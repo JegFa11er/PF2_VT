@@ -1,0 +1,215 @@
+# Strike, MAP, Damage & HP — PF2e Remastered
+
+## Implemented baseline
+
+`src/Core/Actions/strike.js` implements a single melee Strike with attack
+resolution, Multiple Attack Penalty, damage, and HP tracking.
+
+Rules used:
+
+1. Strike costs **1 action**.
+2. Melee reach is **5 ft** by default (adjacent orthogonal or diagonal cell).
+   `reachFeet` can be overridden at the API for future reach weapons.
+3. The target must be a **living hostile**. Defeated targets and allies are rejected.
+4. The target must be visible via centre-to-centre **line of sight**.
+5. The attack check is `d20 + resolved attack modifier` against the target's
+   resolved AC. Attack and defense values both flow through
+   `src/Core/Rules/modifiers.js` (base attack bonus + Frightened [status] +
+   MAP [untyped]; target AC + Off-Guard [circumstance] + Frightened [status]).
+   Degrees of success follow `src/Core/Rules/checks.js` (±10 thresholds,
+   natural 20/1 degree shifts).
+6. A **success** deals the weapon's damage once. A **critical success** doubles the
+   total damage `(dice + modifier)`. Failure and critical failure deal no damage.
+7. Damage is applied through `target.takeDamage(amount)`. HP floors at 0 and the
+   target's `isDefeated` flag becomes `true`.
+8. Every valid Strike increments `attacker.attacksThisTurn`, even on a miss.
+   `resetTurn()` clears it.
+9. The action, MAP increment, and dice are consumed only after validation passes.
+   An invalid d20 callback throws before any state mutation.
+
+## Multiple Attack Penalty
+
+`src/Core/Rules/map.js` and `Combatant.getMultipleAttackPenalty()` implement:
+
+| Attack this turn | Normal | Agile |
+|---|---|---|
+| 1st (`attacksThisTurn = 0`) | 0 | 0 |
+| 2nd (`attacksThisTurn = 1`) | −5 | −4 |
+| 3rd+ (`attacksThisTurn >= 2`) | −10 | −8 |
+
+The penalty is applied to the attack check and reported in the Strike result.
+
+## Reactive Strike (reaction)
+
+`src/Core/Actions/reactive-strike.js` implements the PF2e Remastered Reactive
+Strike (formerly Attack of Opportunity).
+
+Rules used:
+
+1. It costs **1 reaction**, never an action. The reactor must have
+   `canSpendReaction() === true`; otherwise the result is
+   `{ ok: false, reason: "no-reaction" }` and nothing is spent.
+2. It is a melee Strike: the target must be a living hostile within reach with
+   line of sight. Validation reuses `Strike.evaluateStrike()`.
+3. It **does not use and does not increase MAP**. The attack is resolved at the
+   full base attack bonus, and `attacker.attacksThisTurn` is left unchanged.
+4. Attack and defense use the same modifier collection and
+   `Modifiers.resolveModifiers()` pipeline as a normal Strike: attacker
+   conditions on the attack side, target conditions plus flanking on the AC
+   side.
+5. `Stride` scans the square being left before each step. The first eligible
+   enemy with a reaction triggers automatically. An enemy with no reaction left
+   is skipped, and the same enemy cannot trigger twice in one Stride.
+6. `Step` never triggers a Reactive Strike.
+7. If the mover is defeated by the reaction, its Stride stops immediately on the
+   square it was leaving.
+
+Direct use:
+
+```js
+ReactiveStrike.performReactiveStrike({
+  attacker: goblin,
+  target: valeros,
+  map,
+  combatants,
+  rollD20: () => 14,
+  rollDamageDie: (sides) => 3,
+});
+```
+
+`findThreatenedEnemies({ mover, cell, combatants, reachFeet })` returns the
+ordered list of living hostile creatures that threaten `cell` and still have a
+reaction. Stride uses it for the automatic trigger.
+
+The Reactive Strike result reuses the Strike result shape and adds
+`reaction: true`, `reactionTrigger: "leave-threatened-square"`,
+`reactionSpent`, `attackerName`, `targetName`, and `reactionsLeft`.
+`mapPenalty` and `multipleAttackPenalty` are always `0`.
+
+## Modifiers, conditions, and flanking
+
+The Strike collects typed modifiers before rolling:
+
+| Side | Base | Modifiers |
+|---|---|---|
+| Attack | `attacker.attackBonus` | Frightened [status], MAP [untyped] |
+| Defense | `target.ac` / `options.targetAC` | Off-Guard [circumstance], Frightened [status], flanking Off-Guard |
+
+Pass `allies` (or `combatants`) to detect flanking. When the target is flanked,
+it is treated as Off-Guard (`-2 circumstance AC`) against this attack. If the
+target already has the Off-Guard condition, the penalty is not applied twice.
+
+Same-type modifiers follow the PF2e non-stacking rules; untyped modifiers stack
+unless they share a source. See `docs/rules/conditions.md` for the full model.
+
+## Damage formulas
+
+`src/Core/Rules/damage.js` supports one dice term plus an optional flat modifier:
+
+- `1d8+4`
+- `2d6`
+- `1d6-1`
+- a flat integer such as `3`
+
+Critical damage doubles the total after adding the modifier. Damage is clamped at
+0, never negative.
+
+## Result contract
+
+```js
+{
+  ok: true,
+  attackerId,
+  targetId,
+  distanceFeet,
+  reachFeet,
+  attackRoll,          // d20 (legacy alias)
+  attackBonus,         // base attack bonus
+  baseAttackBonus,
+  attackModifier,      // base + effective attack modifiers
+  attackModifiers,     // [{ name, type, value, source }]
+  attackBreakdown,     // per-type applied/suppressed audit
+  mapPenalty,
+  total,
+  dc,                  // final resolved AC
+  targetAC,            // final resolved AC
+  targetACBase,        // AC before conditions/flanking
+  baseTargetAC,
+  targetACModifiers,
+  targetACBreakdown,
+  flanked,
+  flankers,            // [{ id, name }]
+  offGuard,
+  degree,              // CRITICAL_SUCCESS | SUCCESS | FAILURE | CRITICAL_FAILURE
+  isNatural20,
+  isNatural1,
+  hit,
+  critical,
+  attack: {
+    d20, attackBonus, baseAttackBonus, mapPenalty,
+    attackModifier, modifiers, breakdown, modifier, total, dc,
+    degree, isNatural20, isNatural1
+  },
+  damage: {
+    formula, diceCount, dieSize, modifier, rolls,
+    diceTotal, baseTotal, doubled, multiplier, total
+  } | null,
+  damageDealt,         // raw damage before HP clamping
+  hpDamage,            // actual HP lost (clamped)
+  hpBefore,
+  hpAfter,
+  targetMaxHP,
+  targetDefeated,
+  attacksThisTurn,
+  actionsLeft
+}
+{ ok: false, reason, distanceFeet?, blockedBy? }
+```
+
+Failure reasons:
+
+- `no-actions`
+- `invalid-target`
+- `ally`
+- `out-of-reach`
+- `no-line-of-sight`
+- `attacker-defeated`
+- `target-defeated`
+
+`evaluateStrike()` performs the same validation without spending an action,
+rolling dice, or incrementing MAP, so the View can highlight valid targets.
+
+## Deterministic dice
+
+The host may inject:
+
+- `rollD20()` — returns 1..20;
+- `rollDamageDie(sides)` — returns 1..sides;
+- or a shared `rollDie(sides)` used for both.
+
+Tests use fixed callbacks. The browser host uses `Math.random`. If no callback is
+supplied, the core falls back to `Math.random` so the prototype remains playable.
+
+## View behaviour
+
+- Select **Strike** mode in the Actions panel. The button shows the current MAP,
+  e.g. `Strike (-0)` then `Strike (-5)` after the first attack.
+- Hostile living tokens within reach and LoS are outlined in red.
+- Clicking the target resolves the attack and logs the expanded expression:
+  `Valeros strikes Goblin: d20(12) + 9 (base) - 5 (MAP) = 16 vs AC 13 (16 - 2 Off-Guard [circumstance] - 1 Frightened 1 [status]) -> SUCCESS.`
+- A flanked target is called out explicitly and the hover badge reads
+  `FLANKED (-2 AC)`.
+- A critical hit appends `CRITICAL SUCCESS (Double Damage)!`.
+- Natural 20/1 logs the degree shift, e.g. `(Natural 20: FAILURE -> SUCCESS)`.
+- Damage logs `Damage: 7. Goblin HP: 6 -> 0 (Defeated).`
+- HP is shown in the sidebar and as a mini-bar above each token. Defeated tokens
+  are greyed, semi-transparent, and marked with a skull.
+
+## Explicitly deferred
+
+- Dying, Wounded, Unconscious, and recovery checks.
+- Persistent damage, precision damage, and damage-type resistance/weakness.
+- Cover, concealment, creature size, and reach weapons.
+- Ranged Strikes, thrown weapons, and reload.
+- Other reactions (Detect/Disrupt, Shield Block), ranged Reactive Strikes, and
+  reactive triggers other than leaving a threatened square.

@@ -1,0 +1,205 @@
+/**
+ * PF2E REMASTERED — GRID MATHEMATICS (HEADLESS CORE)
+ *
+ * Pure rules code. No DOM, canvas, or rendering dependencies.
+ *
+ * Grid model:
+ *   - One square = 5 feet.
+ *   - Cells are integer coordinates { x, y }; (0, 0) is the top-left cell.
+ *   - Diagonal movement alternates 5 ft / 10 ft / 5 ft / 10 ft.
+ *     Cumulative diagonal distance: 0, 5, 15, 20, 30, 35, ...
+ *
+ * The module works both as a classic browser script (PF2e.Core.Grid)
+ * and as a CommonJS module for the Node test runner.
+ */
+(function (root, factory) {
+  "use strict";
+
+  if (typeof module === "object" && module.exports) {
+    module.exports = factory();
+  } else {
+    root.PF2e = root.PF2e || {};
+    root.PF2e.Core = root.PF2e.Core || {};
+    root.PF2e.Core.Grid = factory();
+  }
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  /** @typedef {{ x: number, y: number }} Cell */
+  /** @typedef {{ x: number, y: number, distanceFeet: number }} ReachableCell */
+
+  const FEET_PER_SQUARE = 5;
+  const DIFFICULT_TERRAIN_EXTRA_FEET = 5;
+
+  function assertInteger(value, label) {
+    if (!Number.isInteger(value)) {
+      throw new TypeError(label + " must be an integer; received " + String(value) + ".");
+    }
+  }
+
+  function assertCell(cell, label) {
+    if (cell === null || typeof cell !== "object") {
+      throw new TypeError(label + " must be a cell object { x, y }.");
+    }
+    assertInteger(cell.x, label + ".x");
+    assertInteger(cell.y, label + ".y");
+  }
+
+  function assertFeetBudget(maxFeet) {
+    if (typeof maxFeet !== "number" || !Number.isFinite(maxFeet) || maxFeet < 0) {
+      throw new TypeError("maxFeet must be a non-negative finite number; received " + String(maxFeet) + ".");
+    }
+  }
+
+  /**
+   * Incremental cost of one diagonal square, using a 0-based diagonal index.
+   * 0 -> 5 ft, 1 -> 10 ft, 2 -> 5 ft, 3 -> 10 ft, ...
+   *
+   * @param {number} diagonalIndex
+   * @returns {number}
+   */
+  function diagonalStepCostFeet(diagonalIndex) {
+    assertInteger(diagonalIndex, "diagonalIndex");
+    if (diagonalIndex < 0) {
+      throw new RangeError("diagonalIndex must be >= 0.");
+    }
+    return diagonalIndex % 2 === 0 ? FEET_PER_SQUARE : FEET_PER_SQUARE * 2;
+  }
+
+  /**
+   * Cumulative PF2e cost of N diagonal squares.
+   * 0 -> 0, 1 -> 5, 2 -> 15, 3 -> 20, 4 -> 30, 5 -> 35 ...
+   *
+   * Closed form: N * 5 + floor(N / 2) * 5.
+   *
+   * @param {number} diagonalCount
+   * @returns {number}
+   */
+  function diagonalDistanceFeet(diagonalCount) {
+    assertInteger(diagonalCount, "diagonalCount");
+    if (diagonalCount < 0) {
+      throw new RangeError("diagonalCount must be >= 0.");
+    }
+    return diagonalCount * FEET_PER_SQUARE + Math.floor(diagonalCount / 2) * FEET_PER_SQUARE;
+  }
+
+  /**
+   * PF2e Remastered distance between two grid cells.
+   *
+   * Every cell-to-cell step is either straight (5 ft) or diagonal. The
+   * diagonal steps within the whole move share one 5-10-5 alternation,
+   * regardless of where straight steps are inserted. For an unobstructed
+   * grid the cheapest path takes the minimum number of diagonal steps,
+   * giving the closed form:
+   *
+   *   5 * (max(dx, dy) + floor(min(dx, dy) / 2))
+   *
+   * @param {Cell} from
+   * @param {Cell} to
+   * @returns {number}
+   */
+  function distanceFeet(from, to) {
+    assertCell(from, "from");
+    assertCell(to, "to");
+
+    const dx = Math.abs(to.x - from.x);
+    const dy = Math.abs(to.y - from.y);
+    const diagonalCount = Math.min(dx, dy);
+    const straightCount = Math.max(dx, dy) - diagonalCount;
+
+    return straightCount * FEET_PER_SQUARE + diagonalDistanceFeet(diagonalCount);
+  }
+
+  /**
+   * @param {Cell} from
+   * @param {Cell} to
+   * @param {number} maxFeet
+   * @returns {boolean}
+   */
+  function isWithinDistanceFeet(from, to, maxFeet) {
+    assertFeetBudget(maxFeet);
+    return distanceFeet(from, to) <= maxFeet;
+  }
+
+  /**
+   * All in-bounds cells reachable from `origin` within a movement budget.
+   * The origin cell is excluded because a token cannot "move" to its own square.
+   *
+   * Obstacles, difficult terrain, and creature sizes are deliberately out of
+   * scope for Session 1.1; those arrive with pathfinding in Session 1.2.
+   *
+   * @param {Cell} origin
+   * @param {number} maxFeet
+   * @param {{ cols?: number, rows?: number }} [options]
+   * @returns {ReachableCell[]}
+   */
+  function reachableCells(origin, maxFeet, options) {
+    assertCell(origin, "origin");
+    assertFeetBudget(maxFeet);
+
+    const opts = options || {};
+    const cols = opts.cols === undefined ? 15 : opts.cols;
+    const rows = opts.rows === undefined ? 15 : opts.rows;
+    assertInteger(cols, "options.cols");
+    assertInteger(rows, "options.rows");
+    if (cols <= 0 || rows <= 0) {
+      throw new RangeError("options.cols and options.rows must be positive.");
+    }
+
+    // No single square can cost less than 5 ft, so this bounds the search.
+    const radius = Math.ceil(maxFeet / FEET_PER_SQUARE);
+    const minX = Math.max(0, origin.x - radius);
+    const maxX = Math.min(cols - 1, origin.x + radius);
+    const minY = Math.max(0, origin.y - radius);
+    const maxY = Math.min(rows - 1, origin.y + radius);
+    const cells = [];
+
+    for (let y = minY; y <= maxY; y += 1) {
+      for (let x = minX; x <= maxX; x += 1) {
+        if (x === origin.x && y === origin.y) {
+          continue;
+        }
+        const cost = distanceFeet(origin, { x: x, y: y });
+        if (cost <= maxFeet) {
+          cells.push({ x: x, y: y, distanceFeet: cost });
+        }
+      }
+    }
+
+    return cells;
+  }
+
+  /**
+   * Human-readable grid label: column letters + 1-based row number.
+   * (3, 7) -> "D8"; (25, 0) -> "Z1"; (26, 0) -> "AA1".
+   *
+   * @param {Cell} cell
+   * @returns {string}
+   */
+  function gridToLabel(cell) {
+    assertCell(cell, "cell");
+    if (cell.x < 0 || cell.y < 0) {
+      throw new RangeError("cell coordinates must be non-negative.");
+    }
+
+    let column = "";
+    let index = cell.x;
+    do {
+      column = String.fromCharCode(65 + (index % 26)) + column;
+      index = Math.floor(index / 26) - 1;
+    } while (index >= 0);
+
+    return column + String(cell.y + 1);
+  }
+
+  return Object.freeze({
+    FEET_PER_SQUARE: FEET_PER_SQUARE,
+    DIFFICULT_TERRAIN_EXTRA_FEET: DIFFICULT_TERRAIN_EXTRA_FEET,
+    diagonalStepCostFeet: diagonalStepCostFeet,
+    diagonalDistanceFeet: diagonalDistanceFeet,
+    distanceFeet: distanceFeet,
+    isWithinDistanceFeet: isWithinDistanceFeet,
+    reachableCells: reachableCells,
+    gridToLabel: gridToLabel,
+  });
+});

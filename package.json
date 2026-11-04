@@ -1,0 +1,9 @@
+{
+  "name": "pf2e-tactical-battlefield",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Headless Pathfinder 2E Remastered rules core with a vanilla JS tactical battlefield view.",
+  "scripts": {
+    "test": "node tests/run-node.js"
+  }
+}

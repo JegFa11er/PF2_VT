@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PF2e Remastered — Tactical Battlefield</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">P2</div>
+          <div>
+            <h1>Tactical Battlefield</h1>
+            <p>Pathfinder 2E Remastered · Phase 5 — Conditions, Flanking, Shields &amp; Reactions</p>
+          </div>
+        </div>
+        <div class="topbar-meta">
+          <span class="badge">15 × 15 grid</span>
+          <span class="badge">5-10-5 diagonals</span>
+          <span class="badge">Difficult terrain</span>
+          <span class="badge">Occupancy + LoS</span>
+          <span class="badge badge-accent">Modifiers · Conditions · Reactive Strike</span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="board-panel" aria-label="Tactical grid">
+          <div class="board-frame">
+            <canvas
+              id="battlefield"
+              width="720"
+              height="720"
+              aria-label="15 by 15 square battlefield grid with obstacles, difficult terrain, and tokens"
+            ></canvas>
+          </div>
+          <p id="board-status" class="board-hint board-status" aria-live="polite">
+            Hover a square to preview movement. Click to act. Esc clears selection.
+          </p>
+        </section>
+
+        <aside class="sidebar" aria-label="Battlefield sidebar">
+          <section class="panel turn-panel">
+            <div class="turn-panel-head">
+              <h2>Initiative</h2>
+              <span id="round-indicator" class="round-badge">Round 1</span>
+            </div>
+            <div id="initiative-tracker" class="initiative-tracker" aria-live="polite"></div>
+            <button id="end-turn" class="end-turn-button" type="button">End Turn ▸</button>
+          </section>
+
+          <section class="panel">
+            <h2>Combatants</h2>
+            <div id="token-list" class="token-list"></div>
+          </section>
+
+          <section class="panel">
+            <h2>Actions</h2>
+            <div id="action-modes" class="action-modes" role="group" aria-label="Action mode">
+              <button type="button" class="mode-button is-active" data-mode="stride" aria-pressed="true">
+                Stride
+              </button>
+              <button type="button" class="mode-button" data-mode="step" aria-pressed="false">
+                Step
+              </button>
+              <button type="button" class="mode-button" data-mode="strike" aria-pressed="false">
+                Strike
+              </button>
+              <button
+                type="button"
+                id="raise-shield"
+                class="mode-button action-button"
+                data-action="raise-shield"
+                title="+2 circumstance AC until the start of your next turn · 1 action"
+              >
+                Raise Shield
+              </button>
+            </div>
+            <p id="mode-hint" class="mode-hint">
+              Stride moves up to Speed for 1 action. Difficult terrain adds 5 ft per square. Leaving a threatened square can provoke a Reactive Strike; Step never does.
+            </p>
+          </section>
+
+          <section class="panel">
+            <h2>Selection</h2>
+            <div id="selection-panel" class="selection-panel">
+              <p class="selection-empty">
+                No token selected. The active combatant is selected at the start of its turn.
+              </p>
+            </div>
+          </section>
+
+          <section class="panel log-panel">
+            <h2>Combat Log</h2>
+            <div id="combat-log" class="combat-log" role="log" aria-live="polite"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <!-- Classic scripts keep the prototype runnable from file:// by double-click. -->
+    <script src="src/Core/Grid/grid-math.js"></script>
+    <script src="src/Core/Grid/grid-map.js"></script>
+    <script src="src/Core/Grid/pathfinding.js"></script>
+    <script src="src/Core/Grid/occupancy.js"></script>
+    <script src="src/Core/Grid/los-math.js"></script>
+    <script src="src/Core/Rules/map.js"></script>
+    <script src="src/Core/Rules/damage.js"></script>
+    <script src="src/Core/Rules/checks.js"></script>
+    <script src="src/Core/Rules/modifiers.js"></script>
+    <script src="src/Core/Grid/flanking.js"></script>
+    <script src="src/Core/Entities/conditions.js"></script>
+    <script src="src/Core/Entities/combatant.js"></script>
+    <script src="src/Core/Encounter/encounter.js"></script>
+    <script src="src/Core/Actions/strike.js"></script>
+    <script src="src/Core/Actions/reactive-strike.js"></script>
+    <script src="src/Core/Actions/stride.js"></script>
+    <script src="src/Core/Actions/step.js"></script>
+    <script src="src/Core/Actions/raise-shield.js"></script>
+    <script src="src/View/Grid/grid-view.js"></script>
+    <script src="src/View/Tokens/token-view.js"></script>
+    <script src="src/View/UI/combat-log.js"></script>
+    <script src="src/View/battlefield-view.js"></script>
+    <script src="src/main.js"></script>
+  </body>
+</html>

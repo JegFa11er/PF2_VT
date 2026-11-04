@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PF2e Core — Test Runner</title>
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body class="test-page">
+    <div class="test-wrap">
+      <header class="test-header">
+        <div>
+          <h1>PF2e Core — Test Runner</h1>
+          <p>
+            Isolated rules tests · Distance, obstacles, terrain, occupancy, LoS,
+            checks, modifiers, conditions, flanking, MAP, damage, actions,
+            reactions, initiative
+          </p>
+        </div>
+        <a class="button-link" href="index.html">← Back to battlefield</a>
+      </header>
+
+      <div id="test-summary" class="test-summary">Running tests…</div>
+      <div id="test-results" class="test-results"></div>
+
+      <p class="test-hint">
+        Node CLI: <code>npm test</code> or <code>node tests/run-node.js</code>
+      </p>
+    </div>
+
+    <script src="src/Core/Grid/grid-math.js"></script>
+    <script src="src/Core/Grid/grid-map.js"></script>
+    <script src="src/Core/Grid/pathfinding.js"></script>
+    <script src="src/Core/Grid/occupancy.js"></script>
+    <script src="src/Core/Grid/los-math.js"></script>
+    <script src="src/Core/Rules/map.js"></script>
+    <script src="src/Core/Rules/damage.js"></script>
+    <script src="src/Core/Rules/checks.js"></script>
+    <script src="src/Core/Rules/modifiers.js"></script>
+    <script src="src/Core/Grid/flanking.js"></script>
+    <script src="src/Core/Entities/conditions.js"></script>
+    <script src="src/Core/Entities/combatant.js"></script>
+    <script src="src/Core/Encounter/encounter.js"></script>
+    <script src="src/Core/Actions/strike.js"></script>
+    <script src="src/Core/Actions/reactive-strike.js"></script>
+    <script src="src/Core/Actions/stride.js"></script>
+    <script src="src/Core/Actions/step.js"></script>
+    <script src="src/Core/Actions/raise-shield.js"></script>
+    <script src="tests/harness.js"></script>
+    <script src="tests/Grid/distance.test.js"></script>
+    <script src="tests/Grid/pathfinding.test.js"></script>
+    <script src="tests/Grid/terrain-occupancy.test.js"></script>
+    <script src="tests/Grid/los.test.js"></script>
+    <script src="tests/Rules/checks.test.js"></script>
+    <script src="tests/Rules/modifiers.test.js"></script>
+    <script src="tests/Grid/flanking.test.js"></script>
+    <script src="tests/Entities/conditions.test.js"></script>
+    <script src="tests/Actions/step-strike.test.js"></script>
+    <script src="tests/Actions/strike.test.js"></script>
+    <script src="tests/Actions/raise-shield.test.js"></script>
+    <script src="tests/Actions/reactive-strike.test.js"></script>
+    <script src="tests/Encounter/encounter.test.js"></script>
+    <script src="tests/run-browser.js"></script>
+  </body>
+</html>
