@@ -23,6 +23,10 @@
       require("../Rules/map.js"),
       require("../Rules/damage.js"),
       require("./conditions.js"),
+      require("../Rules/iwr.js"),
+      require("../Rules/weapon-traits.js"),
+      require("./persistent-damage.js"),
+      require("../Grid/cover.js"),
     );
   } else {
     root.PF2e = root.PF2e || {};
@@ -31,12 +35,20 @@
       root.PF2e.Core.Rules.MultipleAttack,
       root.PF2e.Core.Rules.Damage,
       root.PF2e.Core.Conditions,
+      root.PF2e.Core.Rules.IWR,
+      root.PF2e.Core.Rules.WeaponTraits,
+      root.PF2e.Core.PersistentDamage,
+      root.PF2e.Core.Cover,
     );
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
   MultipleAttack,
   Damage,
   Conditions,
+  IWR,
+  WeaponTraits,
+  PersistentDamage,
+  Cover,
 ) {
   "use strict";
 
@@ -56,6 +68,67 @@
     PLAYER: "player",
     ENEMY: "enemy",
   });
+
+  /**
+   * Saving throws are treated the same way as PF2e: a static modifier used to
+   * derive a defence DC (`10 + modifier`). Skills use the same underlying math
+   * for Athletics, Acrobatics, Stealth, and Perception checks.
+   */
+  const SAVE_NAMES = Object.freeze(["fortitude", "reflex", "will"]);
+  const SKILL_NAMES = Object.freeze([
+    "acrobatics",
+    "athletics",
+    "perception",
+    "stealth",
+  ]);
+
+  function normalizeStatName(value, label) {
+    if (typeof value !== "string" || value.trim() === "") {
+      throw new TypeError(label + " must be a non-empty string.");
+    }
+    return value.trim().toLowerCase();
+  }
+
+  /**
+   * Normalize an authored save/skill block. Known names default to 0 and any
+   * additional future name is preserved, so the engine stays forward
+   * compatible without silently dropping authored data.
+   *
+   * @param {object|undefined} input
+   * @param {string[]} defaults
+   * @param {string} label
+   * @returns {Object<string, number>}
+   */
+  function normalizeStatBlock(input, defaults, label) {
+    const result = {};
+    for (const name of defaults) {
+      result[name] = 0;
+    }
+    if (input === undefined || input === null) {
+      return result;
+    }
+    if (typeof input !== "object" || Array.isArray(input)) {
+      throw new TypeError(label + " must be an object of integer modifiers.");
+    }
+    for (const key of Object.keys(input)) {
+      const name = normalizeStatName(key, label + " key");
+      assertInteger(input[key], label + "." + name);
+      result[name] = input[key];
+    }
+    return result;
+  }
+
+  function appendExtraModifiers(modifiers, extraModifiers) {
+    if (extraModifiers === undefined || extraModifiers === null) {
+      return;
+    }
+    if (!Array.isArray(extraModifiers)) {
+      throw new TypeError("extraModifiers must be an array.");
+    }
+    for (const modifier of extraModifiers) {
+      modifiers.push(modifier);
+    }
+  }
 
   function normalizeAlliance(value) {
     const alliance = value === undefined ? ALLIANCES.PLAYER : value;
@@ -133,8 +206,28 @@
       const attackBonus = opts.attackBonus === undefined ? 0 : opts.attackBonus;
       assertInteger(attackBonus, "attackBonus");
 
-      const damageFormula = opts.damage === undefined ? "1d4" : opts.damage;
-      Damage.parseDamageFormula(damageFormula);
+      const saves = normalizeStatBlock(opts.saves, SAVE_NAMES, "saves");
+      const skills = normalizeStatBlock(opts.skills, SKILL_NAMES, "skills");
+
+      const damageInput =
+        opts.damage === undefined
+          ? opts.weapon === undefined
+            ? "1d4"
+            : opts.weapon
+          : opts.damage;
+      const damageSpec = Damage.parseDamageSpec(damageInput, opts.damageType);
+      const traitsInput =
+        opts.traits === undefined
+          ? opts.weapon && opts.weapon.traits
+          : opts.traits;
+      const traitDefinitions = WeaponTraits.normalizeTraits(traitsInput);
+
+      const immunities = IWR.normalizeImmunities(opts.immunities);
+      const weaknesses = IWR.normalizeIWRValues(opts.weaknesses, "weaknesses");
+      const resistances = IWR.normalizeIWRValues(
+        opts.resistances,
+        "resistances",
+      );
 
       const agile = opts.agile === undefined ? false : opts.agile;
       if (typeof agile !== "boolean") {
@@ -164,16 +257,43 @@
       this.currentHP = currentHP;
       this.ac = ac;
       this.attackBonus = attackBonus;
-      this.damage = damageFormula;
+      this.saves = saves;
+      this.skills = skills;
+      // `damage` stays a formula string for backwards compatibility. The
+      // companion `damageType`/`damageSpec` fields carry the typed contract.
+      this.damage = damageSpec.formula;
+      this.damageType = damageSpec.type;
+      this.damageSpec = damageSpec;
+      this.traitDefinitions = Object.freeze(traitDefinitions.slice());
+      this.traits = Object.freeze(
+        traitDefinitions.map(function (trait) {
+          return trait.slug;
+        }),
+      );
+      this.immunities = immunities;
+      this.weaknesses = weaknesses;
+      this.resistances = resistances;
       this.agile = agile;
       this.attacksThisTurn = attacksThisTurn;
       this.isDefeated = currentHP <= 0;
       this.conditions = new Map();
+      this.persistentDamage = [];
+      // Monotonic count of the turns this combatant has begun. Grapple
+      // duration is expressed against the grappler's turn count so it expires
+      // at the end of the grappler's next turn, not the victim's.
+      const turnNumber = opts.turnNumber === undefined ? 0 : opts.turnNumber;
+      if (!Number.isInteger(turnNumber) || turnNumber < 0) {
+        throw new RangeError("turnNumber must be a non-negative integer.");
+      }
+      this.turnNumber = turnNumber;
       this._x = opts.x;
       this._y = opts.y;
 
       if (opts.conditions !== undefined) {
         this._initializeConditions(opts.conditions);
+      }
+      if (opts.persistentDamage !== undefined) {
+        this._initializePersistentDamage(opts.persistentDamage);
       }
     }
 
@@ -207,6 +327,36 @@
         return;
       }
       throw new TypeError("conditions must be a Map, array, or object.");
+    }
+
+    _initializePersistentDamage(source) {
+      if (Array.isArray(source)) {
+        for (const entry of source) {
+          this.addPersistentDamage(entry);
+        }
+        return;
+      }
+      if (source !== null && typeof source === "object") {
+        if (source.formula !== undefined || source.damage !== undefined) {
+          this.addPersistentDamage(source);
+          return;
+        }
+        // Type-keyed map: { fire: "1d6", bleed: "1d4" }.
+        for (const type of Object.keys(source)) {
+          const value = source[type];
+          if (value !== null && typeof value === "object") {
+            this.addPersistentDamage(
+              Object.assign({}, value, { type: value.type || type }),
+            );
+          } else {
+            this.addPersistentDamage({ formula: String(value), type: type });
+          }
+        }
+        return;
+      }
+      throw new TypeError(
+        "persistentDamage must be an array, an object, or a type-keyed map.",
+      );
     }
 
     get x() {
@@ -259,13 +409,18 @@
      * Add or refresh a condition. Frightened uses the higher of the old and new
      * values, matching PF2e's non-stacking condition value rule.
      *
+     * `options` carries source-linked metadata for Grapple:
+     * `{ sourceId, expiresOnSourceTurn }`. Re-applying the same unvalued
+     * condition refreshes its duration instead of stacking.
+     *
      * @param {string} name
      * @param {number} [value]
+     * @param {{sourceId?:string,expiresOnSourceTurn?:number}} [options]
      * @returns {object|null} a copy of the stored condition, or null when the
      *   condition was removed (frightened 0)
      */
-    addCondition(name, value) {
-      const condition = Conditions.createCondition(name, value);
+    addCondition(name, value, options) {
+      const condition = Conditions.createCondition(name, value, options);
       if (condition === null) {
         this.removeCondition(name);
         return null;
@@ -281,6 +436,10 @@
           this.conditions.set(condition.name, condition);
           return Conditions.copyCondition(condition);
         }
+        // Unvalued conditions (Grabbed, Restrained, Immobilized, ...) refresh
+        // their source and expiry metadata rather than stacking.
+        existing.sourceId = condition.sourceId;
+        existing.expiresOnSourceTurn = condition.expiresOnSourceTurn;
         return Conditions.copyCondition(existing);
       }
 
@@ -327,6 +486,98 @@
     }
 
     /**
+     * Whether movement actions are forbidden. Grabbed and Restrained imply
+     * Immobilized, so all three conditions count even if only the parent was
+     * authored.
+     *
+     * @returns {boolean}
+     */
+    isImmobilized() {
+      return Conditions.isImmobilized(this);
+    }
+
+    /**
+     * Active grapple condition (Restrained before Grabbed), or null.
+     *
+     * @returns {object|null}
+     */
+    getGrappleCondition() {
+      return Conditions.getGrappleCondition(this);
+    }
+
+    _removeGrappleRecords(sourceId, predicate) {
+      const removed = [];
+      for (const slug of Conditions.GRAPPLE_CONDITIONS) {
+        const condition = this.conditions.get(slug);
+        if (condition === undefined || condition.sourceId !== sourceId) {
+          continue;
+        }
+        if (!predicate(condition)) {
+          continue;
+        }
+        this.conditions.delete(slug);
+        removed.push(Conditions.copyCondition(condition));
+      }
+
+      if (removed.length > 0) {
+        const immobilized = this.conditions.get(
+          Conditions.CONDITION_SLUGS.IMMOBILIZED,
+        );
+        const stillGrappled =
+          this.hasCondition("grabbed") || this.hasCondition("restrained");
+        if (
+          immobilized !== undefined &&
+          immobilized.sourceId === sourceId &&
+          !stillGrappled
+        ) {
+          this.conditions.delete(Conditions.CONDITION_SLUGS.IMMOBILIZED);
+          removed.push(Conditions.copyCondition(immobilized));
+        }
+      }
+
+      return removed;
+    }
+
+    /**
+     * Break every grapple this source maintains on this combatant. Called when
+     * the grappler Strides/Steps or is defeated.
+     *
+     * @param {string} sourceId
+     * @returns {object[]} removed condition records
+     */
+    releaseGrappleFrom(sourceId) {
+      if (typeof sourceId !== "string") {
+        return [];
+      }
+      return this._removeGrappleRecords(sourceId, function () {
+        return true;
+      });
+    }
+
+    /**
+     * End this source's grapples when the source's turn ends. The duration is
+     * "until the end of the grappler's next turn": a grapple applied on the
+     * grappler's turn N stores `expiresOnSourceTurn = N + 1`, so the end of
+     * turn N keeps it and the end of turn N + 1 removes it.
+     *
+     * @param {string} sourceId
+     * @param {number} sourceTurnNumber
+     * @returns {object[]} removed condition records
+     */
+    expireGrapplesFrom(sourceId, sourceTurnNumber) {
+      if (typeof sourceId !== "string" || !Number.isInteger(sourceTurnNumber)) {
+        return [];
+      }
+      return this._removeGrappleRecords(sourceId, function (condition) {
+        return (
+          condition.expiresOnSourceTurn !== null &&
+          condition.expiresOnSourceTurn !== undefined &&
+          sourceTurnNumber >= condition.expiresOnSourceTurn
+        );
+      });
+    }
+
+    /**
      * @returns {object[]} defensive copies in insertion order
      */
     getConditions() {
@@ -352,6 +603,181 @@
         }
       }
       return modifiers;
+    }
+
+    // ------------------------------------------------- saves, skills & DCs
+
+    /**
+     * @returns {Object<string, number>} defensive copy of the saving throws
+     */
+    getSaves() {
+      return Object.assign({}, this.saves);
+    }
+
+    /**
+     * @returns {Object<string, number>} defensive copy of the skill modifiers
+     */
+    getSkills() {
+      return Object.assign({}, this.skills);
+    }
+
+    /**
+     * Raw saving-throw modifier, defaulting to 0 for an unknown save.
+     *
+     * @param {string} saveName
+     * @returns {number}
+     */
+    getSaveModifier(saveName) {
+      const name = normalizeStatName(saveName, "saveName");
+      return Number.isInteger(this.saves[name]) ? this.saves[name] : 0;
+    }
+
+    /**
+     * Raw skill modifier, defaulting to 0 for an unknown skill.
+     *
+     * @param {string} skillName
+     * @returns {number}
+     */
+    getSkillModifier(skillName) {
+      const name = normalizeStatName(skillName, "skillName");
+      return Number.isInteger(this.skills[name]) ? this.skills[name] : 0;
+    }
+
+    /**
+     * Situational modifiers for a skill check.
+     *
+     * Frightened contributes its status penalty. Attack-roll modifiers such as
+     * Prone deliberately do NOT apply: an Attack-trait action such as Trip is a
+     * skill check, not an attack roll, even though it uses MAP. Future
+     * skill-specific bonuses can be appended through `extraModifiers`.
+     *
+     * @param {string} skillName
+     * @param {{extraModifiers?:object[]}} [options]
+     * @returns {object[]}
+     */
+    getSkillModifiers(skillName, options) {
+      const name = normalizeStatName(skillName, "skillName");
+      const opts = options || {};
+      const modifiers = this.getConditionModifiers([
+        "skill",
+        "skill:" + name,
+        "check",
+      ]);
+      appendExtraModifiers(modifiers, opts.extraModifiers);
+      return modifiers;
+    }
+
+    /**
+     * Situational modifiers for a saving throw. Standard and greater cover add
+     * a circumstance bonus to Reflex saves; lesser cover is AC-only.
+     *
+     * @param {string} saveName
+     * @param {{cover?:object|string, extraModifiers?:object[]}} [options]
+     * @returns {object[]}
+     */
+    getSaveModifiers(saveName, options) {
+      const name = normalizeStatName(saveName, "saveName");
+      const opts = options || {};
+      const modifiers = this.getConditionModifiers([
+        "save",
+        "save:" + name,
+      ]);
+
+      if (name === "reflex" && opts.cover !== undefined) {
+        const coverModifier = Cover.coverReflexModifier(opts.cover);
+        if (coverModifier !== null) {
+          modifiers.push(coverModifier);
+        }
+      }
+
+      appendExtraModifiers(modifiers, opts.extraModifiers);
+      return modifiers;
+    }
+
+    /**
+     * Situational modifiers for a defence DC such as Reflex DC, Fortitude DC,
+     * or Will DC. Cover applies to Reflex DC at standard/greater cover.
+     * `"ac"` is also accepted for AC-scope condition queries; AC itself is
+     * already a DC and is resolved directly by Strike rather than through
+     * `calculateDC`.
+     *
+     * @param {string} dcName
+     * @param {{cover?:object|string, extraModifiers?:object[]}} [options]
+     * @returns {object[]}
+     */
+    getDCModifiers(dcName, options) {
+      const name = normalizeStatName(dcName, "dcName");
+      const opts = options || {};
+      const scopes = ["dc", "dc:" + name];
+      if (name === "ac") {
+        scopes.push("ac");
+      }
+      const modifiers = this.getConditionModifiers(scopes);
+
+      if (name === "reflex" && opts.cover !== undefined) {
+        const coverModifier = Cover.coverReflexModifier(opts.cover);
+        if (coverModifier !== null) {
+          modifiers.push(coverModifier);
+        }
+      }
+
+      appendExtraModifiers(modifiers, opts.extraModifiers);
+      return modifiers;
+    }
+
+    // ----------------------------------------------------- persistent damage
+
+    /**
+     * Add or upgrade persistent damage. Same-type instances do not stack; the
+     * stronger formula wins. Different types coexist.
+     *
+     * @param {{id?:string,formula:string,type?:string}|string} input
+     * @param {string} [fallbackType]
+     * @returns {{instance:object,added:boolean,replaced:boolean,keptExisting:boolean,previous:object|null}}
+     */
+    addPersistentDamage(input, fallbackType) {
+      return PersistentDamage.addPersistentDamage(
+        this.persistentDamage,
+        input,
+        fallbackType,
+      );
+    }
+
+    /**
+     * Remove by instance id, or by damage type. A type removes every instance
+     * of that type (there is at most one by construction).
+     *
+     * @param {string} idOrType
+     * @returns {boolean}
+     */
+    removePersistentDamage(idOrType) {
+      return PersistentDamage.removePersistentDamage(
+        this.persistentDamage,
+        idOrType,
+      );
+    }
+
+    /**
+     * @param {string} [type] omit to ask whether any persistent damage is active
+     * @returns {boolean}
+     */
+    hasPersistentDamage(type) {
+      return PersistentDamage.hasPersistentDamage(
+        this.persistentDamage,
+        type,
+      );
+    }
+
+    /**
+     * @returns {{id:string,formula:string,type:string}[]} defensive copies
+     */
+    getPersistentDamage() {
+      return PersistentDamage.getPersistentDamage(this.persistentDamage);
+    }
+
+    clearPersistentDamage() {
+      this.persistentDamage.length = 0;
+      return this;
     }
 
     /**
@@ -380,41 +806,238 @@
     }
 
     /**
-     * End-of-turn condition tick. This is the canonical place where Frightened
-     * decays. Encounter calls it for the outgoing combatant.
+     * End-of-turn resolution. Frightened decays here, and every persistent
+     * damage instance rolls its damage, runs the target's IWR, and makes a
+     * recovery flat check against DC 15.
      *
-     * @returns {{frightened: object|null, changed: boolean}}
+     * Callbacks:
+     *   - `rollDie(sides)` / `rollDamageDie(sides)` for persistent damage dice;
+     *   - `rollD20()` / `rollFlatCheck()` for the recovery check.
+     *
+     * @param {{rollDie?:Function,rollDamageDie?:Function,rollD20?:Function,rollFlatCheck?:Function}} [options]
+     * @returns {{
+     *   frightened: object|null,
+     *   changed: boolean,
+     *   persistentTick: object,
+     *   persistentChanged: boolean
+     * }}
      */
-    endTurn() {
+    endTurn(options) {
+      const opts = options || {};
       const frightened = this.tickConditions();
+      const persistentTick = PersistentDamage.tickPersistentDamage({
+        combatant: this,
+        instances: this.persistentDamage,
+        rollDie: opts.rollDie,
+        rollDamageDie: opts.rollDamageDie,
+        rollD20: opts.rollD20,
+        rollFlatCheck: opts.rollFlatCheck,
+      });
+      const releasedGrapples = this._releaseGrapplesAtEndOfTurn(opts.combatants);
       return {
         frightened: frightened,
         changed: frightened !== null,
+        persistentTick: persistentTick,
+        persistentChanged: persistentTick.changed,
+        releasedGrapples: releasedGrapples,
       };
     }
 
     /**
-     * Apply damage. HP floors at 0 and the combatant becomes defeated at 0.
+     * End or break the grapples this combatant maintains. A living grappler
+     * expires only grapples whose `expiresOnSourceTurn` has been reached; a
+     * defeated grappler releases them immediately.
+     *
+     * @param {object[]} [combatants]
+     * @returns {{combatant:object,combatantId:string,combatantName:string,removed:object[]}[]}
+     */
+    _releaseGrapplesAtEndOfTurn(combatants) {
+      if (!Array.isArray(combatants)) {
+        return [];
+      }
+
+      const released = [];
+      for (const combatant of combatants) {
+        if (
+          combatant === null ||
+          typeof combatant !== "object" ||
+          combatant === this
+        ) {
+          continue;
+        }
+
+        let removed = [];
+        if (this.isDefeated) {
+          if (typeof combatant.releaseGrappleFrom === "function") {
+            removed = combatant.releaseGrappleFrom(this.id);
+          }
+        } else if (typeof combatant.expireGrapplesFrom === "function") {
+          removed = combatant.expireGrapplesFrom(this.id, this.turnNumber);
+        }
+
+        if (removed.length > 0) {
+          released.push({
+            combatant: combatant,
+            combatantId: combatant.id,
+            combatantName: combatant.name,
+            removed: removed,
+          });
+        }
+      }
+      return released;
+    }
+
+    /**
+     * Frozen typed damage contract for this combatant's weapon/attack.
+     *
+     * @returns {{formula:string,type:string}}
+     */
+    getDamageSpec() {
+      return this.damageSpec;
+    }
+
+    /**
+     * Active weapon definition used by the damage calculator.
+     *
+     * @returns {{formula:string,type:string,traits:string[]}}
+     */
+    getWeapon() {
+      return {
+        formula: this.damage,
+        type: this.damageType,
+        traits: this.traits.slice(),
+      };
+    }
+
+    /**
+     * @param {string} name canonical trait name or full slug ("deadly" or "deadly-d8")
+     * @returns {boolean}
+     */
+    hasTrait(name) {
+      return WeaponTraits.hasTrait(this.traits, name);
+    }
+
+    /**
+     * @param {string} name
+     * @returns {object|null} structured trait definition
+     */
+    getTrait(name) {
+      return WeaponTraits.getTrait(this.traitDefinitions, name);
+    }
+
+    /**
+     * @returns {string[]} canonical trait slugs, e.g. ["reach", "deadly-d8"]
+     */
+    getTraits() {
+      return this.traits.slice();
+    }
+
+    /**
+     * @returns {string[]} display labels, e.g. ["reach", "deadly d8"]
+     */
+    getTraitLabels() {
+      return WeaponTraits.traitLabels(this.traitDefinitions);
+    }
+
+    /**
+     * Melee reach in feet. The `reach` weapon trait increases it to 10 ft.
+     *
+     * @returns {number}
+     */
+    getReachFeet() {
+      return WeaponTraits.getReachFeet(this.traitDefinitions, 5);
+    }
+
+    /**
+     * Snapshot of this combatant's authored IWR profile.
+     *
+     * @returns {{
+     *   immunities: string[],
+     *   weaknesses: {type:string,value:number}[],
+     *   resistances: {type:string,value:number}[]
+     * }}
+     */
+    getIWR() {
+      return {
+        immunities: this.immunities.slice(),
+        weaknesses: this.weaknesses.map(function (entry) {
+          return { type: entry.type, value: entry.value };
+        }),
+        resistances: this.resistances.map(function (entry) {
+          return { type: entry.type, value: entry.value };
+        }),
+      };
+    }
+
+    /**
+     * Apply damage through the canonical Immunity -> Weakness -> Resistance
+     * pipeline. HP floors at 0 and the combatant becomes defeated at 0.
+     *
+     * Options:
+     *   - `type`: damage type for a single-instance hit (default `untyped`).
+     *   - `damageInstances`: pre-split typed instances, used when an attack
+     *     deals more than one type. When present, `amount` is only the base
+     *     caller amount and the instances drive the calculation.
+     *   - `applyIWR: false`: bypass IWR entirely (e.g. future healing rules).
+     *
+     * `damageTaken` remains the actual HP lost (clamped), while
+     * `damageApplied` is the post-IWR damage; `baseDamage` is the pre-IWR
+     * amount. This keeps overkill visible in the log exactly like Phase 4.
      *
      * @param {number} amount non-negative integer
-     * @returns {{ damageTaken: number, currentHP: number, maxHP: number, isDefeated: boolean }}
+     * @param {{type?:string, damageInstances?:{amount:number,type:string}[], applyIWR?:boolean}} [options]
+     * @returns {{
+     *   damageTaken: number,
+     *   damageApplied: number,
+     *   baseDamage: number,
+     *   currentHP: number,
+     *   maxHP: number,
+     *   isDefeated: boolean,
+     *   iwr: object|null
+     * }}
      */
-    takeDamage(amount) {
+    takeDamage(amount, options) {
       if (!Number.isInteger(amount) || amount < 0) {
         throw new RangeError("Damage must be a non-negative integer.");
       }
 
+      const opts = options || {};
+      let finalDamage = amount;
+      let iwr = null;
+
+      if (opts.applyIWR !== false) {
+        const damageInstances = Array.isArray(opts.damageInstances)
+          ? opts.damageInstances
+          : [
+              {
+                amount: amount,
+                type: opts.type === undefined ? "untyped" : opts.type,
+              },
+            ];
+
+        iwr = IWR.applyIWR({
+          damageInstances: damageInstances,
+          immunities: this.immunities,
+          weaknesses: this.weaknesses,
+          resistances: this.resistances,
+        });
+        finalDamage = iwr.totalDamage;
+      }
+
       const before = this.currentHP;
-      this.currentHP = Math.max(0, before - amount);
+      this.currentHP = Math.max(0, before - finalDamage);
       if (this.currentHP === 0) {
         this.isDefeated = true;
       }
 
       return {
         damageTaken: before - this.currentHP,
+        damageApplied: finalDamage,
+        baseDamage: amount,
         currentHP: this.currentHP,
         maxHP: this.maxHP,
         isDefeated: this.isDefeated,
+        iwr: iwr,
       };
     }
 
@@ -503,9 +1126,10 @@
      *
      * A raised shield lasts until the start of the raiser's next turn, so it
      * is removed here unconditionally, including when the Frightened tick is
-     * suppressed for the incoming combatant. The reaction budget is also
-     * restored here: reactions spent during other creatures' turns come back
-     * at the start of this combatant's own turn.
+     * suppressed for the incoming combatant. Greater cover from Take Cover
+     * has the same duration and is cleared here as well. The reaction budget
+     * is also restored here: reactions spent during other creatures' turns
+     * come back at the start of this combatant's own turn.
      *
      * @param {{tickConditions?: boolean}} [options]
      * @returns {Combatant}
@@ -513,18 +1137,24 @@
     resetTurn(options) {
       const opts = options || {};
       if (opts.tickConditions !== false) {
-        this.endTurn();
+        this.endTurn(opts);
       }
       this.conditions.delete(Conditions.CONDITION_SLUGS.SHIELD_RAISED);
+      this.conditions.delete(Conditions.CONDITION_SLUGS.GREATER_COVER);
       this.actionsRemaining = this.maxActions;
       this.reactionsRemaining = this.maxReactions;
       this.diagonalStepsThisTurn = 0;
       this.attacksThisTurn = 0;
+      // A new turn begins. Grapple durations are expressed against this
+      // monotonic counter so "until the end of your next turn" is exact.
+      this.turnNumber += 1;
       return this;
     }
   }
 
   Combatant.ALLIANCES = ALLIANCES;
+  Combatant.SAVE_NAMES = SAVE_NAMES;
+  Combatant.SKILL_NAMES = SKILL_NAMES;
 
   return Combatant;
 });

@@ -23,6 +23,7 @@
       require("../Rules/checks.js"),
       require("../Rules/damage.js"),
       require("../Rules/modifiers.js"),
+      require("../Rules/weapon-traits.js"),
       require("./strike.js"),
     );
   } else {
@@ -34,6 +35,7 @@
       root.PF2e.Core.Rules.Checks,
       root.PF2e.Core.Rules.Damage,
       root.PF2e.Core.Rules.Modifiers,
+      root.PF2e.Core.Rules.WeaponTraits,
       root.PF2e.Core.Actions.Strike,
     );
   }
@@ -42,6 +44,7 @@
   Checks,
   Damage,
   Modifiers,
+  WeaponTraits,
   Strike,
 ) {
   "use strict";
@@ -80,6 +83,28 @@
     return reach;
   }
 
+  /**
+   * Per-creature threatened reach. An explicit override (used by tests and
+   * special effects) applies to every candidate; otherwise each creature uses
+   * its own weapon reach, including the `reach` trait.
+   *
+   * @param {object} combatant
+   * @param {number} [overrideFeet]
+   * @returns {number}
+   */
+  function reachOf(combatant, overrideFeet) {
+    if (overrideFeet !== undefined) {
+      return normalizeReach(overrideFeet);
+    }
+    if (typeof combatant.getReachFeet === "function") {
+      return normalizeReach(combatant.getReachFeet());
+    }
+    if (combatant.traits !== undefined) {
+      return normalizeReach(WeaponTraits.getReachFeet(combatant.traits));
+    }
+    return DEFAULT_REACH_FEET;
+  }
+
   function isDefeated(unit) {
     return unit.isDefeated === true || unit.currentHP === 0;
   }
@@ -109,12 +134,8 @@
     return Number.isInteger(target.ac) ? target.ac : DEFAULT_AC;
   }
 
-  function normalizeDamageFormula(options, attacker) {
-    if (options.damage !== undefined) {
-      Damage.parseDamageFormula(options.damage);
-      return options.damage;
-    }
-    return typeof attacker.damage === "string" ? attacker.damage : DEFAULT_DAMAGE;
+  function normalizeDamageSpec(options, attacker) {
+    return Strike.normalizeDamageSpec(options, attacker);
   }
 
   function normalizeCombatants(options) {
@@ -149,7 +170,7 @@
       throw new TypeError("findThreatenedEnemies requires a combatants array.");
     }
 
-    const reachFeet = normalizeReach(opts.reachFeet);
+    const overrideReach = opts.reachFeet;
     const threats = [];
 
     for (const candidate of opts.combatants) {
@@ -178,7 +199,7 @@
       if (
         !Number.isInteger(candidate.x) ||
         !Number.isInteger(candidate.y) ||
-        Grid.distanceFeet(opts.cell, candidate) > reachFeet
+        Grid.distanceFeet(opts.cell, candidate) > reachOf(candidate, overrideReach)
       ) {
         continue;
       }
@@ -246,8 +267,77 @@
 
     const attackBonus = normalizeAttackBonus(opts, attacker);
     const targetAC = normalizeTargetAC(opts, target);
-    const damageFormula = normalizeDamageFormula(opts, attacker);
+    const weaponSpec = Strike.normalizeWeaponSpec(opts, attacker);
     const flanked = evaluation.flanked === true;
+    const hiddenAttacker = evaluation.hiddenAttacker === true;
+    const offGuard = evaluation.offGuard === true;
+    const visibility = evaluation.visibility || { condition: null };
+    const flatCheckDC =
+      evaluation.flatCheckDC === undefined
+        ? visibility.flatCheckDC
+        : evaluation.flatCheckDC;
+    const flatCheckCondition =
+      evaluation.flatCheckCondition === undefined
+        ? visibility.condition
+        : evaluation.flatCheckCondition;
+
+    // Concealment and Hidden resolve before the attack roll. A failed check
+    // still spends the reaction, but the reaction never touches MAP.
+    let flatCheck = null;
+    if (flatCheckCondition && flatCheckDC !== null && flatCheckDC !== undefined) {
+      flatCheck = Strike.rollVisibilityFlatCheck(
+        opts,
+        flatCheckDC,
+        flatCheckCondition,
+      );
+
+      if (!flatCheck.passed) {
+        attacker.spendReaction(1);
+        return {
+          ok: true,
+          automaticMiss: true,
+          reaction: true,
+          reactionTrigger: "leave-threatened-square",
+          reactionSpent: true,
+          attackerId: attacker.id,
+          attackerName: attacker.name,
+          targetId: target.id,
+          targetName: target.name,
+          flatCheck: flatCheck,
+          visibility: visibility,
+          hiddenAttacker: hiddenAttacker,
+          attackRoll: null,
+          attackBonus: attackBonus,
+          baseAttackBonus: attackBonus,
+          attackModifier: null,
+          mapPenalty: 0,
+          multipleAttackPenalty: 0,
+          total: null,
+          attackTotal: null,
+          dc: null,
+          targetAC: null,
+          targetACBase: targetAC,
+          degree: null,
+          hit: false,
+          isHit: false,
+          critical: false,
+          isCritical: false,
+          damage: null,
+          iwr: null,
+          damageDealt: 0,
+          damageAmount: 0,
+          damageTotal: 0,
+          hpDamage: 0,
+          hpBefore: null,
+          hpAfter: null,
+          targetMaxHP: Number.isInteger(target.maxHP) ? target.maxHP : null,
+          targetDefeated: target.isDefeated === true,
+          attacksThisTurn: attacker.attacksThisTurn,
+          actionsLeft: attacker.actionsRemaining,
+          reactionsLeft: attacker.reactionsRemaining,
+        };
+      }
+    }
 
     // Reactive Strike ignores the attacker's current MAP entirely: no penalty
     // is applied and attacksThisTurn is not incremented afterwards.
@@ -256,7 +346,12 @@
       attackBonus,
       attackModifiers,
     );
-    const defenseModifiers = Strike.collectDefenseModifiers(target, flanked);
+    const defenseModifiers = Strike.collectDefenseModifiers(
+      target,
+      flanked,
+      evaluation.cover || null,
+      hiddenAttacker,
+    );
     const defenseResolution = Modifiers.resolveModifiers(
       targetAC,
       defenseModifiers,
@@ -281,23 +376,12 @@
           "Reactive Strike target must implement takeDamage(amount).",
         );
       }
-      const rolled = Damage.rollDamage({
-        formula: damageFormula,
-        rollDie: Strike.resolveDamageDie(opts),
+      damage = WeaponTraits.calculateWeaponDamage({
+        weapon: weaponSpec,
+        degree: check.degree,
+        isOffGuard: offGuard,
+        rollDamageDie: Strike.resolveDamageDie(opts),
       });
-      const multiplier = critical ? 2 : 1;
-      damage = {
-        formula: rolled.formula,
-        diceCount: rolled.diceCount,
-        dieSize: rolled.dieSize,
-        modifier: rolled.modifier,
-        rolls: rolled.rolls,
-        diceTotal: rolled.diceTotal,
-        baseTotal: rolled.baseTotal,
-        doubled: critical,
-        multiplier: multiplier,
-        total: Math.max(0, rolled.baseTotal * multiplier),
-      };
     }
 
     // Spend the reaction only after every validation and roll succeeded.
@@ -309,11 +393,18 @@
     let targetDefeated = target.isDefeated === true;
     let damageDealt = 0;
     let hpDamage = 0;
+    let iwr = null;
 
     if (hit) {
       hpBefore = Number.isInteger(target.currentHP) ? target.currentHP : null;
-      const applied = target.takeDamage(damage.total);
-      damageDealt = damage.total;
+      const applied = target.takeDamage(damage.total, {
+        type: damage.type,
+      });
+      iwr = applied.iwr || null;
+      damageDealt =
+        applied.damageApplied === undefined
+          ? damage.total
+          : applied.damageApplied;
       hpDamage = applied.damageTaken;
       hpAfter = applied.currentHP;
       targetDefeated = applied.isDefeated;
@@ -330,6 +421,9 @@
       targetName: target.name,
       distanceFeet: evaluation.distanceFeet,
       reachFeet: evaluation.reachFeet,
+      flatCheck: flatCheck,
+      visibility: visibility,
+      hiddenAttacker: hiddenAttacker,
       attackRoll: d20,
       attackBonus: attackBonus,
       baseAttackBonus: attackBonus,
@@ -347,8 +441,15 @@
       baseTargetAC: targetAC,
       targetACModifiers: defenseResolution.effectiveModifiers,
       defenseModifiers: defenseResolution.effectiveModifiers,
+      targetACSuppressedModifiers: defenseResolution.suppressedModifiers,
+      suppressedACModifiers: defenseResolution.suppressedModifiers,
       targetACBreakdown: defenseResolution.breakdown,
       defenseBreakdown: defenseResolution.breakdown,
+      cover: evaluation.cover || null,
+      coverDegree: evaluation.coverDegree || "none",
+      coverBonus: evaluation.coverBonus || 0,
+      coverRays: evaluation.coverRays || [],
+      blockedRaysCount: evaluation.blockedRaysCount || 0,
       flanked: flanked,
       flankers: evaluation.flankers || [],
       offGuard: evaluation.offGuard === true,
@@ -375,6 +476,7 @@
         isNatural1: check.isNatural1,
       },
       damage: damage,
+      iwr: iwr,
       damageDealt: damageDealt,
       damageAmount: damageDealt,
       damageTotal: damageDealt,

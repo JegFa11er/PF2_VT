@@ -483,6 +483,99 @@
       t.assertEqual(result.degree, Checks.DEGREES.FAILURE);
     });
 
+    t.test("lesser cover from an intervening creature adds +1 circumstance AC", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 3, y: 0, ac: 10, maxHP: 100 });
+      const bystander = makeCombatant({
+        id: "bystander",
+        name: "Bystander",
+        x: 1,
+        y: 0,
+      });
+
+      const result = perform(attacker, target, 10, 1, {
+        allies: [attacker, target, bystander],
+        reachFeet: 15,
+      });
+
+      t.assertEqual(result.coverDegree, "lesser");
+      t.assertEqual(result.coverBonus, 1);
+      t.assertEqual(result.baseTargetAC, 10);
+      t.assertEqual(result.targetAC, 11);
+      t.assertEqual(result.defenseModifiers.length, 1);
+      t.assertEqual(result.defenseModifiers[0].source, "cover");
+      t.assertEqual(result.defenseModifiers[0].value, 1);
+    });
+
+    t.test("Standard Cover and Shield Raised do not stack (+2 total, not +4)", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 2, y: 3, ac: 16, maxHP: 100 });
+      target.addCondition("shield-raised");
+
+      const map = new GridMap({
+        cols: 6,
+        rows: 6,
+        blocked: [{ x: 1, y: 3 }],
+      });
+
+      const result = perform(attacker, target, 10, 1, {
+        map: map,
+        reachFeet: 20,
+      });
+
+      t.assertTrue(result.ok);
+      t.assertEqual(result.coverDegree, "standard");
+      t.assertEqual(result.coverBonus, 2);
+      t.assertEqual(result.baseTargetAC, 16);
+      t.assertEqual(result.targetAC, 18, "16 + 2 circumstance, not +4");
+      t.assertEqual(result.defenseModifiers.length, 1);
+      t.assertEqual(result.defenseModifiers[0].source, "shield-raised");
+      t.assertEqual(result.defenseModifiers[0].value, 2);
+      t.assertTrue(
+        result.suppressedACModifiers.some(function (modifier) {
+          return modifier.source === "cover" && modifier.value === 2;
+        }),
+        "the Standard Cover circumstance bonus is suppressed, not stacked",
+      );
+    });
+
+    t.test("Greater Cover beats Shield Raised and applies +4 total", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 2, y: 3, ac: 16, maxHP: 100 });
+      target.addCondition("shield-raised");
+      target.addCondition("greater-cover");
+
+      const map = new GridMap({
+        cols: 6,
+        rows: 6,
+        blocked: [{ x: 1, y: 3 }],
+      });
+
+      const result = perform(attacker, target, 10, 1, {
+        map: map,
+        reachFeet: 20,
+      });
+
+      t.assertTrue(result.ok);
+      t.assertEqual(result.baseTargetAC, 16);
+      t.assertEqual(result.targetAC, 20, "16 + 4 Greater Cover, not +6");
+      t.assertEqual(result.defenseModifiers.length, 1);
+      t.assertEqual(result.defenseModifiers[0].source, "greater-cover");
+      t.assertEqual(result.defenseModifiers[0].value, 4);
+      t.assertTrue(
+        result.suppressedACModifiers.some(function (modifier) {
+          return modifier.source === "shield-raised";
+        }),
+        "Shield Raised is suppressed",
+      );
+      t.assertTrue(
+        result.suppressedACModifiers.some(function (modifier) {
+          return modifier.source === "cover" && modifier.value === 2;
+        }),
+        "geometric Standard Cover is also suppressed",
+      );
+    });
+
     t.test("shield-raised and off-guard apply as +2 and -2 circumstance", function () {
       const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
       const target = makeTarget({ x: 1, y: 0, ac: 16, maxHP: 100 });
@@ -542,6 +635,356 @@
       t.assertTrue(evaluation.offGuard);
       t.assertEqual(attacker.actionsRemaining, 3);
       t.assertEqual(attacker.attacksThisTurn, 0);
+    });
+
+    // ------------------------------------------------ concealment & visibility
+
+    t.test("a failed DC 5 flat check against Concealed spends the action and raises MAP without an attack roll", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 1, y: 0, ac: 10, maxHP: 100 });
+      target.addCondition("concealed");
+
+      let attackRolls = 0;
+      const result = Strike.performStrike({
+        attacker: attacker,
+        target: target,
+        map: makeMap(),
+        rollFlatCheck: function () {
+          return 4;
+        },
+        rollD20: function () {
+          attackRolls += 1;
+          return 20;
+        },
+        rollDamageDie: function () {
+          return 1;
+        },
+      });
+
+      t.assertTrue(result.ok);
+      t.assertTrue(result.automaticMiss);
+      t.assertTrue(!result.hit);
+      t.assertTrue(!result.critical);
+      t.assertDeepEqual(result.flatCheck, {
+        passed: false,
+        dc: 5,
+        roll: 4,
+        condition: "concealed",
+      });
+      t.assertEqual(result.attackRoll, null, "the attack d20 is never rolled");
+      t.assertEqual(result.damage, null);
+      t.assertEqual(result.damageDealt, 0);
+      t.assertEqual(attackRolls, 0);
+      t.assertEqual(target.currentHP, 100);
+      t.assertEqual(attacker.actionsRemaining, 2);
+      t.assertEqual(attacker.attacksThisTurn, 1);
+      t.assertEqual(result.actionsLeft, 2);
+      t.assertEqual(attacker.getMultipleAttackPenalty(), -5);
+    });
+
+    t.test("a successful DC 11 flat check against Hidden proceeds and Hidden does not lower the target's AC", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 1, y: 0, ac: 10, maxHP: 100 });
+      target.addCondition("hidden");
+
+      const result = Strike.performStrike({
+        attacker: attacker,
+        target: target,
+        map: makeMap(),
+        rollFlatCheck: function () {
+          return 11;
+        },
+        rollD20: function () {
+          return 10;
+        },
+        rollDamageDie: function () {
+          return 1;
+        },
+      });
+
+      t.assertTrue(result.ok);
+      t.assertTrue(result.hit);
+      t.assertDeepEqual(result.flatCheck, {
+        passed: true,
+        dc: 11,
+        roll: 11,
+        condition: "hidden",
+      });
+      t.assertEqual(result.baseTargetAC, 10);
+      t.assertEqual(result.targetAC, 10, "Hidden is not an AC penalty");
+      t.assertEqual(result.defenseModifiers.length, 0);
+      t.assertEqual(result.attackRoll, 10);
+      t.assertEqual(result.damageDealt, 5);
+      t.assertEqual(target.currentHP, 95);
+      t.assertEqual(attacker.actionsRemaining, 2);
+      t.assertEqual(attacker.attacksThisTurn, 1);
+    });
+
+    t.test("Concealed + Hidden require only one flat check at the stricter DC 11", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 1, y: 0, ac: 10, maxHP: 100 });
+      target.addCondition("concealed");
+      target.addCondition("hidden");
+
+      let flatChecks = 0;
+      const result = Strike.performStrike({
+        attacker: attacker,
+        target: target,
+        map: makeMap(),
+        rollFlatCheck: function () {
+          flatChecks += 1;
+          return 11;
+        },
+        rollD20: function () {
+          return 10;
+        },
+        rollDamageDie: function () {
+          return 1;
+        },
+      });
+
+      t.assertEqual(flatChecks, 1);
+      t.assertTrue(result.flatCheck.passed);
+      t.assertEqual(result.flatCheck.dc, 11);
+      t.assertEqual(result.flatCheck.condition, "hidden");
+      t.assertTrue(result.hit);
+    });
+
+    t.test("a Hidden attacker makes the target Off-Guard with -2 circumstance AC", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 1, y: 0, ac: 12, maxHP: 100 });
+      attacker.addCondition("hidden");
+
+      const result = perform(attacker, target, 10, 1);
+
+      t.assertTrue(result.ok);
+      t.assertTrue(result.hiddenAttacker);
+      t.assertTrue(result.offGuard);
+      t.assertEqual(result.baseTargetAC, 12);
+      t.assertEqual(result.targetAC, 10);
+      t.assertEqual(result.degree, Checks.DEGREES.SUCCESS);
+      t.assertEqual(result.defenseModifiers.length, 1);
+      t.assertEqual(result.defenseModifiers[0].name, "Hidden Attacker");
+      t.assertEqual(result.defenseModifiers[0].source, "off-guard");
+      t.assertEqual(result.defenseModifiers[0].type, "circumstance");
+      t.assertEqual(result.defenseModifiers[0].value, -2);
+    });
+
+    t.test("Hidden attacker Off-Guard does not stack with an existing Off-Guard", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 1, y: 0, ac: 12, maxHP: 100 });
+      attacker.addCondition("hidden");
+      target.addCondition("off-guard");
+
+      const result = perform(attacker, target, 10, 1);
+
+      t.assertEqual(result.targetAC, 10);
+      t.assertEqual(result.defenseModifiers.length, 1);
+      t.assertEqual(result.defenseModifiers[0].source, "off-guard");
+    });
+
+    t.test("an Undetected attacker also makes the target Off-Guard", function () {
+      const attacker = makeCombatant({ x: 0, y: 0, attackBonus: 0 });
+      const target = makeTarget({ x: 1, y: 0, ac: 12, maxHP: 100 });
+      attacker.addCondition("undetected");
+
+      const result = perform(attacker, target, 10, 1);
+
+      t.assertTrue(result.hiddenAttacker);
+      t.assertEqual(result.targetAC, 10);
+      t.assertEqual(result.defenseModifiers[0].name, "Hidden Attacker");
+    });
+
+    t.test("an Undetected target cannot be struck and consumes nothing", function () {
+      const attacker = makeCombatant({ x: 0, y: 0 });
+      const target = makeTarget({ x: 1, y: 0 });
+      target.addCondition("undetected");
+
+      let attackRolls = 0;
+      const result = Strike.performStrike({
+        attacker: attacker,
+        target: target,
+        map: makeMap(),
+        rollD20: function () {
+          attackRolls += 1;
+          return 20;
+        },
+      });
+
+      t.assertTrue(!result.ok);
+      t.assertEqual(result.reason, "target-undetected");
+      t.assertEqual(
+        result.reason,
+        Strike.STRIKE_REASONS.TARGET_UNDETECTED,
+      );
+      t.assertEqual(attacker.actionsRemaining, 3);
+      t.assertEqual(attacker.attacksThisTurn, 0);
+      t.assertEqual(attackRolls, 0);
+      t.assertEqual(target.currentHP, 100);
+
+      const evaluation = Strike.evaluateStrike({
+        attacker: attacker,
+        target: target,
+        map: makeMap(),
+      });
+      t.assertTrue(!evaluation.ok);
+      t.assertEqual(evaluation.reason, "target-undetected");
+    });
+
+    // ------------------------------------------------ damage types & IWR
+
+    t.test("a slashing strike triggers the target's slashing weakness", function () {
+      const attacker = makeCombatant({
+        x: 0,
+        y: 0,
+        attackBonus: 0,
+        damage: { formula: "1d8+4", type: "slashing" },
+      });
+      const target = makeTarget({
+        x: 1,
+        y: 0,
+        maxHP: 100,
+        ac: 10,
+        weaknesses: [{ type: "slashing", value: 5 }],
+      });
+
+      const result = perform(attacker, target, 10, 5);
+
+      t.assertTrue(result.hit);
+      t.assertEqual(result.damage.type, "slashing");
+      t.assertEqual(result.damage.total, 9);
+      t.assertEqual(result.iwr.totalDamage, 14, "9 + 5 weakness");
+      t.assertEqual(result.damageDealt, 14);
+      t.assertEqual(result.hpBefore, 100);
+      t.assertEqual(result.hpAfter, 86);
+      t.assertEqual(target.currentHP, 86);
+      t.assertEqual(result.iwr.breakdown[0].weakness, 5);
+    });
+
+    t.test("a slashing strike is reduced by the target's slashing resistance", function () {
+      const attacker = makeCombatant({
+        x: 0,
+        y: 0,
+        attackBonus: 0,
+        damage: { formula: "1d8+4", type: "slashing" },
+      });
+      const target = makeTarget({
+        x: 1,
+        y: 0,
+        maxHP: 100,
+        ac: 10,
+        resistances: [{ type: "slashing", value: 3 }],
+      });
+
+      const result = perform(attacker, target, 10, 5);
+
+      t.assertTrue(result.hit);
+      t.assertEqual(result.damage.total, 9);
+      t.assertEqual(result.iwr.totalDamage, 6, "9 - 3 resistance");
+      t.assertEqual(result.damageDealt, 6);
+      t.assertEqual(result.hpAfter, 94);
+      t.assertEqual(target.currentHP, 94);
+      t.assertEqual(result.iwr.breakdown[0].resistance, 3);
+    });
+
+    t.test("immunity to the attacker's damage type deals no damage", function () {
+      const attacker = makeCombatant({
+        x: 0,
+        y: 0,
+        attackBonus: 0,
+        damage: { formula: "1d8+4", type: "slashing" },
+      });
+      const target = makeTarget({
+        x: 1,
+        y: 0,
+        maxHP: 100,
+        ac: 10,
+        immunities: ["slashing"],
+        weaknesses: [{ type: "slashing", value: 5 }],
+        resistances: [{ type: "slashing", value: 3 }],
+      });
+
+      const result = perform(attacker, target, 10, 5);
+
+      t.assertTrue(result.hit);
+      t.assertEqual(result.iwr.totalDamage, 0);
+      t.assertEqual(result.iwr.breakdown[0].immune, true);
+      t.assertEqual(result.damageDealt, 0);
+      t.assertEqual(result.hpDamage, 0);
+      t.assertEqual(result.hpBefore, 100);
+      t.assertEqual(result.hpAfter, 100);
+      t.assertEqual(target.currentHP, 100);
+      t.assertTrue(!target.isDefeated);
+    });
+
+    t.test("critical damage is doubled before IWR is applied", function () {
+      const attacker = makeCombatant({
+        x: 0,
+        y: 0,
+        attackBonus: 10,
+        damage: { formula: "1d8+4", type: "fire" },
+      });
+      const target = makeTarget({
+        x: 1,
+        y: 0,
+        maxHP: 100,
+        ac: 10,
+        weaknesses: [{ type: "fire", value: 5 }],
+        resistances: [{ type: "fire", value: 3 }],
+      });
+
+      const result = perform(attacker, target, 10, 5);
+
+      t.assertEqual(result.degree, Checks.DEGREES.CRITICAL_SUCCESS);
+      t.assertEqual(result.damage.total, 18, "9 doubled");
+      t.assertEqual(result.iwr.totalDamage, 20, "18 + 5 - 3");
+      t.assertEqual(result.damageDealt, 20);
+      t.assertEqual(target.currentHP, 80);
+    });
+
+    t.test("a plain formula string remains backwards compatible as untyped", function () {
+      const attacker = makeCombatant({
+        x: 0,
+        y: 0,
+        attackBonus: 0,
+        damage: "1d8+4",
+      });
+      const target = makeTarget({
+        x: 1,
+        y: 0,
+        maxHP: 100,
+        ac: 10,
+        weaknesses: [{ type: "slashing", value: 5 }],
+      });
+
+      const result = perform(attacker, target, 10, 5);
+
+      t.assertEqual(result.damage.type, "untyped");
+      t.assertEqual(result.iwr.totalDamage, 9, "untyped does not match slashing");
+      t.assertEqual(target.currentHP, 91);
+    });
+
+    t.test("Combatant.damageType authoring works without an object damage spec", function () {
+      const attacker = makeCombatant({
+        x: 0,
+        y: 0,
+        attackBonus: 0,
+        damage: "1d8+4",
+        damageType: "piercing",
+      });
+      const target = makeTarget({
+        x: 1,
+        y: 0,
+        maxHP: 100,
+        ac: 10,
+        resistances: [{ type: "piercing", value: 2 }],
+      });
+
+      const result = perform(attacker, target, 10, 5);
+
+      t.assertEqual(result.damage.type, "piercing");
+      t.assertEqual(result.iwr.totalDamage, 7);
+      t.assertEqual(target.currentHP, 93);
     });
   };
 });

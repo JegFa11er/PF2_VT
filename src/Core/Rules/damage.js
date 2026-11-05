@@ -4,6 +4,10 @@
  * Supported formula shape: one dice term plus an optional flat modifier,
  * e.g. "1d8+4", "2d6", "1d6 - 1", or a flat integer such as "3".
  *
+ * Damage may also carry a type: { formula: "1d8+4", type: "slashing" }. A plain
+ * string remains backwards compatible and resolves as `untyped`. IWR itself
+ * lives in Rules/iwr.js; this module only parses and rolls the typed dice.
+ *
  * The caller supplies a deterministic die callback in tests/replays. When no
  * callback is supplied, the default uses Math.random so the browser prototype
  * remains playable. The rules engine never decides which die face is rolled.
@@ -24,6 +28,51 @@
 
   const DICE_PATTERN = /^\s*(\d*)d(\d+)\s*([+-]\s*\d+)?\s*$/i;
   const FLAT_PATTERN = /^\s*[+-]?\d+\s*$/;
+  const DAMAGE_TYPE_PATTERN = /^[a-z][a-z-]*$/;
+
+  const DEFAULT_DAMAGE_TYPE = "untyped";
+
+  /**
+   * Canonical damage types used by PF2e Remastered. Custom single-word slugs
+   * are accepted too, because the ruleset keeps adding special damage types
+   * (for example vitality/void in the Remaster). The list documents the common
+   * values used by the UI and the demo encounter.
+   */
+  const DAMAGE_TYPES = Object.freeze([
+    "acid",
+    "bleed",
+    "bludgeoning",
+    "cold",
+    "electricity",
+    "fire",
+    "force",
+    "mental",
+    "piercing",
+    "poison",
+    "precision",
+    "slashing",
+    "sonic",
+    "spirit",
+    "untyped",
+    "vitality",
+    "void",
+  ]);
+
+  function normalizeDamageType(type) {
+    const value =
+      type === undefined || type === null || type === ""
+        ? DEFAULT_DAMAGE_TYPE
+        : String(type).trim().toLowerCase();
+
+    if (!DAMAGE_TYPE_PATTERN.test(value)) {
+      throw new TypeError(
+        'damage type must be a lower-case slug such as "slashing" or "fire"; received ' +
+          String(type) +
+          ".",
+      );
+    }
+    return value;
+  }
 
   function defaultRollDie(sides) {
     return 1 + Math.floor(Math.random() * sides);
@@ -79,14 +128,70 @@
   }
 
   /**
+   * Normalize the damage contract used by Combatant and the attack actions.
+   *
+   * A plain formula string stays backwards compatible and is treated as
+   * `untyped` unless a fallback type is supplied explicitly. The object form
+   * carries the weapon/attack damage type:
+   *
+   *   "1d8+4"                     -> { formula: "1d8+4", type: "untyped" }
+   *   { formula: "1d8+4", type: "slashing" }
+   *
+   * @param {string|{formula:string,type?:string,damageType?:string}} input
+   * @param {string} [fallbackType] used for a plain string or when the object
+   *   omits its type
+   * @returns {{formula:string,type:string}}
+   */
+  function parseDamageSpec(input, fallbackType) {
+    if (typeof input === "string") {
+      const parsed = parseDamageFormula(input);
+      return Object.freeze({
+        formula: parsed.formula,
+        type: normalizeDamageType(fallbackType),
+      });
+    }
+
+    if (input !== null && typeof input === "object" && !Array.isArray(input)) {
+      const formula =
+        input.formula === undefined ? input.damage : input.formula;
+      const declaredType =
+        input.type === undefined ? input.damageType : input.type;
+      const type = declaredType === undefined ? fallbackType : declaredType;
+      const parsed = parseDamageFormula(formula);
+      return Object.freeze({
+        formula: parsed.formula,
+        type: normalizeDamageType(type),
+      });
+    }
+
+    throw new TypeError(
+      "damage must be a formula string or an object { formula, type }.",
+    );
+  }
+
+  /**
+   * Human-readable "1d8+4 slashing" form for logs and the selection panel.
+   *
+   * @param {string|object} input
+   * @param {string} [fallbackType]
+   * @returns {string}
+   */
+  function formatDamageSpec(input, fallbackType) {
+    const spec = parseDamageSpec(input, fallbackType);
+    return spec.formula + " " + spec.type;
+  }
+
+  /**
    * Roll a damage formula once.
    *
    * @param {{
    *   formula: string,
+   *   type?: string,
    *   rollDie?: (sides: number) => number
    * }} options
    * @returns {{
    *   formula: string,
+   *   type: string|null,
    *   diceCount: number,
    *   dieSize: number,
    *   modifier: number,
@@ -99,6 +204,10 @@
   function rollDamage(options) {
     const opts = options || {};
     const parsed = parseDamageFormula(opts.formula);
+    const type =
+      opts.type === undefined || opts.type === null
+        ? null
+        : normalizeDamageType(opts.type);
     const rollDie =
       typeof opts.rollDie === "function" ? opts.rollDie : defaultRollDie;
 
@@ -119,6 +228,7 @@
 
     return {
       formula: parsed.formula,
+      type: type,
       diceCount: parsed.diceCount,
       dieSize: parsed.dieSize,
       modifier: parsed.modifier,
@@ -130,8 +240,13 @@
   }
 
   return Object.freeze({
+    DEFAULT_DAMAGE_TYPE: DEFAULT_DAMAGE_TYPE,
+    DAMAGE_TYPES: DAMAGE_TYPES,
     defaultRollDie: defaultRollDie,
+    normalizeDamageType: normalizeDamageType,
     parseDamageFormula: parseDamageFormula,
+    parseDamageSpec: parseDamageSpec,
+    formatDamageSpec: formatDamageSpec,
     rollDamage: rollDamage,
   });
 });

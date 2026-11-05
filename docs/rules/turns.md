@@ -8,9 +8,17 @@
 - `Combatant.spendActions(n)` deducts actions and throws if the pool is too small.
 - `Combatant.resetTurn()` restores actions and reactions, clears the cumulative
   diagonal count, and resets `attacksThisTurn` (Multiple Attack Penalty). It also
-  performs the end-of-turn condition tick by default, so Frightened decays;
-  Encounter uses `resetTurn({ tickConditions: false })` for the incoming combatant.
-- `Combatant.endTurn()` is the explicit end-of-turn hook for timed conditions.
+  removes `shield-raised` and `greater-cover` because both last until the start of
+  the creature's next turn, and performs the end-of-turn condition tick by default
+  so Frightened decays; Encounter uses `resetTurn({ tickConditions: false })` for
+  the incoming combatant.
+- `Combatant.endTurn()` is the explicit end-of-turn hook. It ticks timed
+  conditions (Frightened decays) **and** resolves every persistent damage
+  instance: roll damage through IWR, then a DC 15 recovery flat check. The
+  result reports `persistentTick` alongside `frightened`.
+- `Encounter.nextTurn(options)` forwards optional die callbacks
+  (`rollDie`, `rollDamageDie`, `rollD20`, `rollFlatCheck`) to the outgoing
+  combatant's `endTurn()`, keeping the tick deterministic in tests.
 - A combatant has **1 reaction per turn** by default (`maxReactions`). Reactions are
   a separate pool from actions:
   - `reactionsRemaining` starts at `maxReactions`;
@@ -36,8 +44,9 @@ Rules implemented:
 3. `startEncounter()` sets `round = 1` and resets every combatant's turn. It starts at
    the first **living** combatant in initiative order.
 4. `nextTurn()` advances the index, calls `endTurn()` on the **outgoing** combatant
-   (Frightened decay), and calls `resetTurn({ tickConditions: false })` on the
-   **newly active** combatant so its conditions do not tick prematurely.
+   (Frightened decay and persistent damage), and calls
+   `resetTurn({ tickConditions: false })` on the **newly active** combatant so its
+   conditions do not tick prematurely.
 5. **Defeated combatants (`isDefeated === true`) remain in the roster but are skipped**
    by the turn cycle. Passing the end of the order still increments `round` exactly once.
 6. If every combatant is defeated, `activeCombatant` becomes `null`, `isOver` is `true`,
@@ -51,11 +60,14 @@ Rules implemented:
 Return value of `nextTurn()`:
 
 ```js
-{ active, previous, round, wrapped, index, conditionTick }
+{ active, previous, round, wrapped, index, conditionTick, persistentTick }
 ```
 
 `conditionTick` is `null` or the result of the outgoing combatant's
 `endTurn()` call, e.g. `{ frightened: { from: 1, to: 0, removed: true }, changed: true }`.
+
+`persistentTick` is `null` or the structured persistent-damage report from the
+same `endTurn()` call. See `docs/rules/persistent-damage.md`.
 
 ## Stride
 
@@ -73,11 +85,14 @@ Rules used:
 7. Difficult terrain adds 5 ft per entered square.
 8. Allies may be crossed but not occupied; enemies block movement.
 9. Before every square of the route, the mover leaves its current cell. If a
-   living hostile with a reaction threatens that cell within 5 ft, the first such
-   enemy automatically spends 1 reaction and makes a Reactive Strike.
+   living hostile with a reaction threatens that cell within **its own** reach
+   (5 ft, or 10 ft with the `reach` weapon trait), the first such enemy
+   automatically spends 1 reaction and makes a Reactive Strike.
 10. Step never triggers reactions or threatened-square effects.
 11. If the mover becomes defeated during a triggered Reactive Strike, movement
    stops on the square it was leaving and the rest of the route is discarded.
+12. A successful Stride removes `greater-cover` from Take Cover, because the
+    benefit ends when the creature moves.
 
 Pass the full roster as `combatants` (and optionally `allies`) to enable the
 reaction scan. Dice callbacks `rollD20` / `rollDamageDie` / `rollDie` are
@@ -128,6 +143,8 @@ Rules used:
    highlight.
 8. Step deliberately ignores reactions: leaving a threatened square with Step does
    not provoke a Reactive Strike.
+9. A successful Step removes `greater-cover`, because the benefit ends when the
+   creature moves.
 
 Failure reasons: `no-actions`, `already-there`, `not-adjacent`, `out-of-bounds`,
 `blocked-start`, `blocked-destination`, `destination-occupied`, `difficult-terrain`,
@@ -147,12 +164,18 @@ Failure reasons: `no-actions`, `already-there`, `not-adjacent`, `out-of-bounds`,
   reasons. Routes may cross allies; enemy squares block.
 - Step mode highlights only legally enterable adjacent squares.
 - Strike mode highlights hostile targets in reach with line of sight and draws the LoS ray.
+- The action bar includes **Raise Shield** and **Take Cover**. Take Cover is enabled
+  only when the active combatant has standard cover or better and an action left.
+- Covered targets show `LESSER/STANDARD/GREATER COVER (+1/+2/+4 AC)` on hover and
+  draw the cover rays; the log marks suppressed circumstance bonuses.
 - Successful action log lines:
   - `Valeros uses Stride. Moves 15 ft. Actions left: 1`
   - `Valeros uses Step. Moves 5 ft to E8. Actions left: 2`
   - `Valeros strikes Goblin: d20(12) + 9 (base) - 5 (MAP) = 16 vs AC 13 (16 - 2 Off-Guard [circumstance] - 1 Frightened 1 [status]) -> SUCCESS.`
   - `Damage: 7. Goblin HP: 6 -> 0 (Defeated).`
   - `Goblin's Frightened decreases 1 -> 0 (removed).`
+  - `[PERSISTENT DAMAGE] Goblin takes 1 [1] bleed -> 1 damage dealt. Goblin HP: 6 -> 5.`
+  - `Recovery Check: Flat Check d20(2) vs DC 15 -> FAILED (Bleed persists).`
 - The Strike button shows the current MAP, e.g. `Strike (-0)` → `Strike (-5)`.
 - The sidebar token list and initiative roster show current/max HP.
 - Defeated combatants are greyed, semi-transparent, and skipped by End Turn.
@@ -167,7 +190,8 @@ Failure reasons: `no-actions`, `already-there`, `not-adjacent`, `out-of-bounds`,
 
 - Dying, Wounded, Unconscious, and recovery checks.
 - Free actions, Detect/Disrupt, and other reaction types.
-- Cover degrees, creature size, reach weapons in the UI, elevation, and
-  Large-target flank arcs.
+- Seek/Hide/Sneak actions, creature size, multi-cell reach, elevation,
+  and Large-target flank arcs.
 - Enemy AI; the active combatant is controlled by the user.
-- Creature occupancy in line-of-sight (creatures do not block sight yet).
+- Creature occupancy in line-of-sight (creatures provide lesser cover instead of
+  blocking sight).

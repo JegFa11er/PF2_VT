@@ -27,13 +27,19 @@
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory(require("../Grid/grid-math.js"));
+    module.exports = factory(
+      require("../Grid/grid-math.js"),
+      require("../Rules/weapon-traits.js"),
+    );
   } else {
     root.PF2e = root.PF2e || {};
     root.PF2e.Core = root.PF2e.Core || {};
-    root.PF2e.Core.Flanking = factory(root.PF2e.Core.Grid);
+    root.PF2e.Core.Flanking = factory(
+      root.PF2e.Core.Grid,
+      root.PF2e.Core.Rules.WeaponTraits,
+    );
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function (Grid) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Grid, WeaponTraits) {
   "use strict";
 
   const DEFAULT_REACH_FEET = 5;
@@ -128,11 +134,30 @@
     return Math.max(dx, dy) === 1;
   }
 
-  function canReach(target, unit, reachFeet) {
-    if (!isAdjacent(target, unit)) {
-      return false;
+  /**
+   * Per-creature melee reach. An explicit option overrides every creature;
+   * otherwise each one uses its own weapon reach (including `reach`).
+   */
+  function reachOf(unit, overrideFeet) {
+    if (overrideFeet !== undefined) {
+      return normalizeReach(overrideFeet);
     }
-    return Grid.distanceFeet(target, unit) <= reachFeet;
+    if (typeof unit.getReachFeet === "function") {
+      return normalizeReach(unit.getReachFeet());
+    }
+    if (unit.traits !== undefined) {
+      return normalizeReach(WeaponTraits.getReachFeet(unit.traits));
+    }
+    return DEFAULT_REACH_FEET;
+  }
+
+  /**
+   * A creature can flank if it is within its own melee reach of the target.
+   * Each flanker is measured with its own reach, so a 10-ft reach weapon can
+   * flank from two squares away.
+   */
+  function canReach(target, unit, overrideFeet) {
+    return Grid.distanceFeet(target, unit) <= reachOf(unit, overrideFeet);
   }
 
   /**
@@ -152,7 +177,7 @@
     assertUnit(attacker, "attacker");
     const roster = assertAllies(allies);
     const opts = options || {};
-    const reachFeet = normalizeReach(opts.reachFeet);
+    const reachOverride = opts.reachFeet;
 
     if (isDefeated(target) || isDefeated(attacker)) {
       return [];
@@ -163,7 +188,7 @@
     if (!inBounds(gridMap, target) || !inBounds(gridMap, attacker)) {
       return [];
     }
-    if (!canReach(target, attacker, reachFeet)) {
+    if (!canReach(target, attacker, reachOverride)) {
       return [];
     }
 
@@ -186,7 +211,7 @@
       if (isDefeated(ally) || !isHostileTo(ally, target)) {
         continue;
       }
-      if (!inBounds(gridMap, ally) || !canReach(target, ally, reachFeet)) {
+      if (!inBounds(gridMap, ally) || !canReach(target, ally, reachOverride)) {
         continue;
       }
 

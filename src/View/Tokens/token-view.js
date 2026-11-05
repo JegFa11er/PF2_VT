@@ -68,8 +68,38 @@
       const radius = this.radius;
       const defeated = this.token.isDefeated === true;
       const bodyColor = defeated ? "#5c636d" : this.color;
+      const obscured =
+        !defeated &&
+        typeof this.token.hasCondition === "function" &&
+        (this.token.hasCondition("hidden") ||
+          this.token.hasCondition("undetected"));
+      const prone =
+        !defeated &&
+        typeof this.token.hasCondition === "function" &&
+        this.token.hasCondition("prone");
+      const immobilized =
+        !defeated &&
+        (typeof this.token.isImmobilized === "function"
+          ? this.token.isImmobilized()
+          : typeof this.token.hasCondition === "function" &&
+            (this.token.hasCondition("immobilized") ||
+              this.token.hasCondition("grabbed") ||
+              this.token.hasCondition("restrained")));
 
       ctx.save();
+      if (obscured) {
+        ctx.globalAlpha = 0.5;
+      }
+
+      // A prone token is rotated 90 degrees around its centre. The HP bar and
+      // name plate are drawn after the rotation is restored so they stay
+      // readable. The condition badge in the DOM carries the exact label.
+      ctx.save();
+      if (prone) {
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.PI / 2);
+        ctx.translate(-cx, -cy);
+      }
 
       // Drop shadow.
       ctx.save();
@@ -111,7 +141,9 @@
         ? "#f2c96b"
         : defeated
           ? "rgba(190, 196, 205, 0.5)"
-          : "rgba(255, 255, 255, 0.82)";
+          : immobilized
+            ? "#e05d62"
+            : "rgba(255, 255, 255, 0.82)";
       ctx.lineWidth = selected ? 3 : 2;
       ctx.stroke();
 
@@ -123,6 +155,26 @@
         ctx.lineWidth = 1.5;
         ctx.setLineDash([4, 4]);
         ctx.stroke();
+        ctx.restore();
+      }
+
+      // Immobilized/Grabbed/Restrained tokens get a red dashed ring and a
+      // chain marker so the movement lock reads at a glance.
+      if (immobilized) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(224, 93, 98, 0.9)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "rgba(255, 208, 211, 0.95)";
+        ctx.font = "700 " + Math.round(radius * 0.5) + "px " + FONT_STACK;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("⛓", cx + radius * 0.62, cy + radius * 0.62);
         ctx.restore();
       }
 
@@ -143,6 +195,8 @@
         : this.token.initial || this.token.name.charAt(0).toUpperCase();
       ctx.fillText(glyph, cx, cy + 1);
       ctx.restore();
+
+      ctx.restore(); // prone rotation
 
       this.drawHpBar(ctx, cx, cy - radius - 8, radius * 2, defeated);
 

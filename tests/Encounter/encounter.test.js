@@ -250,5 +250,30 @@
       t.assertEqual(turn.active, null);
       t.assertEqual(encounter.isOver, true);
     });
+    t.test("nextTurn forwards die callbacks and reports persistent damage", function () {
+      const a = makeCombatant("a", 20, { maxHP: 20 });
+      const b = makeCombatant("b", 10, { maxHP: 20 });
+      a.addPersistentDamage({ formula: "1d6", type: "fire" });
+
+      const encounter = new Encounter({ combatants: [a, b] });
+      encounter.startEncounter();
+
+      const turn = encounter.nextTurn({
+        rollDie: function () {
+          return 4;
+        },
+        rollD20: function () {
+          return 16;
+        },
+      });
+
+      t.assertEqual(turn.previous.id, "a");
+      t.assertEqual(turn.persistentTick.combatantId, "a");
+      t.assertEqual(turn.persistentTick.events.length, 1);
+      t.assertEqual(turn.persistentTick.events[0].damageDealt, 4);
+      t.assertEqual(turn.persistentTick.events[0].recovery.passed, true);
+      t.assertEqual(a.currentHP, 16);
+      t.assertTrue(!a.hasPersistentDamage("fire"));
+    });
   };
 });

@@ -20,6 +20,10 @@ const suites = [
     register: require("./Grid/los.test.js"),
   },
   {
+    name: "Core/Grid — Cover Geometry",
+    register: require("./Grid/cover.test.js"),
+  },
+  {
     name: "Core/Rules — d20 Checks & Degrees of Success",
     register: require("./Rules/checks.test.js"),
   },
@@ -28,12 +32,28 @@ const suites = [
     register: require("./Rules/modifiers.test.js"),
   },
   {
+    name: "Core/Rules — Saving Throws, Skills & DCs",
+    register: require("./Rules/saves-skills.test.js"),
+  },
+  {
+    name: "Core/Rules — Damage Types & IWR",
+    register: require("./Rules/iwr.test.js"),
+  },
+  {
+    name: "Core/Rules — Weapon Traits & Reach",
+    register: require("./Rules/weapon-traits.test.js"),
+  },
+  {
     name: "Core/Grid — Flanking Geometry",
     register: require("./Grid/flanking.test.js"),
   },
   {
     name: "Core/Entities — Conditions",
     register: require("./Entities/conditions.test.js"),
+  },
+  {
+    name: "Core/Entities — Persistent Damage",
+    register: require("./Entities/persistent-damage.test.js"),
   },
   {
     name: "Core/Actions — Step & Strike",
@@ -46,6 +66,30 @@ const suites = [
   {
     name: "Core/Actions — Raise a Shield",
     register: require("./Actions/raise-shield.test.js"),
+  },
+  {
+    name: "Core/Actions — Take Cover",
+    register: require("./Actions/take-cover.test.js"),
+  },
+  {
+    name: "Core/Actions — Trip & Reflex DC",
+    register: require("./Actions/trip.test.js"),
+  },
+  {
+    name: "Core/Actions — Shove & Push Geometry",
+    register: require("./Actions/shove.test.js"),
+  },
+  {
+    name: "Core/Actions — Grapple, Grabbed & Source Duration",
+    register: require("./Actions/grapple.test.js"),
+  },
+  {
+    name: "Core/Actions — Escape & Best Skill",
+    register: require("./Actions/escape.test.js"),
+  },
+  {
+    name: "Core/Actions — Stand & Reactions",
+    register: require("./Actions/stand.test.js"),
   },
   {
     name: "Core/Actions — Reactions & Reactive Strike",

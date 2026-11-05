@@ -109,8 +109,25 @@ every cell it touches:
 
 A ray that passes exactly through a grid vertex also touches the two orthogonal cells at
 that vertex. If any touched cell is a solid obstacle, sight is blocked. This is consistent
-with the canonical `block-any` movement policy. Creature occupancy and cover degrees are
-not part of the line-of-sight calculation yet.
+with the canonical `block-any` movement policy. Creature occupancy does not block the
+centre-to-centre LoS ray; creatures instead contribute lesser cover.
+
+## Cover geometry
+
+`src/Core/Grid/cover.js` evaluates cover from the attacker's best corner to the four
+corners of the target's square. A ray is blocked only when it crosses the **interior** of
+a solid obstacle. The attacker chooses the corner with the fewest blocked rays:
+
+| Blocked rays | Result |
+|---|---|
+| 0 | none, unless an able creature lies on a ray → lesser (+1 circumstance AC) |
+| 1–2 | standard (+2 circumstance AC) |
+| 3 | greater (+4 circumstance AC) |
+| 4 | no line of sight |
+
+`determineCover(attacker, target, gridMap, combatants)` returns the degree, AC bonus,
+best corner, rays, blocked-ray count, and creature-cover flag. See
+`docs/rules/cover.md` for the full contract, Take Cover, and non-stacking rules.
 
 ## Acceptance tests
 
@@ -121,7 +138,8 @@ not part of the line-of-sight calculation yet.
 - terrain cost accumulation and reachable-cell budgets;
 - ally pass-through, ally destination rejection, enemy blocking;
 - line-of-sight rays, corner-touch blocking, and wall occlusion;
+- cover degrees, best-corner selection, creature cover, and 4-ray occlusion;
 - Step validation (adjacency, terrain, occupancy, corners, action cost);
-- Strike reach, LoS, alliance check, action spending, and d20 reporting.
+- Strike reach, LoS, alliance check, action spending, d20 reporting, and cover AC.
 
 Run with `npm test`, `node tests/run-node.js`, or open `test_runner.html`.

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PF2e Core — Test Runner</title>
-    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/main.css?v=8.0" />
   </head>
   <body class="test-page">
     <div class="test-wrap">
@@ -13,7 +13,9 @@
           <h1>PF2e Core — Test Runner</h1>
           <p>
             Isolated rules tests · Distance, obstacles, terrain, occupancy, LoS,
-            checks, modifiers, conditions, flanking, MAP, damage, actions,
+            cover, checks, flat checks, modifiers, saves, skills, conditions,
+            visibility, flanking, MAP, typed damage, IWR, persistent damage,
+            weapon traits, prone, Stand, Trip, Shove, Grapple, Escape, actions,
             reactions, initiative
           </p>
         </div>
@@ -35,17 +37,28 @@
     <script src="src/Core/Grid/los-math.js"></script>
     <script src="src/Core/Rules/map.js"></script>
     <script src="src/Core/Rules/damage.js"></script>
-    <script src="src/Core/Rules/checks.js"></script>
+    <script src="src/Core/Rules/iwr.js"></script>
     <script src="src/Core/Rules/modifiers.js"></script>
+    <script src="src/Core/Rules/checks.js?v=8.0"></script>
+    <script src="src/Core/Rules/weapon-traits.js?v=7.3"></script>
     <script src="src/Core/Grid/flanking.js"></script>
-    <script src="src/Core/Entities/conditions.js"></script>
-    <script src="src/Core/Entities/combatant.js"></script>
-    <script src="src/Core/Encounter/encounter.js"></script>
-    <script src="src/Core/Actions/strike.js"></script>
+    <script src="src/Core/Grid/cover.js?v=8.0"></script>
+    <script src="src/Core/Entities/conditions.js?v=8.3"></script>
+    <script src="src/Core/Entities/persistent-damage.js"></script>
+    <script src="src/Core/Entities/combatant.js?v=8.3"></script>
+    <script src="src/Core/Encounter/encounter.js?v=8.3"></script>
+    <script src="src/Core/Actions/strike.js?v=8.3"></script>
     <script src="src/Core/Actions/reactive-strike.js"></script>
-    <script src="src/Core/Actions/stride.js"></script>
-    <script src="src/Core/Actions/step.js"></script>
+    <script src="src/Core/Actions/stride.js?v=8.3"></script>
+    <script src="src/Core/Actions/step.js?v=8.3"></script>
     <script src="src/Core/Actions/raise-shield.js"></script>
+    <script src="src/Core/Actions/take-cover.js"></script>
+    <script src="src/Core/Actions/trip.js?v=8.0"></script>
+    <script src="src/Core/Actions/stand.js?v=8.3"></script>
+    <script src="src/Core/Actions/athletics-maneuver.js?v=8.3"></script>
+    <script src="src/Core/Actions/shove.js?v=8.3"></script>
+    <script src="src/Core/Actions/grapple.js?v=8.3"></script>
+    <script src="src/Core/Actions/escape.js?v=8.3"></script>
     <script src="tests/harness.js"></script>
     <script src="tests/Grid/distance.test.js"></script>
     <script src="tests/Grid/pathfinding.test.js"></script>
@@ -53,11 +66,22 @@
     <script src="tests/Grid/los.test.js"></script>
     <script src="tests/Rules/checks.test.js"></script>
     <script src="tests/Rules/modifiers.test.js"></script>
+    <script src="tests/Rules/saves-skills.test.js"></script>
+    <script src="tests/Rules/iwr.test.js"></script>
+    <script src="tests/Rules/weapon-traits.test.js"></script>
     <script src="tests/Grid/flanking.test.js"></script>
+    <script src="tests/Grid/cover.test.js"></script>
     <script src="tests/Entities/conditions.test.js"></script>
+    <script src="tests/Entities/persistent-damage.test.js"></script>
     <script src="tests/Actions/step-strike.test.js"></script>
     <script src="tests/Actions/strike.test.js"></script>
     <script src="tests/Actions/raise-shield.test.js"></script>
+    <script src="tests/Actions/take-cover.test.js"></script>
+    <script src="tests/Actions/trip.test.js"></script>
+    <script src="tests/Actions/shove.test.js"></script>
+    <script src="tests/Actions/grapple.test.js"></script>
+    <script src="tests/Actions/escape.test.js"></script>
+    <script src="tests/Actions/stand.test.js"></script>
     <script src="tests/Actions/reactive-strike.test.js"></script>
     <script src="tests/Encounter/encounter.test.js"></script>
     <script src="tests/run-browser.js"></script>

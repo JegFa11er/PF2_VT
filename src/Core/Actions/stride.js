@@ -21,6 +21,7 @@
       require("../Grid/grid-math.js"),
       require("../Grid/pathfinding.js"),
       require("./reactive-strike.js"),
+      require("../Entities/conditions.js"),
     );
   } else {
     root.PF2e = root.PF2e || {};
@@ -30,17 +31,20 @@
       root.PF2e.Core.Grid,
       root.PF2e.Core.Pathfinding,
       root.PF2e.Core.Actions.ReactiveStrike,
+      root.PF2e.Core.Conditions,
     );
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
   Grid,
   Pathfinding,
   ReactiveStrike,
+  Conditions,
 ) {
   "use strict";
 
   const STRIDE_REASONS = Object.freeze({
     NO_ACTIONS: "no-actions",
+    IMMOBILIZED: "immobilized",
     ALREADY_THERE: "already-there",
     OUT_OF_BOUNDS: "out-of-bounds",
     BLOCKED_START: "blocked-start",
@@ -111,7 +115,10 @@
     const map = opts.map;
     const path = opts.path;
     const roster = normalizeCombatants(opts);
-    const reachFeet = normalizeReach(opts.reachFeet);
+    // Do not force the default 5 ft here: each threatening enemy contributes
+    // its own weapon reach (`reach` trait = 10 ft). An explicit override is
+    // forwarded as-is for tests and special effects.
+    const reachOverride = opts.reachFeet;
 
     const startDiagonalSteps = Number.isInteger(combatant.diagonalStepsThisTurn)
       ? combatant.diagonalStepsThisTurn
@@ -134,7 +141,7 @@
           mover: combatant,
           cell: from,
           combatants: roster,
-          reachFeet: reachFeet,
+          reachFeet: reachOverride,
         });
 
         for (const enemy of threats) {
@@ -142,7 +149,7 @@
             attacker: enemy,
             target: combatant,
             map: map,
-            reachFeet: reachFeet,
+            reachFeet: reachOverride,
             combatants: roster,
             allies: roster,
             rollD20: opts.rollD20,
@@ -238,6 +245,15 @@
       return { ok: false, reason: STRIDE_REASONS.NO_ACTIONS };
     }
 
+    // Immobilized (including Grabbed/Restrained) sets Speed to 0 and forbids
+    // move actions. Reject before any geometry or die roll.
+    if (
+      (typeof combatant.isImmobilized === "function" && combatant.isImmobilized()) ||
+      Conditions.isImmobilized(combatant)
+    ) {
+      return { ok: false, reason: STRIDE_REASONS.IMMOBILIZED };
+    }
+
     if (destination.x === combatant.x && destination.y === combatant.y) {
       return { ok: false, reason: STRIDE_REASONS.ALREADY_THERE };
     }
@@ -280,6 +296,19 @@
       rollDie: opts.rollDie,
     });
 
+    // Take Cover's greater cover ends as soon as the creature moves, even if
+    // the Stride was interrupted by a Reactive Strike.
+    if (typeof combatant.removeCondition === "function") {
+      combatant.removeCondition("greater-cover");
+    }
+
+    // A grappler that moves loses its hold. This is checked once the action is
+    // committed, before the target can act again.
+    const releasedGrapples = Conditions.releaseGrapplesBySource(
+      normalizeCombatants(opts),
+      combatant.id,
+    );
+
     return Object.assign(
       {
         ok: true,
@@ -288,6 +317,7 @@
         actionsLeft: combatant.actionsRemaining,
         diagonalSteps: result.diagonalSteps,
         diagonalParity: combatant.diagonalParity,
+        releasedGrapples: releasedGrapples,
       },
       movement,
     );

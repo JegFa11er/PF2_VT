@@ -13,19 +13,25 @@
  *
  * No presentation state and no random source live here: the caller supplies
  * the d20 result.
+ *
+ * A defended saving-throw or skill DC (Reflex DC, Will DC, Fortitude DC, or a
+ * skill-based DC) is `10 + base value + situational modifiers`. `calculateDC`
+ * routes the modifiers through the same typed modifier resolver as attack
+ * rolls, so Frightened, cover, and other typed bonuses never stack incorrectly
+ * at the DC boundary. AC is already a DC and is resolved directly by Strike.
  */
 (function (root, factory) {
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory();
+    module.exports = factory(require("./modifiers.js"));
   } else {
     root.PF2e = root.PF2e || {};
     root.PF2e.Core = root.PF2e.Core || {};
     root.PF2e.Core.Rules = root.PF2e.Core.Rules || {};
-    root.PF2e.Core.Rules.Checks = factory();
+    root.PF2e.Core.Rules.Checks = factory(root.PF2e.Core.Rules.Modifiers);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Modifiers) {
   "use strict";
 
   const DEGREES = Object.freeze({
@@ -90,6 +96,53 @@
   }
 
   /**
+   * Resolve the d20 value for a flat check. Tests inject `d20` or `rollD20`;
+   * the browser host relies on the Math.random fallback.
+   *
+   * @param {object} options
+   * @returns {number}
+   */
+  function resolveFlatCheckD20(options) {
+    const opts = options || {};
+    let value;
+
+    if (opts.d20 !== undefined) {
+      value = opts.d20;
+    } else if (typeof opts.rollD20 === "function") {
+      value = opts.rollD20();
+    } else if (typeof opts.rollDie === "function") {
+      value = opts.rollDie(20);
+    } else {
+      value = 1 + Math.floor(Math.random() * 20);
+    }
+
+    assertInteger(value, "d20");
+    if (value < 1 || value > 20) {
+      throw new RangeError("d20 must be an integer from 1 to 20.");
+    }
+    return value;
+  }
+
+  /**
+   * PF2e Remastered flat check: a d20 with no modifiers against a fixed DC.
+   * Used for Concealed (DC 5), Hidden (DC 11), persistent damage, and recovery.
+   *
+   * @param {{ d20?: number, dc: number, rollD20?: () => number, rollDie?: (sides:number)=>number }} options
+   * @returns {{ passed: boolean, d20: number, dc: number }}
+   */
+  function evaluateFlatCheck(options) {
+    const opts = options || {};
+    assertInteger(opts.dc, "dc");
+
+    const d20 = resolveFlatCheckD20(opts);
+    return {
+      passed: d20 >= opts.dc,
+      d20: d20,
+      dc: opts.dc,
+    };
+  }
+
+  /**
    * @param {{ d20: number, modifier: number, dc: number }} options
    * @returns {{
    *   d20: number,
@@ -133,11 +186,48 @@
     };
   }
 
+  /**
+   * Defended DC formula: `10 + baseValue + modifiers`.
+   *
+   * `baseValue` is the defender's saving-throw or skill modifier. Situational
+   * modifiers (Frightened, cover, and future item/status effects) flow through
+   * `resolveModifiers`, so same-type bonuses and penalties do not stack.
+   *
+   * @param {number} baseValue
+   * @param {{name?:string,type?:string,value:number,source?:string}[]} [modifiers]
+   * @returns {number}
+   */
+  function calculateDC(baseValue, modifiers) {
+    return resolveDC(baseValue, modifiers).total;
+  }
+
+  /**
+   * Full audit form of `calculateDC`, used by Trip and the combat log.
+   *
+   * @param {number} baseValue
+   * @param {object[]} [modifiers]
+   * @returns {object} the `resolveModifiers` result with the DC in `total`
+   */
+  function resolveDC(baseValue, modifiers) {
+    assertInteger(baseValue, "baseValue");
+    const list = modifiers === undefined || modifiers === null ? [] : modifiers;
+    if (!Array.isArray(list)) {
+      throw new TypeError("modifiers must be an array.");
+    }
+    if (!Modifiers || typeof Modifiers.resolveModifiers !== "function") {
+      throw new Error("calculateDC requires the modifier resolver.");
+    }
+    return Modifiers.resolveModifiers(10 + baseValue, list);
+  }
+
   return Object.freeze({
     DEGREES: DEGREES,
     DEGREE_ORDER: DEGREE_ORDER,
     shiftDegree: shiftDegree,
     classifyTotal: classifyTotal,
     evaluateCheck: evaluateCheck,
+    evaluateFlatCheck: evaluateFlatCheck,
+    calculateDC: calculateDC,
+    resolveDC: resolveDC,
   });
 });

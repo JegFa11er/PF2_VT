@@ -366,6 +366,81 @@
       t.assertEqual(goblin.reactionsRemaining, 1);
     });
 
+    // ------------------------------------------------ concealment & visibility
+
+    t.test("a failed flat check spends the reaction without advancing MAP", function () {
+      const valeros = makeCombatant({ x: 1, y: 1 });
+      const goblin = makeGoblin({ x: 2, y: 1 });
+      valeros.addCondition("hidden");
+
+      const result = ReactiveStrike.performReactiveStrike({
+        attacker: goblin,
+        target: valeros,
+        map: openMap(),
+        rollFlatCheck: function () {
+          return 4;
+        },
+        rollD20: function () {
+          return 20;
+        },
+      });
+
+      t.assertTrue(result.ok);
+      t.assertTrue(result.automaticMiss);
+      t.assertTrue(!result.hit);
+      t.assertDeepEqual(result.flatCheck, {
+        passed: false,
+        dc: 11,
+        roll: 4,
+        condition: "hidden",
+      });
+      t.assertEqual(result.attackRoll, null);
+      t.assertEqual(goblin.reactionsRemaining, 0, "the reaction is spent");
+      t.assertEqual(goblin.attacksThisTurn, 0, "Reactive Strike never advances MAP");
+      t.assertEqual(valeros.currentHP, 20);
+    });
+
+    t.test("a Hidden attacker makes the target Off-Guard through the shared pipeline", function () {
+      const valeros = makeCombatant({ x: 1, y: 1, ac: 12 });
+      const goblin = makeGoblin({ x: 2, y: 1 });
+      goblin.addCondition("hidden");
+
+      const result = ReactiveStrike.performReactiveStrike({
+        attacker: goblin,
+        target: valeros,
+        map: openMap(),
+        rollD20: fixedD20(10),
+        rollDamageDie: fixedDamage(2),
+      });
+
+      t.assertTrue(result.ok);
+      t.assertTrue(result.hiddenAttacker);
+      t.assertEqual(result.targetACBase, 12);
+      t.assertEqual(result.targetAC, 10);
+      t.assertEqual(result.targetACModifiers.length, 1);
+      t.assertEqual(result.targetACModifiers[0].name, "Hidden Attacker");
+      t.assertEqual(result.targetACModifiers[0].value, -2);
+      t.assertEqual(goblin.reactionsRemaining, 0);
+      t.assertEqual(goblin.attacksThisTurn, 0);
+    });
+
+    t.test("an Undetected target rejects the reaction without spending it", function () {
+      const valeros = makeCombatant({ x: 1, y: 1 });
+      const goblin = makeGoblin({ x: 2, y: 1 });
+      valeros.addCondition("undetected");
+
+      const result = ReactiveStrike.performReactiveStrike({
+        attacker: goblin,
+        target: valeros,
+        map: openMap(),
+      });
+
+      t.assertTrue(!result.ok);
+      t.assertEqual(result.reason, "target-undetected");
+      t.assertEqual(goblin.reactionsRemaining, 1);
+      t.assertEqual(goblin.attacksThisTurn, 0);
+    });
+
     t.test("findThreatenedEnemies returns only armed living hostiles in reach", function () {
       const valeros = makeCombatant({ x: 1, y: 1 });
       const goblin = makeGoblin({ x: 2, y: 1 });

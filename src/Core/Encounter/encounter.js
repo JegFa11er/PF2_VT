@@ -21,13 +21,13 @@
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory();
+    module.exports = factory(require("../Entities/conditions.js"));
   } else {
     root.PF2e = root.PF2e || {};
     root.PF2e.Core = root.PF2e.Core || {};
-    root.PF2e.Core.Encounter = factory();
+    root.PF2e.Core.Encounter = factory(root.PF2e.Core.Conditions);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Conditions) {
   "use strict";
 
   function assertCombatants(combatants) {
@@ -149,17 +149,22 @@
      * Advance the initiative pointer. Wrapping past the last combatant starts
      * the next round. The incoming active combatant always gets a fresh turn.
      *
-     * If the encounter has not started, this starts it.
+     * The outgoing combatant's endTurn() resolves Frightened decay and
+     * persistent damage. Optional die callbacks are forwarded so a host/test
+     * can keep the tick deterministic.
      *
+     * @param {{rollDie?:Function,rollDamageDie?:Function,rollD20?:Function,rollFlatCheck?:Function}} [options]
      * @returns {{
      *   active: object,
      *   previous: object | null,
      *   round: number,
      *   wrapped: boolean,
-     *   index: number
+     *   index: number,
+     *   conditionTick: object|null,
+     *   persistentTick: object|null
      * }}
      */
-    nextTurn() {
+    nextTurn(options) {
       if (!this.started) {
         const active = this.startEncounter();
         return {
@@ -169,14 +174,32 @@
           wrapped: false,
           index: this.activeCombatantIndex,
           conditionTick: null,
+          persistentTick: null,
+          releasedGrapples: [],
         };
       }
 
       const previous = this.activeCombatant;
-      const conditionTick =
+      // A defeated grappler cannot maintain a hold. Clean up before the next
+      // creature acts so no stale Grabbed/Restrained state survives the death.
+      const releasedGrapples = this.releaseGrapplesFromDefeated();
+      const endTurnOptions = Object.assign({}, options || {}, {
+        combatants: this.combatants,
+      });
+      const endTurnResult =
         previous && typeof previous.endTurn === "function"
-          ? previous.endTurn()
+          ? previous.endTurn(endTurnOptions)
           : null;
+      const conditionTick = endTurnResult;
+      const persistentTick =
+        endTurnResult && endTurnResult.persistentTick
+          ? endTurnResult.persistentTick
+          : null;
+      if (endTurnResult && Array.isArray(endTurnResult.releasedGrapples)) {
+        for (const entry of endTurnResult.releasedGrapples) {
+          releasedGrapples.push(entry);
+        }
+      }
       const length = this.combatants.length;
       let index = this.activeCombatantIndex;
       let wrapped = false;
@@ -208,6 +231,8 @@
           wrapped: wrapped,
           index: -1,
           conditionTick: conditionTick,
+          persistentTick: persistentTick,
+          releasedGrapples: releasedGrapples,
         };
       }
 
@@ -225,7 +250,32 @@
         wrapped: wrapped,
         index: this.activeCombatantIndex,
         conditionTick: conditionTick,
+        persistentTick: persistentTick,
+        releasedGrapples: releasedGrapples,
       };
+    }
+
+    /**
+     * Break all grapples maintained by defeated combatants. Called at the
+     * start of nextTurn so a slain grappler cannot keep a victim immobilized.
+     *
+     * @returns {{combatant:object,combatantId:string,combatantName:string,removed:object[]}[]}
+     */
+    releaseGrapplesFromDefeated() {
+      const released = [];
+      for (const combatant of this.combatants) {
+        if (!Encounter.isDefeated(combatant)) {
+          continue;
+        }
+        const entries = Conditions.releaseGrapplesBySource(
+          this.combatants,
+          combatant.id,
+        );
+        for (const entry of entries) {
+          released.push(entry);
+        }
+      }
+      return released;
     }
 
     /**

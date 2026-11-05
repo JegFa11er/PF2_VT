@@ -355,6 +355,53 @@
       ctx.restore();
     }
 
+    /**
+     * Debug/demo overlay for the canonical cover rays. Each ray runs from the
+     * attacker's best corner to one corner of the target's square. A blocked
+     * ray is red, a creature-blocked ray is amber, and a clear ray is teal.
+     */
+    drawCoverRays(ctx, rays) {
+      if (!Array.isArray(rays) || rays.length === 0) {
+        return;
+      }
+
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5;
+
+      for (const ray of rays) {
+        const from = {
+          x: ray.from.x * this.cellSize,
+          y: ray.from.y * this.cellSize,
+        };
+        const to = {
+          x: ray.to.x * this.cellSize,
+          y: ray.to.y * this.cellSize,
+        };
+
+        let color = "rgba(116, 226, 204, 0.72)";
+        if (ray.blocked) {
+          color = "rgba(255, 116, 104, 0.82)";
+        } else if (ray.creatureBlocked) {
+          color = "rgba(255, 178, 74, 0.82)";
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.strokeStyle = color;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(to.x, to.y, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
     /** Orange corner brackets mark a target that is Off-Guard from flanking. */
     drawFlankedCell(ctx, cell) {
       const rect = this.cellRect(cell.x, cell.y);
@@ -412,6 +459,9 @@
       } else if (kind === "flank") {
         stroke = "rgba(255, 178, 74, 0.95)";
         textColor = "#ffd9a3";
+      } else if (kind === "cover") {
+        stroke = "rgba(116, 226, 204, 0.95)";
+        textColor = "#c6f5eb";
       }
 
       roundedRect(ctx, x, y, width, height, 6);

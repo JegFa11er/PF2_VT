@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PF2e Remastered — Tactical Battlefield</title>
-    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/main.css?v=8.0" />
   </head>
   <body>
     <div class="app">
@@ -13,19 +13,31 @@
           <div class="brand-mark" aria-hidden="true">P2</div>
           <div>
             <h1>Tactical Battlefield</h1>
-            <p>Pathfinder 2E Remastered · Phase 5 — Conditions, Flanking, Shields &amp; Reactions</p>
+            <p>Pathfinder 2E Remastered · Phase 8.3 — Saves, Skills, Trip, Shove &amp; Grapple</p>
           </div>
         </div>
         <div class="topbar-meta">
           <span class="badge">15 × 15 grid</span>
           <span class="badge">5-10-5 diagonals</span>
-          <span class="badge">Difficult terrain</span>
           <span class="badge">Occupancy + LoS</span>
-          <span class="badge badge-accent">Modifiers · Conditions · Reactive Strike</span>
+          <span class="badge">Cover · Visibility · Flat Checks</span>
+          <span class="badge">Typed Damage · IWR</span>
+          <span class="badge">Saves · Skills · Reflex DC</span>
+          <span class="badge badge-accent">Trip · Shove · Grapple · Escape</span>
         </div>
       </header>
 
       <main class="workspace">
+        <aside class="log-column" aria-label="Combat log sidebar">
+          <section class="panel log-panel">
+            <div class="log-panel-head">
+              <h2>Combat Log</h2>
+              <span class="log-live">Live</span>
+            </div>
+            <div id="combat-log" class="combat-log" role="log" aria-live="polite"></div>
+          </section>
+        </aside>
+
         <section class="board-panel" aria-label="Tactical grid">
           <div class="board-frame">
             <canvas
@@ -40,7 +52,7 @@
           </p>
         </section>
 
-        <aside class="sidebar" aria-label="Battlefield sidebar">
+        <aside class="sidebar" aria-label="Battlefield control sidebar">
           <section class="panel turn-panel">
             <div class="turn-panel-head">
               <h2>Initiative</h2>
@@ -69,12 +81,68 @@
               </button>
               <button
                 type="button"
+                class="mode-button"
+                data-mode="trip"
+                aria-pressed="false"
+                title="Athletics vs Reflex DC · 1 action · attack trait"
+              >
+                Trip
+              </button>
+              <button
+                type="button"
+                class="mode-button"
+                data-mode="shove"
+                aria-pressed="false"
+                title="Athletics vs Fortitude DC · push 5 ft / critical 10 ft · 1 action · attack trait"
+              >
+                Shove
+              </button>
+              <button
+                type="button"
+                class="mode-button"
+                data-mode="grapple"
+                aria-pressed="false"
+                title="Athletics vs Fortitude DC · Grabbed/Restrained · 1 action · attack trait"
+              >
+                Grapple
+              </button>
+              <button
+                type="button"
                 id="raise-shield"
                 class="mode-button action-button"
                 data-action="raise-shield"
                 title="+2 circumstance AC until the start of your next turn · 1 action"
               >
                 Raise Shield
+              </button>
+              <button
+                type="button"
+                id="take-cover"
+                class="mode-button action-button"
+                data-action="take-cover"
+                title="Requires standard cover or better · +4 circumstance AC · 1 action"
+              >
+                Take Cover
+              </button>
+              <button
+                type="button"
+                id="stand"
+                class="mode-button action-button"
+                data-action="stand"
+                title="Requires Prone · removes Prone · provokes Reactive Strike · 1 action"
+                disabled
+              >
+                Stand
+              </button>
+              <button
+                type="button"
+                id="escape"
+                class="mode-button action-button"
+                data-action="escape"
+                title="Requires Grabbed/Restrained · best of Unarmed/Athletics/Acrobatics vs the grappler's Athletics DC · 1 action"
+                disabled
+              >
+                Escape
               </button>
             </div>
             <p id="mode-hint" class="mode-hint">
@@ -90,11 +158,6 @@
               </p>
             </div>
           </section>
-
-          <section class="panel log-panel">
-            <h2>Combat Log</h2>
-            <div id="combat-log" class="combat-log" role="log" aria-live="polite"></div>
-          </section>
         </aside>
       </main>
     </div>
@@ -107,21 +170,32 @@
     <script src="src/Core/Grid/los-math.js"></script>
     <script src="src/Core/Rules/map.js"></script>
     <script src="src/Core/Rules/damage.js"></script>
-    <script src="src/Core/Rules/checks.js"></script>
+    <script src="src/Core/Rules/iwr.js"></script>
     <script src="src/Core/Rules/modifiers.js"></script>
+    <script src="src/Core/Rules/checks.js?v=8.0"></script>
+    <script src="src/Core/Rules/weapon-traits.js?v=7.3"></script>
     <script src="src/Core/Grid/flanking.js"></script>
-    <script src="src/Core/Entities/conditions.js"></script>
-    <script src="src/Core/Entities/combatant.js"></script>
-    <script src="src/Core/Encounter/encounter.js"></script>
-    <script src="src/Core/Actions/strike.js"></script>
+    <script src="src/Core/Grid/cover.js?v=8.0"></script>
+    <script src="src/Core/Entities/conditions.js?v=8.3"></script>
+    <script src="src/Core/Entities/persistent-damage.js"></script>
+    <script src="src/Core/Entities/combatant.js?v=8.3"></script>
+    <script src="src/Core/Encounter/encounter.js?v=8.3"></script>
+    <script src="src/Core/Actions/strike.js?v=8.3"></script>
     <script src="src/Core/Actions/reactive-strike.js"></script>
-    <script src="src/Core/Actions/stride.js"></script>
-    <script src="src/Core/Actions/step.js"></script>
+    <script src="src/Core/Actions/stride.js?v=8.3"></script>
+    <script src="src/Core/Actions/step.js?v=8.3"></script>
     <script src="src/Core/Actions/raise-shield.js"></script>
+    <script src="src/Core/Actions/take-cover.js"></script>
+    <script src="src/Core/Actions/trip.js?v=8.0"></script>
+    <script src="src/Core/Actions/stand.js?v=8.3"></script>
+    <script src="src/Core/Actions/athletics-maneuver.js?v=8.3"></script>
+    <script src="src/Core/Actions/shove.js?v=8.3"></script>
+    <script src="src/Core/Actions/grapple.js?v=8.3"></script>
+    <script src="src/Core/Actions/escape.js?v=8.3"></script>
     <script src="src/View/Grid/grid-view.js"></script>
-    <script src="src/View/Tokens/token-view.js"></script>
+    <script src="src/View/Tokens/token-view.js?v=8.3"></script>
     <script src="src/View/UI/combat-log.js"></script>
-    <script src="src/View/battlefield-view.js"></script>
-    <script src="src/main.js"></script>
+    <script src="src/View/battlefield-view.js?v=8.3"></script>
+    <script src="src/main.js?v=8.3"></script>
   </body>
 </html>

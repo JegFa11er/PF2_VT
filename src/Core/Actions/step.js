@@ -16,18 +16,28 @@
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory(require("../Grid/pathfinding.js"));
+    module.exports = factory(
+      require("../Grid/pathfinding.js"),
+      require("../Entities/conditions.js"),
+    );
   } else {
     root.PF2e = root.PF2e || {};
     root.PF2e.Core = root.PF2e.Core || {};
     root.PF2e.Core.Actions = root.PF2e.Core.Actions || {};
-    root.PF2e.Core.Actions.Step = factory(root.PF2e.Core.Pathfinding);
+    root.PF2e.Core.Actions.Step = factory(
+      root.PF2e.Core.Pathfinding,
+      root.PF2e.Core.Conditions,
+    );
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function (Pathfinding) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (
+  Pathfinding,
+  Conditions,
+) {
   "use strict";
 
   const STEP_REASONS = Object.freeze({
     NO_ACTIONS: "no-actions",
+    IMMOBILIZED: "immobilized",
     ALREADY_THERE: "already-there",
     NOT_ADJACENT: "not-adjacent",
     OUT_OF_BOUNDS: "out-of-bounds",
@@ -117,6 +127,15 @@
     const combatant = opts.combatant;
     const map = opts.map;
     const destination = opts.destination;
+
+    // Immobilized forbids move actions outright; no geometry is evaluated.
+    if (
+      (typeof combatant.isImmobilized === "function" && combatant.isImmobilized()) ||
+      Conditions.isImmobilized(combatant)
+    ) {
+      return { ok: false, reason: STEP_REASONS.IMMOBILIZED };
+    }
+
     const dx = destination.x - combatant.x;
     const dy = destination.y - combatant.y;
 
@@ -201,6 +220,22 @@
     combatant.spendActions(1);
     combatant.setPosition(opts.destination.x, opts.destination.y);
 
+    // Take Cover's greater cover ends as soon as the creature moves.
+    if (typeof combatant.removeCondition === "function") {
+      combatant.removeCondition("greater-cover");
+    }
+
+    // Stepping away breaks any grapple this creature maintains.
+    const roster = Array.isArray(opts.combatants)
+      ? opts.combatants
+      : Array.isArray(opts.allies)
+        ? opts.allies
+        : [];
+    const releasedGrapples = Conditions.releaseGrapplesBySource(
+      roster,
+      combatant.id,
+    );
+
     return {
       ok: true,
       path: [origin, { x: opts.destination.x, y: opts.destination.y }],
@@ -208,6 +243,7 @@
       actionsLeft: combatant.actionsRemaining,
       diagonalSteps: combatant.diagonalStepsThisTurn,
       diagonalParity: combatant.diagonalParity,
+      releasedGrapples: releasedGrapples,
     };
   }
 

@@ -14,12 +14,18 @@
   const Pathfinding = NS.Core.Pathfinding;
   const Step = NS.Core.Actions.Step;
   const Strike = NS.Core.Actions.Strike;
+  const Trip = NS.Core.Actions.Trip;
+  const Shove = NS.Core.Actions.Shove;
+  const Grapple = NS.Core.Actions.Grapple;
   const POLICY = Pathfinding.DIAGONAL_CORNER_POLICIES;
 
   const MODES = Object.freeze({
     STRIDE: "stride",
     STEP: "step",
     STRIKE: "strike",
+    TRIP: "trip",
+    SHOVE: "shove",
+    GRAPPLE: "grapple",
   });
 
   function allianceOf(combatant) {
@@ -57,9 +63,18 @@
         return "No actions";
       case Strike.STRIKE_REASONS.INVALID_TARGET:
         return "Invalid target";
+      case Strike.STRIKE_REASONS.TARGET_UNDETECTED:
+        return "CANNOT TARGET UNDETECTED";
       default:
         return "Cannot Strike";
     }
+  }
+
+  function coverLabel(cover) {
+    if (!cover || cover.degree === "none" || !cover.acBonus) {
+      return null;
+    }
+    return cover.label.toUpperCase() + " (+" + cover.acBonus + " AC)";
   }
 
   class BattlefieldView {
@@ -117,6 +132,9 @@
       this.selectedCombatant = null;
       this.reachable = [];
       this.strikeTargets = [];
+      this.tripTargets = [];
+      this.shoveTargets = [];
+      this.grappleTargets = [];
 
       this.hover = null;
       this.hoverKey = null;
@@ -131,6 +149,12 @@
         typeof opts.onStepRequest === "function" ? opts.onStepRequest : function () {};
       this.onStrikeRequest =
         typeof opts.onStrikeRequest === "function" ? opts.onStrikeRequest : function () {};
+      this.onTripRequest =
+        typeof opts.onTripRequest === "function" ? opts.onTripRequest : function () {};
+      this.onShoveRequest =
+        typeof opts.onShoveRequest === "function" ? opts.onShoveRequest : function () {};
+      this.onGrappleRequest =
+        typeof opts.onGrappleRequest === "function" ? opts.onGrappleRequest : function () {};
       this.onHoverChange =
         typeof opts.onHoverChange === "function" ? opts.onHoverChange : function () {};
       this.onInactiveToken =
@@ -166,6 +190,18 @@
       return this.strikeTargets;
     }
 
+    getTripTargets() {
+      return this.tripTargets;
+    }
+
+    getShoveTargets() {
+      return this.shoveTargets;
+    }
+
+    getGrappleTargets() {
+      return this.grappleTargets;
+    }
+
     getSelectedCombatant() {
       return this.selectedCombatant;
     }
@@ -175,7 +211,14 @@
     }
 
     setMode(mode) {
-      if (mode !== MODES.STRIDE && mode !== MODES.STEP && mode !== MODES.STRIKE) {
+      if (
+        mode !== MODES.STRIDE &&
+        mode !== MODES.STEP &&
+        mode !== MODES.STRIKE &&
+        mode !== MODES.TRIP &&
+        mode !== MODES.SHOVE &&
+        mode !== MODES.GRAPPLE
+      ) {
         throw new RangeError("Unknown action mode: " + String(mode) + ".");
       }
       if (this.mode === mode) {
@@ -216,6 +259,9 @@
 
     refreshReachable() {
       this.strikeTargets = [];
+      this.tripTargets = [];
+      this.shoveTargets = [];
+      this.grappleTargets = [];
 
       if (!this.selectedCombatant) {
         this.reachable = [];
@@ -224,6 +270,17 @@
 
       const combatant = this.selectedCombatant;
       const occupancy = this.getOccupancy(combatant);
+
+      // Immobilized creatures cannot Stride or Step. This also suppresses the
+      // reachable highlights so the board matches the core rule.
+      if (
+        (this.mode === MODES.STRIDE || this.mode === MODES.STEP) &&
+        typeof combatant.isImmobilized === "function" &&
+        combatant.isImmobilized()
+      ) {
+        this.reachable = [];
+        return;
+      }
 
       if (this.mode === MODES.STEP) {
         this.reachable = Step.getStepDestinations({
@@ -249,6 +306,75 @@
               target: candidate,
               map: map,
               allies: combatants,
+            }).ok;
+          })
+          .map(function (candidate) {
+            return { x: candidate.x, y: candidate.y };
+          });
+        return;
+      }
+
+      if (this.mode === MODES.TRIP) {
+        const map = this.map;
+        const combatants = this.combatants;
+        this.reachable = [];
+        this.tripTargets = this.combatants
+          .filter(function (candidate) {
+            if (candidate.id === combatant.id) {
+              return false;
+            }
+            return Trip.evaluateTrip({
+              attacker: combatant,
+              target: candidate,
+              map: map,
+              allies: combatants,
+              combatants: combatants,
+            }).ok;
+          })
+          .map(function (candidate) {
+            return { x: candidate.x, y: candidate.y };
+          });
+        return;
+      }
+
+      if (this.mode === MODES.SHOVE) {
+        const map = this.map;
+        const combatants = this.combatants;
+        this.reachable = [];
+        this.shoveTargets = this.combatants
+          .filter(function (candidate) {
+            if (candidate.id === combatant.id) {
+              return false;
+            }
+            return Shove.evaluateShove({
+              attacker: combatant,
+              target: candidate,
+              map: map,
+              allies: combatants,
+              combatants: combatants,
+            }).ok;
+          })
+          .map(function (candidate) {
+            return { x: candidate.x, y: candidate.y };
+          });
+        return;
+      }
+
+      if (this.mode === MODES.GRAPPLE) {
+        const map = this.map;
+        const combatants = this.combatants;
+        this.reachable = [];
+        this.grappleTargets = this.combatants
+          .filter(function (candidate) {
+            if (candidate.id === combatant.id) {
+              return false;
+            }
+            return Grapple.evaluateGrapple({
+              attacker: combatant,
+              target: candidate,
+              map: map,
+              allies: combatants,
+              combatants: combatants,
             }).ok;
           })
           .map(function (candidate) {
@@ -296,6 +422,9 @@
       this.selectedCombatant = null;
       this.reachable = [];
       this.strikeTargets = [];
+      this.tripTargets = [];
+      this.shoveTargets = [];
+      this.grappleTargets = [];
       this.resetHover();
       this.render();
       this.onSelectionChange(null, []);
@@ -351,13 +480,26 @@
 
       const token = this.findTokenAt(point.x, point.y);
 
-      if (this.mode === MODES.STRIKE) {
+      if (
+        this.mode === MODES.STRIKE ||
+        this.mode === MODES.TRIP ||
+        this.mode === MODES.SHOVE ||
+        this.mode === MODES.GRAPPLE
+      ) {
         if (!this.selectedCombatant) {
           return;
         }
         if (token && token.id !== this.selectedCombatant.id) {
           this.resetHover();
-          this.onStrikeRequest(this.selectedCombatant, token);
+          if (this.mode === MODES.TRIP) {
+            this.onTripRequest(this.selectedCombatant, token);
+          } else if (this.mode === MODES.SHOVE) {
+            this.onShoveRequest(this.selectedCombatant, token);
+          } else if (this.mode === MODES.GRAPPLE) {
+            this.onGrappleRequest(this.selectedCombatant, token);
+          } else {
+            this.onStrikeRequest(this.selectedCombatant, token);
+          }
           this.render();
         } else if (token && token.id === this.selectedCombatant.id) {
           this.clearSelection();
@@ -452,6 +594,22 @@
       const occupancy = this.getOccupancy(combatant);
       const isOrigin = cell.x === combatant.x && cell.y === combatant.y;
 
+      if (
+        (this.mode === MODES.STRIDE || this.mode === MODES.STEP) &&
+        typeof combatant.isImmobilized === "function" &&
+        combatant.isImmobilized()
+      ) {
+        this.hoverInfo = {
+          status: "immobilized",
+          cell: cell,
+          label: label,
+          combatant: combatant,
+        };
+        this.onHoverChange(this.hoverInfo);
+        this.render();
+        return;
+      }
+
       if (this.mode === MODES.STRIKE) {
         if (occupant && occupant.id !== combatant.id) {
           const evaluation = Strike.evaluateStrike({
@@ -469,13 +627,158 @@
             valid: evaluation.ok,
             reason: evaluation.reason || null,
             distanceFeet: evaluation.distanceFeet,
+            reachFeet: evaluation.reachFeet,
             flanked: evaluation.flanked === true,
             offGuard: evaluation.offGuard === true,
             flankers: evaluation.flankers || [],
+            cover: evaluation.cover || null,
+            coverDegree: evaluation.coverDegree || "none",
+            coverBonus: evaluation.coverBonus || 0,
+            blockedRaysCount: evaluation.blockedRaysCount || 0,
+            flatCheckDC: evaluation.flatCheckDC || null,
+            flatCheckCondition: evaluation.flatCheckCondition || null,
+            hiddenAttacker: evaluation.hiddenAttacker === true,
+            visibility: evaluation.visibility || null,
           };
         } else {
           this.hoverInfo = {
             status: "strike-empty",
+            cell: cell,
+            label: label,
+            combatant: combatant,
+          };
+        }
+        this.onHoverChange(this.hoverInfo);
+        this.render();
+        return;
+      }
+
+      if (this.mode === MODES.TRIP) {
+        if (occupant && occupant.id !== combatant.id) {
+          const evaluation = Trip.evaluateTrip({
+            attacker: combatant,
+            target: occupant,
+            map: this.map,
+            allies: this.combatants,
+            combatants: this.combatants,
+          });
+          this.hoverInfo = {
+            status: "trip",
+            cell: cell,
+            label: label,
+            combatant: combatant,
+            target: occupant,
+            valid: evaluation.ok,
+            reason: evaluation.reason || null,
+            distanceFeet: evaluation.distanceFeet,
+            reachFeet: evaluation.reachFeet,
+            skillBase: evaluation.skillBase || 0,
+            mapPenalty: evaluation.mapPenalty || 0,
+            reflexDC: evaluation.reflexDC,
+            targetDC: evaluation.targetDC,
+            cover: evaluation.cover || null,
+            coverDegree: evaluation.coverDegree || "none",
+            flatCheckDC: evaluation.flatCheckDC || null,
+            flatCheckCondition: evaluation.flatCheckCondition || null,
+            visibility: evaluation.visibility || null,
+          };
+        } else {
+          this.hoverInfo = {
+            status: "trip-empty",
+            cell: cell,
+            label: label,
+            combatant: combatant,
+          };
+        }
+        this.onHoverChange(this.hoverInfo);
+        this.render();
+        return;
+      }
+
+      if (this.mode === MODES.SHOVE) {
+        if (occupant && occupant.id !== combatant.id) {
+          const evaluation = Shove.evaluateShove({
+            attacker: combatant,
+            target: occupant,
+            map: this.map,
+            allies: this.combatants,
+            combatants: this.combatants,
+          });
+          this.hoverInfo = {
+            status: "shove",
+            cell: cell,
+            label: label,
+            combatant: combatant,
+            target: occupant,
+            valid: evaluation.ok,
+            reason: evaluation.reason || null,
+            distanceFeet: evaluation.distanceFeet,
+            reachFeet: evaluation.reachFeet,
+            skillBase: evaluation.skillBase || 0,
+            mapPenalty: evaluation.mapPenalty || 0,
+            fortitudeDC:
+              evaluation.fortitudeDC === undefined
+                ? null
+                : evaluation.fortitudeDC,
+            targetDC: evaluation.targetDC,
+            pushDirection: evaluation.pushDirection || null,
+            potentialPushPath: evaluation.potentialPushPath || [],
+            potentialPushedFeet: evaluation.potentialPushedFeet || 0,
+            potentialBlockedReason: evaluation.potentialBlockedReason || null,
+            cover: evaluation.cover || null,
+            coverDegree: evaluation.coverDegree || "none",
+            flatCheckDC: evaluation.flatCheckDC || null,
+            flatCheckCondition: evaluation.flatCheckCondition || null,
+            visibility: evaluation.visibility || null,
+          };
+        } else {
+          this.hoverInfo = {
+            status: "shove-empty",
+            cell: cell,
+            label: label,
+            combatant: combatant,
+          };
+        }
+        this.onHoverChange(this.hoverInfo);
+        this.render();
+        return;
+      }
+
+      if (this.mode === MODES.GRAPPLE) {
+        if (occupant && occupant.id !== combatant.id) {
+          const evaluation = Grapple.evaluateGrapple({
+            attacker: combatant,
+            target: occupant,
+            map: this.map,
+            allies: this.combatants,
+            combatants: this.combatants,
+          });
+          this.hoverInfo = {
+            status: "grapple",
+            cell: cell,
+            label: label,
+            combatant: combatant,
+            target: occupant,
+            valid: evaluation.ok,
+            reason: evaluation.reason || null,
+            distanceFeet: evaluation.distanceFeet,
+            reachFeet: evaluation.reachFeet,
+            skillBase: evaluation.skillBase || 0,
+            mapPenalty: evaluation.mapPenalty || 0,
+            fortitudeDC:
+              evaluation.fortitudeDC === undefined
+                ? null
+                : evaluation.fortitudeDC,
+            targetDC: evaluation.targetDC,
+            cover: evaluation.cover || null,
+            coverDegree: evaluation.coverDegree || "none",
+            flatCheckDC: evaluation.flatCheckDC || null,
+            flatCheckCondition: evaluation.flatCheckCondition || null,
+            visibility: evaluation.visibility || null,
+          };
+        } else {
+          this.hoverInfo = {
+            status: "grapple-empty",
             cell: cell,
             label: label,
             combatant: combatant,
@@ -592,20 +895,134 @@
           this.grid.drawFlankedCell(ctx, info.cell);
         }
         this.grid.drawLineOfSight(ctx, info.combatant, info.target, info.valid);
+        if (
+          info.cover &&
+          (info.cover.degree !== "none" || info.cover.blockedRaysCount > 0)
+        ) {
+          this.grid.drawCoverRays(ctx, info.cover.rays);
+        }
+
+        const coverText = coverLabel(info.cover);
+        let label = info.valid
+          ? "Strike · " + info.distanceFeet + " ft"
+          : strikeReasonText(info.reason);
+        const targetBlocked =
+          !info.valid &&
+          info.reason === Strike.STRIKE_REASONS.TARGET_UNDETECTED;
+
+        if (info.valid && info.flanked) {
+          label += " · FLANKED (-2 AC)";
+        }
+        if (!targetBlocked && info.hiddenAttacker) {
+          label += " · TARGET OFF-GUARD (-2 AC)";
+        }
+        if (!targetBlocked && info.flatCheckDC) {
+          label += " · FLAT CHECK DC " + info.flatCheckDC;
+        }
+        if (info.valid && coverText) {
+          label += " · " + coverText;
+        }
+
+        let labelKind = info.valid ? "valid" : "invalid";
+        if (!targetBlocked && (coverText || info.flatCheckDC)) {
+          labelKind = "cover";
+        } else if (!targetBlocked && (info.flanked || info.hiddenAttacker)) {
+          labelKind = "flank";
+        }
+
+        this.grid.drawPathLabel(ctx, info.cell, label, labelKind);
+        return;
+      }
+
+      if (
+        info.status === "strike-empty" ||
+        info.status === "trip-empty" ||
+        info.status === "shove-empty" ||
+        info.status === "grapple-empty"
+      ) {
+        return;
+      }
+
+      if (info.status === "trip") {
+        this.grid.drawHoverCell(ctx, info.cell, info.valid);
+        this.grid.drawLineOfSight(ctx, info.combatant, info.target, info.valid);
+        if (
+          info.cover &&
+          (info.cover.degree !== "none" || info.cover.blockedRaysCount > 0)
+        ) {
+          this.grid.drawCoverRays(ctx, info.cover.rays);
+        }
+
+        let label = info.valid
+          ? "TRIP · Athletics vs Reflex DC " + info.reflexDC
+          : strikeReasonText(info.reason);
+        const coverText = coverLabel(info.cover);
+        if (info.valid && coverText) {
+          label += " · " + coverText;
+        }
+        if (info.valid && info.flatCheckDC) {
+          label += " · FLAT CHECK DC " + info.flatCheckDC;
+        }
         this.grid.drawPathLabel(
           ctx,
           info.cell,
-          info.valid
-            ? info.flanked
-              ? "Strike · " + info.distanceFeet + " ft · FLANKED (-2 AC)"
-              : "Strike · " + info.distanceFeet + " ft"
-            : strikeReasonText(info.reason),
-          info.valid ? (info.flanked ? "flank" : "valid") : "invalid",
+          label,
+          info.valid ? "valid" : "invalid",
         );
         return;
       }
 
-      if (info.status === "strike-empty") {
+      if (info.status === "shove") {
+        this.grid.drawHoverCell(ctx, info.cell, info.valid);
+        this.grid.drawLineOfSight(ctx, info.combatant, info.target, info.valid);
+        if (info.valid && info.potentialPushPath.length > 1) {
+          this.grid.drawPath(ctx, info.potentialPushPath, true);
+        }
+
+        let label = info.valid
+          ? "SHOVE · Athletics vs Fortitude DC " + info.fortitudeDC
+          : strikeReasonText(info.reason);
+        if (info.valid) {
+          label += " · push up to " + info.potentialPushedFeet + " ft";
+        }
+        if (info.valid && info.flatCheckDC) {
+          label += " · FLAT CHECK DC " + info.flatCheckDC;
+        }
+        this.grid.drawPathLabel(
+          ctx,
+          info.cell,
+          label,
+          info.valid ? "valid" : "invalid",
+        );
+        return;
+      }
+
+      if (info.status === "grapple") {
+        this.grid.drawHoverCell(ctx, info.cell, info.valid);
+        this.grid.drawLineOfSight(ctx, info.combatant, info.target, info.valid);
+        if (
+          info.cover &&
+          (info.cover.degree !== "none" || info.cover.blockedRaysCount > 0)
+        ) {
+          this.grid.drawCoverRays(ctx, info.cover.rays);
+        }
+
+        let label = info.valid
+          ? "GRAPPLE · Athletics vs Fortitude DC " + info.fortitudeDC
+          : strikeReasonText(info.reason);
+        const coverText = coverLabel(info.cover);
+        if (info.valid && coverText) {
+          label += " · " + coverText;
+        }
+        if (info.valid && info.flatCheckDC) {
+          label += " · FLAT CHECK DC " + info.flatCheckDC;
+        }
+        this.grid.drawPathLabel(
+          ctx,
+          info.cell,
+          label,
+          info.valid ? "valid" : "invalid",
+        );
         return;
       }
 
@@ -620,6 +1037,12 @@
           info.valid ? "Step · 5 ft" : stepReasonText(info.reason),
           info.valid ? "valid" : "invalid",
         );
+        return;
+      }
+
+      if (info.status === "immobilized") {
+        this.grid.drawHoverCell(ctx, info.cell, false);
+        this.grid.drawPathLabel(ctx, info.cell, "IMMOBILIZED", "blocked");
         return;
       }
 
@@ -670,6 +1093,15 @@
 
     render() {
       const ctx = this.ctx;
+      this.canvas.style.cursor =
+        this.hoverInfo &&
+        (this.hoverInfo.status === "strike" ||
+          this.hoverInfo.status === "trip" ||
+          this.hoverInfo.status === "shove" ||
+          this.hoverInfo.status === "grapple") &&
+        this.hoverInfo.reason === Strike.STRIKE_REASONS.TARGET_UNDETECTED
+          ? "not-allowed"
+          : "";
       ctx.clearRect(0, 0, this.grid.width, this.grid.height);
       this.grid.draw(ctx);
 
@@ -686,6 +1118,15 @@
       }
       if (this.strikeTargets.length > 0) {
         this.grid.drawStrikeTargets(ctx, this.strikeTargets);
+      }
+      if (this.tripTargets.length > 0) {
+        this.grid.drawStrikeTargets(ctx, this.tripTargets);
+      }
+      if (this.shoveTargets.length > 0) {
+        this.grid.drawStrikeTargets(ctx, this.shoveTargets);
+      }
+      if (this.grappleTargets.length > 0) {
+        this.grid.drawStrikeTargets(ctx, this.grappleTargets);
       }
 
       this.grid.drawObstacles(ctx, this.map.getBlockedCells());

@@ -67,37 +67,45 @@ If confidence is below 95%, pause and ask targeted clarifying questions about ru
 
 ---
 
-## Hybrid Development Protocol: DeepSeek + Gemini Pro CLI
+## Hybrid Development Protocol: DeepSeek (Worker) + Gemini Pro (Architect)
 
-The local execution agent operates in tandem with Gemini Pro, invoked via the terminal wrapper `gemini "<prompt>"`. This keeps the local session context lean, avoids hallucinations of legacy D&D 5e/pre-Remaster rules, and accelerates development.
+The local execution agent operates strictly as the **Hands / Implementer**, while Gemini Pro (via `gemini "<prompt>"`) acts as the **Head / Rules Architect**. 
+Invoking Gemini is completely free and saves tokens/context. DeepSeek MUST delegate rules design, test matrices, and edge-case resolution to Gemini before writing non-boilerplate code.
 
-### 1. Local Agent Scope (Execute Fast & Direct)
-* **File & Project Operations:** Creating directories, boilerplate files, moving assets, verifying dependencies, and running local builds.
-* **Minor Code Edits:** Local adjustments, renames, and targeted bug fixes up to 20 lines of code.
-* **Test Execution:** Running tests locally (e.g., `dotnet test` or Godot GUT), parsing pass/fail exit codes and stdout.
-* **Direct File Reads:** Inspect target files directly with read tools; avoid running unstructured exploratory subagents.
-
-### 2. Delegate to Gemini Pro via `gemini "<prompt>"`
-Always prepend system context to your prompt: `[Context: Pathfinder 2E Remastered (ORC-license ruleset), no D&D 5e / legacy rules]`. Delegate the following:
-* **Core Rule System Architecture:** Designing core data structures (`Modifier`, `Condition`, `CombatAction`), degree-of-success pipelines, and modifier stacking math before writing files.
-* **Rule Ambiguities & Edge Cases:** Verifying geometric rules (flanking across grid vertices, line-of-sight vs cover, 5-10-5 diagonal costs) against Remaster specifications.
-* **TDD Scenario Generation:** Requesting dense Given-When-Then test cases with precise math (dice roll, DC, modifier breakdown, expected outcome).
-* **Deep Error & Build Analysis:** Diagnosing complex stack traces, compiler errors, or structural test regressions.
-
-### 3. Integration & Consumption Pipeline
-When receiving output from the `gemini` CLI:
-1. Do not repeat or echo the raw CLI response into the human chat interface.
-2. Verify strict syntax and naming alignment with existing project contracts.
-3. Apply the solution directly into the target files and run the test suite.
-
-### 4. Circuit Breaker (Error Escalation Guardrail)
-1. **First Failure:** If a build, linter, or unit test fails after an edit, make **one** autonomous attempt to correct the issue.
-2. **Second Failure:** If the failure persists after the second attempt, **stop editing immediately**. Do NOT attempt a third blind fix.
-3. **Escalate to Gemini:** Execute:
-   ```bash
-   gemini "[Context: Pathfinder 2E Remastered] Build/test failure: <last 5-10 lines of compiler/test error>. Current file: <path>. Provide ONLY the minimal, exact corrected code snippet to resolve this defect."
+### 1. Mandatory Pre-Implementation Query (Zero-Token-Waste Rule)
+Before writing or modifying any Core logic (`src/Core/`), the local agent **MUST** make at least one call to Gemini to fetch the exact algorithmic spec and test cases:
+```bash
+gemini "[Context: Pathfinder 2E Remastered] Plan implementation for <Feature Name>. Requirements: <brief bullets>. Provide exact function signatures, PF2e Remastered math/logic, and 3-5 critical TDD Given-When-Then test cases."
 ```
-4. **Apply & Verify:** Insert the provided fix, rerun the verification command, and report the outcome to the human.
+- **Why:** Prevents blind rule extrapolation and legacy 5e/3.5e assumptions before code is touched.
+- **Rule:** Do not invent formulas or degree-of-success logic autonomously. Implement the architecture provided by Gemini.
+
+### 2. Mandatory Rules Verification Query
+Whenever an implementation touches:
+- Interaction of conditions/modifiers (e.g. Off-Guard, Frightened, Prone).
+- Geometric checks (Cover rays, Flanking angles, LoS, Reach).
+- Reactive triggers or Action Economy edge cases.
+The agent MUST query Gemini for rule confirmation if there is even 1% doubt:
+```bash
+gemini "[Context: Pathfinder 2E Remastered] Rule check: How does <Action/Condition> interact with <Rule/Target> in Remastered? Provide the exact rule resolution and edge cases."
+```
+
+### 3. Circuit Breaker (Escalation Guardrail)
+1. **First Failure:** If a test or build fails, inspect the error and make **ONE** autonomous fix attempt.
+2. **Second Failure:** If the error persists, **STOP immediately**. Do NOT try a third time.
+3. **Escalate to Gemini:** Execute:
+```bash
+gemini "[Context: Pathfinder 2E Remastered] Build/test failure: <last 5-10 lines of error>. File: <path>. Provide ONLY the minimal, exact corrected code snippet."
+```
+4. Apply the provided fix directly and rerun verification.
+
+### 4. Local Agent Responsibilities (Fast Execution Only)
+- Applying Gemini's architecture to the codebase.
+- Creating and wiring files, running `npm test` or browser test suites.
+- DOM / Canvas layout, rendering, CSS, and UI event binding.
+- Updating `docs/HANDOFF.md` and roadmap status.
+
+---
 
 ## Defect Resolution: Fix the Class of Defect
 

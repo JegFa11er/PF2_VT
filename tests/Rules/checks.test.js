@@ -121,6 +121,55 @@
       });
     });
 
+    // ----------------------------------------------------------- flat checks
+
+    t.test("evaluateFlatCheck passes at or above the DC", function () {
+      const pass = Checks.evaluateFlatCheck({ d20: 11, dc: 11 });
+      t.assertDeepEqual(pass, { passed: true, d20: 11, dc: 11 });
+
+      const fail = Checks.evaluateFlatCheck({ d20: 10, dc: 11 });
+      t.assertDeepEqual(fail, { passed: false, d20: 10, dc: 11 });
+    });
+
+    t.test("Concealed flat check uses the DC 5 boundary", function () {
+      t.assertTrue(Checks.evaluateFlatCheck({ d20: 4, dc: 5 }).passed === false);
+      t.assertTrue(Checks.evaluateFlatCheck({ d20: 5, dc: 5 }).passed === true);
+    });
+
+    t.test("Hidden flat check uses the DC 11 boundary", function () {
+      t.assertTrue(Checks.evaluateFlatCheck({ d20: 10, dc: 11 }).passed === false);
+      t.assertTrue(Checks.evaluateFlatCheck({ d20: 11, dc: 11 }).passed === true);
+    });
+
+    t.test("evaluateFlatCheck accepts a deterministic rollD20 callback", function () {
+      let calls = 0;
+      const result = Checks.evaluateFlatCheck({
+        dc: 11,
+        rollD20: function () {
+          calls += 1;
+          return 15;
+        },
+      });
+
+      t.assertEqual(calls, 1);
+      t.assertDeepEqual(result, { passed: true, d20: 15, dc: 11 });
+    });
+
+    t.test("flat checks use no modifiers and reject invalid dice/DC", function () {
+      t.assertThrows(function () {
+        Checks.evaluateFlatCheck({ d20: 0, dc: 11 });
+      }, "d20 below 1");
+      t.assertThrows(function () {
+        Checks.evaluateFlatCheck({ d20: 21, dc: 11 });
+      }, "d20 above 20");
+      t.assertThrows(function () {
+        Checks.evaluateFlatCheck({ d20: 10.5, dc: 11 });
+      }, "non-integer d20");
+      t.assertThrows(function () {
+        Checks.evaluateFlatCheck({ d20: 11, dc: 10.5 });
+      }, "non-integer DC");
+    });
+
     t.test("out-of-range or non-integer inputs are rejected", function () {
       t.assertThrows(function () {
         check(0, 0, 10);
