@@ -22,6 +22,8 @@
       require("../Grid/pathfinding.js"),
       require("./reactive-strike.js"),
       require("../Entities/conditions.js"),
+      require("../Rules/damage.js"),
+      require("../Entities/hazard.js"),
     );
   } else {
     root.PF2e = root.PF2e || {};
@@ -32,6 +34,8 @@
       root.PF2e.Core.Pathfinding,
       root.PF2e.Core.Actions.ReactiveStrike,
       root.PF2e.Core.Conditions,
+      root.PF2e.Core.Rules.Damage,
+      root.PF2e.Core.Hazard,
     );
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
@@ -39,6 +43,8 @@
   Pathfinding,
   ReactiveStrike,
   Conditions,
+  Damage,
+  Hazard,
 ) {
   "use strict";
 
@@ -105,6 +111,87 @@
   }
 
   /**
+   * Roll and apply hazardous-terrain damage when a mover enters a cell.
+   *
+   * @returns {object} a structured record for `hazardousDamageTaken`
+   */
+  function applyHazardousDamage(combatant, cell, hazardRecord, options) {
+    const opts = options || {};
+    const rollDie =
+      typeof opts.rollDamageDie === "function"
+        ? opts.rollDamageDie
+        : typeof opts.rollDie === "function"
+          ? opts.rollDie
+          : Damage.defaultRollDie;
+
+    const damage = Damage.rollDamage({
+      formula: hazardRecord.damage,
+      type: hazardRecord.type,
+      rollDie: rollDie,
+    });
+    const hpBefore = Number.isInteger(combatant.currentHP)
+      ? combatant.currentHP
+      : null;
+    const applied = combatant.takeDamage(damage.total, { type: damage.type });
+
+    return {
+      cell: { x: cell.x, y: cell.y },
+      formula: hazardRecord.damage,
+      type: damage.type,
+      damage: damage,
+      damageDealt:
+        applied.damageApplied === undefined ? damage.total : applied.damageApplied,
+      hpBefore: hpBefore,
+      hpAfter: applied.currentHP,
+      defeated: applied.isDefeated,
+    };
+  }
+
+  /**
+   * Whether an armed hazard's trigger area contains a cell. Works for Hazard
+   * instances and plain objects.
+   */
+  function hazardContainsCell(hazard, cell) {
+    if (!hazard) {
+      return false;
+    }
+    if (typeof hazard.containsTriggerCell === "function") {
+      return hazard.containsTriggerCell(cell);
+    }
+    return (
+      Array.isArray(hazard.triggerArea) &&
+      hazard.triggerArea.some(function (area) {
+        return area.x === cell.x && area.y === cell.y;
+      })
+    );
+  }
+
+  /**
+   * Fire an armed hazard's reaction against a mover and discharge it. Works for
+   * Hazard instances and plain objects.
+   */
+  function triggerHazard(hazard, target, options) {
+    const opts = options || {};
+    let reaction;
+    if (typeof hazard.trigger === "function") {
+      reaction = hazard.trigger(target, {
+        rollD20: opts.rollD20,
+        rollDie: opts.rollDie,
+        rollDamageDie: opts.rollDamageDie,
+      });
+    } else {
+      reaction = Hazard.resolveReaction(hazard, target, {
+        rollD20: opts.rollD20,
+        rollDie: opts.rollDie,
+        rollDamageDie: opts.rollDamageDie,
+      });
+      hazard.isArmed = false;
+      reaction.isArmed = false;
+    }
+    return reaction;
+  }
+
+  /**
    * Walk the validated route one square at a time, checking the Reactive
    * Strike window before each departure. Mutates the combatant's position and
    * diagonal-step counter.
@@ -125,6 +212,8 @@
       : 0;
     const movedPath = [{ x: path[0].x, y: path[0].y }];
     const reactions = [];
+    const hazardousDamageTaken = [];
+    const triggeredHazards = [];
     let movedCostFeet = 0;
     let movedDiagonalSteps = 0;
     let interrupted = false;
@@ -184,6 +273,42 @@
 
       combatant.setPosition(to.x, to.y);
       movedPath.push({ x: to.x, y: to.y });
+
+      // Hazardous terrain: entering the cell deals damage immediately.
+      if (typeof map.getHazardous === "function") {
+        const hazardRecord = map.getHazardous(to.x, to.y);
+        if (hazardRecord) {
+          const record = applyHazardousDamage(combatant, to, hazardRecord, opts);
+          hazardousDamageTaken.push(record);
+          if (record.defeated) {
+            interrupted = true;
+            stoppedAt = { x: to.x, y: to.y };
+            break;
+          }
+        }
+      }
+
+      // Armed traps whose trigger area contains the entered cell fire now and
+      // stop the mover on that square.
+      const hazards = Array.isArray(opts.hazards) ? opts.hazards : [];
+      for (const hazard of hazards) {
+        if (!hazard || hazard.isArmed !== true) {
+          continue;
+        }
+        if (!hazardContainsCell(hazard, to)) {
+          continue;
+        }
+        const reaction = triggerHazard(hazard, combatant, opts);
+        reaction.cell = { x: to.x, y: to.y };
+        triggeredHazards.push(reaction);
+        interrupted = true;
+        stoppedAt = { x: to.x, y: to.y };
+        break;
+      }
+
+      if (interrupted) {
+        break;
+      }
     }
 
     combatant.registerDiagonalSteps(movedDiagonalSteps);
@@ -197,6 +322,8 @@
       movedCostFeet: movedCostFeet,
       movedDiagonalSteps: movedDiagonalSteps,
       destinationReached: !interrupted,
+      hazardousDamageTaken: hazardousDamageTaken,
+      triggeredHazards: triggeredHazards,
     };
   }
 
@@ -210,6 +337,7 @@
    *   combatants?: object[],
    *   allies?: object[],
    *   reachFeet?: number,
+   *   hazards?: object[],
    *   rollD20?: () => number,
    *   rollDamageDie?: (sides:number) => number,
    *   rollDie?: (sides:number) => number
@@ -266,6 +394,10 @@
         startDiagonalParity: combatant.diagonalParity,
         diagonalCornerPolicy: opts.diagonalCornerPolicy,
         occupancy: opts.occupancy,
+        footprint:
+          typeof combatant.getFootprint === "function"
+            ? combatant.getFootprint()
+            : 1,
       },
     );
 
@@ -291,6 +423,7 @@
       combatants: opts.combatants,
       allies: opts.allies,
       reachFeet: opts.reachFeet,
+      hazards: opts.hazards,
       rollD20: opts.rollD20,
       rollDamageDie: opts.rollDamageDie,
       rollDie: opts.rollDie,
@@ -309,7 +442,7 @@
       combatant.id,
     );
 
-    return Object.assign(
+    const strideResult = Object.assign(
       {
         ok: true,
         path: result.path,
@@ -321,6 +454,26 @@
       },
       movement,
     );
+
+    if (typeof combatant.emitEvent === "function") {
+      combatant.emitEvent("combatant:moved", {
+        movementType: "stride",
+        path: strideResult.movedPath || strideResult.path,
+        fullPath: strideResult.path,
+        costFeet:
+          strideResult.movedCostFeet === undefined
+            ? strideResult.costFeet
+            : strideResult.movedCostFeet,
+        actionsSpent: 1,
+        actionsLeft: combatant.actionsRemaining,
+        from: strideResult.path[0],
+        to: { x: combatant.x, y: combatant.y },
+        interrupted: strideResult.movementInterrupted === true,
+        destinationReached: strideResult.destinationReached === true,
+      });
+    }
+
+    return strideResult;
   }
 
   return Object.freeze({

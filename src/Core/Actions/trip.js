@@ -29,6 +29,7 @@
       require("../Rules/map.js"),
       require("../Rules/modifiers.js"),
       require("./strike.js"),
+      require("../Entities/equipment.js"),
     );
   } else {
     root.PF2e = root.PF2e || {};
@@ -40,6 +41,7 @@
       root.PF2e.Core.Rules.MultipleAttack,
       root.PF2e.Core.Rules.Modifiers,
       root.PF2e.Core.Actions.Strike,
+      root.PF2e.Core.Equipment,
     );
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
@@ -48,6 +50,7 @@
   MultipleAttack,
   Modifiers,
   Strike,
+  Equipment,
 ) {
   "use strict";
 
@@ -55,6 +58,7 @@
     NO_ACTIONS: "no-actions",
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
+    NO_FREE_HAND: "no-free-hand",
   });
 
   const ACTION_COST = 1;
@@ -167,6 +171,17 @@
       return { ok: false, reason: TRIP_REASONS.ATTACKER_DEFEATED };
     }
 
+    // Trip needs one free hand unless the wielded weapon has the trip trait.
+    const handCheck = Equipment.checkManeuverHands(attacker, "trip");
+    if (!handCheck.ok) {
+      return {
+        ok: false,
+        reason: TRIP_REASONS.NO_FREE_HAND,
+        freeHands: handCheck.freeHands,
+        handRequirement: handCheck,
+      };
+    }
+
     // Strike validation covers target identity, alliance, reach, visibility,
     // and line of sight. Trip adds no separate geometry of its own.
     const evaluation = Strike.evaluateStrike(opts);
@@ -226,6 +241,11 @@
       flatCheckDC: evaluation.flatCheckDC,
       flatCheckCondition: evaluation.flatCheckCondition,
       hiddenAttacker: evaluation.hiddenAttacker === true,
+      handRequirement: {
+        ok: true,
+        freeHands: handCheck.freeHands,
+        viaTrait: handCheck.viaTrait,
+      },
     };
   }
 

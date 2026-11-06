@@ -1,6 +1,780 @@
 # Handoff
 
-## Current milestone — Phase 8.3 (complete): Saves, Skills, Trip, Shove, Grapple, Escape
+## Current milestone — Phase 20 (complete): View & Presentation Integration
+
+Status: **implemented and verified in Node and the browser**.
+
+```text
+Feature Readiness:
+- goal: expose every Phase 9–19 core subsystem through index.html and
+  test_runner.html, drive the combat log and round header from one
+  CombatEventBus, render Large/Huge footprints, elevation, AoE templates,
+  illumination and hazardous terrain, and add magic/stealth/AI/save-load HUD
+  controls.
+- pf2e_remaster_rule: presentation only for existing rules. New geometry uses
+  the canonical Phase 16 AoE functions (burst, 90-degree cone, line, emanation)
+  and the Phase 18 illumination/terrain classes. Large/Huge footprints use
+  Combatant.getFootprint(); elevation uses Combatant.getElevation() and the
+  Phase 18 3D distance. No new combat math was invented for the view.
+- behavior_and_boundaries: single CombatEventBus shared by Encounter,
+  Combatants, Hazards and the View; log bridge for combatant:damaged (IWR +
+  Shield Block), combatant:moved (feet/actions), condition:added/removed
+  (including Stunned/Slowed/Paralyzed), reaction:triggered (Reactive Strike and
+  Shield Block), hazard:triggered/disabled, turn:changed and round:started.
+  Canvas renders footprint-sized tokens, elevation chips, AoE cell overlays and
+  red outlines on caught tokens, dim/darkness washes, greater-difficult and
+  hazardous textures. HUD adds Roll Initiative, spell selection + Cast Spell,
+  Sustain, Seek, Hide, Sneak, Disable Hazard, AI Step, AI Turn, Save Combat and
+  Load Combat. Hazard ownership remains explicit in the host (HAZARDS array);
+  event replay/undo is still out of scope.
+- data_contracts: index.html / test_runner.html load the full Core order
+  (geometry → rules → entities → encounter/state → actions → AI → view).
+  window.PF2e now exposes Grid.AoE, Grid.Illumination, Distance3D, Hazard,
+  Shield, Equipment, Afflictions, Spells, CastSpell, SustainSpell, Interact,
+  ShieldBlock, Stealth, DisableHazard, TacticalAI, Initiative, State.CombatEventBus
+  and State.Serializer. New View contracts: EventLogBridge; BattlefieldView
+  modes CAST/SNEAK, setSpell/setWorld/getAoeCells, onCastRequest/onSneakRequest;
+  TokenView footprint or elevation accessors; GridView.drawIllumination,
+  drawGreaterDifficultTerrain, drawHazardousTerrain, drawAoeCells and
+  drawAoeTargets. CastSpell save areas now accept burst/cone/line/emanation.
+  TacticalAI.executeAITurn accepts maxActions for one-step execution.
+  DisableHazard now uses Hazard.disarm() so hazard:disabled is emitted.
+- acceptance_tests: Node `npm test` = 492 passed, 0 failed, 35 suites;
+  browser `test_runner.html` = 492 passed, 0 failed, 35 suites with an empty
+  console. Manual browser checks: Roll Initiative rebuilds the queue; Fireball
+  shows a burst template and logs [SPELL]/[SAVE]/[DAMAGE]; Burning Hands,
+  Lightning Bolt and Bless produce cone/line/emanation templates; AI Turn and
+  AI Step spend actions and log each step; Save Combat writes localStorage and
+  Load Combat rebuilds the board; Shield Block logs [REACTION] plus the IWR /
+  Shield Block damage audit; Disable Hazard logs hazard:disabled.
+- delegated_assumptions: the Merisiel spellbook, Ogre/Hill Giant stat blocks,
+  map illumination pockets, greater-difficult rubble, fire vents and Spike Trap
+  are demo fixtures, not canonical bestiary data. Save uses localStorage only
+  (no file download). Cone/line origins are caster cell centres, matching the
+  Phase 16 template engine.
+- confidence: 97%
+```
+
+- `index.html` / `test_runner.html` — full script order and HUD markup:
+  - every Core module from Phases 9–19 is loaded before its dependants;
+  - `test_runner.html` now registers all 35 suites, including the three
+    previously Node-only suites (Dying, Afflictions/Durations, Initiative/
+    Serialization), converted to the shared UMD pattern;
+  - new panels: Magic & Stealth, Hazards, Tactical AI & State; Roll Initiative
+    sits beside End Turn.
+- `src/View/UI/event-log.js` — `EventLogBridge`:
+  - subscribes to all nine standard event types through one bus;
+  - formats the full IWR chain, Shield Block Hardness/shield HP, movement cost
+    in feet and squares, condition labels/values, `[REACTION]`, `[HAZARD]`,
+    `[TURN]` and `[ROUND]` lines;
+  - queues damage/turn lines so the synchronous action roll line is printed
+    first; `flush()` is called at the end of every host action; a macrotask
+    fallback prevents stranded lines;
+  - updates the round badge and the active initiative row directly from
+    `turn:changed` / `round:started`.
+- `src/View/Tokens/token-view.js`:
+  - token centre, radius, HP bar and name plate are measured over the whole
+    `getFootprint() * cellSize` area, so Large (2x2) and Huge (3x3) creatures
+    fill their footprint and are hit-tested across it;
+  - non-zero `getElevation()` renders a contrasting `▲ 15 ft` / `▼ 5 ft` chip.
+- `src/View/Grid/grid-view.js`:
+  - `drawIllumination` (dim wash, deep darkness), `drawGreaterDifficultTerrain`
+    (+10 ft rubble), `drawHazardousTerrain` (warning hatch + damage chip);
+  - `drawAoeCells` palettes per area type and `drawAoeTargets` red outlines for
+    tokens inside the template.
+- `src/View/battlefield-view.js`:
+  - new `CAST` and `SNEAK` modes; `setSpell` computes burst/cone/line/emanation
+    cells from the hovered origin; `setWorld` swaps in deserialized state;
+  - `findCombatantAtCell` is footprint-aware; `onCastRequest`/`onSneakRequest`
+    callbacks keep rules resolution in `main.js`.
+- `src/main.js`:
+  - constructs one `CombatEventBus`, passes it to `Encounter`, wires
+    `EventLogBridge`, and exposes `window.PF2e.App` for integration checks;
+  - demo content adds Merisiel's spellbook, Ogre (Large), Hill Giant (Huge),
+    Goblin elevation 5 ft, dim/darkness pockets, greater-difficult rubble, fire
+    vents and an armed Spike Trap;
+  - new host actions: Roll Initiative, Cast Spell, Sustain, Seek, Hide, Sneak,
+    Disable Hazard, AI Step, AI Turn, Save Combat, Load Combat; Save/Load uses
+    `serializeCombatState` / `deserializeCombatState` + localStorage and rebuilds
+    token cards, initiative, round badge and hazard state.
+- `src/Core/Actions/cast-spell.js` — save-spell area regression extension:
+  `buildTargetPlan` now supports burst, cone, line and emanation using the
+  canonical Phase 16 AoE functions; burst behavior is unchanged.
+- `src/Core/AI/tactical-ai.js` — `executeAITurn({ maxActions })` caps the number
+  of executed actions (used by the AI Step button) without changing full-turn
+  behaviour.
+- `src/Core/Actions/disable-hazard.js` — successful disables now call
+  `Hazard.disarm()` so `hazard:disabled` reaches listeners.
+- `src/Core/Grid/grid-math.js` — the Grid namespace is deliberately extensible
+  so `Grid.AoE` and `Grid.Illumination` can attach in classic-script builds.
+- `src/Core/State/event-bus.js` — browser registration now exposes the
+  `CombatEventBus` class directly (plus EVENT_TYPES/defaultBus helpers).
+- Tests: `tests/Actions/advanced-spells.test.js` adds cone/line/emanation
+  cast-time target-selection cases; `tests/AI/tactical-ai.test.js` adds the
+  `maxActions: 1` AI-step case. Full Node suite: **492 passed, 0 failed,
+  35 suites**.
+- Deliberately deferred: event replay/undo, drag-and-drop token movement,
+  multiple simultaneous selected spells, spell heightening/upcasting in the
+  picker, ranged AI kiting, hazard re-arm cadence, and full line-of-effect
+  rendering for every lighting source.
+
+## Previous milestone — Phase 19 (complete): Initiative Engine, Global Event Bus & Combat State Serialization
+
+Status: **implemented and verified**.
+
+```text
+Feature Readiness:
+- goal: roll PF2e initiative, expose core events, and save/restore a complete
+  encounter so combat can continue after a JSON round-trip.
+- pf2e_remaster_rule: initiative = d20 + Perception (or Stealth when starting
+  from cover/concealment). Ties: enemies before allies; within one alliance the
+  higher base statistic modifier; absolute ties keep stable registration order.
+- behavior_and_boundaries: deterministic initiative rolling, canonical
+  tie-breaks, full JSON state export/import, and an optional pub/sub bus. View/
+  HTML was not modified. Hazards are serialized but remain caller-owned (the
+  Encounter does not own a hazard roster).
+- data_contracts: Encounter.rollInitiative({ combatants, rolls }); Combatant
+  initiative fields (initiativeRoll, initiativeStatistic, initiativeModifier);
+  serializeCombatState/deserializeCombatState; CombatEventBus on/off/emit/clear
+  and the nine standard event types.
+- acceptance_tests: tests/State/initiative-serialization.test.js (16 cases) —
+  enemy tie-break, same-alliance modifier tie-break, registration fallback,
+  authored-order tie-break, Stealth detection, array/object rolls,
+  damage/condition/reaction/turn/round/hazard/movement events, and a JSON
+  round-trip that still performs a Strike.
+- delegated_assumptions: none beyond the explicitly requested tie-break order.
+- confidence: 98%
+```
+
+- `src/Core/Encounter/initiative.js` — pure initiative engine:
+  - `resolveInitiativeStatistic(combatant, options)`: explicit
+    `options.statistics[id]` / `options.statistic`, then an authored
+    `combatant.initiativeStatistic`, then Stealth when the creature starts
+    concealed/hidden/undetected or carries a cover/stealth flag, else
+    Perception.
+  - `getInitiativeModifier(combatant, statistic)` reads
+    `getSkillModifier()`/`skills`; `rollInitiative(combatants, options)`
+    computes `d20 + modifier` and writes `initiative`, `initiativeRoll`,
+    `initiativeStatistic`, and `initiativeModifier`.
+  - `compareInitiative(a, b, { registration })` implements the canonical
+    tie-break chain: higher total → enemy before ally → higher base statistic
+    modifier → stable registration index → stable id. `sortInitiative()` is
+    non-mutating.
+  - Deterministic rolls accept `rolls[id] = 12`, `rolls[id] = { d20: 12 }`,
+    an array in roster order, a roll callback, `rollD20`, or `rollDie(20)`.
+- `src/Core/Encounter/encounter.js` — integration:
+  - Captures a stable `registration` Map once; every sort and re-sort uses it.
+  - `rollInitiative({ combatants, rolls, statistic, statistics, stealth })`
+    rolls the roster, re-sorts, starts round 1, resets every combatant, and
+    activates the first living creature. Returns `{ active, round, order,
+    entries, rolls }`.
+  - Optional `eventBus`/`bus` in the constructor or `setEventBus(bus)`.
+    Emits `round:started` and `turn:changed` (including the `previousId`,
+    `activeId`, `wrapped`, and `index`). The bus is propagated to every
+    combatant.
+  - Browser compatibility: because the legacy HTML entry points do not load
+    `initiative.js`, `Encounter` contains a small fallback comparator/roller
+    with the same tie-break order. Node always uses the canonical module.
+- `src/Core/State/event-bus.js` — `CombatEventBus`:
+  - `on(eventType, callback)` returns an unsubscribe function; `off(type,
+    callback?)`, `emit(type, payload)`, `clear(type?)`, `listenerCount()`,
+    `hasListeners()`. `"*"` subscribes to every event.
+  - `EVENT_TYPES`: `combatant:damaged`, `combatant:moved`, `condition:added`,
+    `condition:removed`, `hazard:triggered`, `hazard:disabled`,
+    `turn:changed`, `round:started`, `reaction:triggered`.
+  - Listener exceptions are captured in `errors` and do not interrupt combat.
+    Optional `recordHistory` keeps an ordered event log.
+- `src/Core/Entities/combatant.js` — bus integration:
+  - Optional `eventBus`/`bus` in the constructor, `setEventBus()`, and
+    `emitEvent()`; payloads always include `combatantId`/`combatantName`.
+  - `takeDamage()` emits `combatant:damaged` with amount, type,
+    `damageTaken`, post-IWR `damageApplied`, `actorDamageApplied`,
+    `shieldBlock`, `iwr`, HP, and defeat state.
+  - `addCondition()`/`removeCondition()` emit `condition:added` (with
+    `refreshed`) and `condition:removed` with the condition record.
+  - `spendReaction(count, metadata)` emits `reaction:triggered`; Reactive
+    Strike and Shield Block pass `type: "reactive-strike"` /
+    `type: "shield-block"` metadata.
+- `src/Core/Actions/stride.js`, `step.js` — emit `combatant:moved` with the
+  traversed path, cost in feet, `actionsSpent`, remaining actions, origin,
+  destination, and interruption state.
+- `src/Core/Entities/hazard.js` — optional bus; `trigger()` emits
+  `hazard:triggered`, while breaking/destroying/disarming emits
+  `hazard:disabled` with a reason.
+- `src/Core/State/serializer.js` — deterministic save/restore:
+  - `serializeCombatState({ encounter, map, combatants, hazards })` exports a
+    pure JSON object with `version`, encounter clock/order/active id,
+    registration order, map geometry, combatants, and hazards.
+  - Map export includes bounds, blocked cells, difficult and
+    greater-difficult terrain, hazardous cells (`damage`/`type`), and
+    non-bright illumination (`dim`/`darkness`; bright is the default).
+  - Combatant export includes HP/maxHP, `x`/`y`/`elevation`, hands (by item id),
+    inventory, shield (HP/broken state), conditions with values, sources,
+    durations, origin, and application round, afflictions, spell slots, focus
+    points, sustained spells with target ids, actions/reactions, IWR, senses,
+    traits, weapon range profile, and initiative audit fields.
+  - `deserializeCombatState(jsonState, { eventBus })` accepts an object or a
+    JSON string and rebuilds live `Encounter`, `GridMap`, `Combatant`, and
+    `Hazard` instances. Sustained-spell targets are relinked by id. The
+    restored state is ready to continue with Stride, Strike, CastSpell, etc.
+  - Round-trip invariant: serializing the deserialized state is deep-equal to
+    the original snapshot.
+- Tests: `tests/State/initiative-serialization.test.js` (16 cases) is
+  registered in `tests/run-node.js`. Full Node suite: **488 passed, 0 failed,
+  35 suites**.
+- Deliberately deferred: hazard roster ownership on `Encounter`, event
+  replay/undo, and browser loading of the new `State/` scripts at the time.
+  **Superseded by Phase 20**, which loads every State/AI/action module in both
+  HTML entry points and wires the bus to the View.
+
+## Previous milestone — Phase 18 (complete): Advanced Terrain, Verticality & Battlefield Hazards
+
+Status: **implemented and verified**.
+
+- `src/Core/Grid/grid-map.js` — expanded terrain + hazardous cells:
+  - `GridMap.TERRAIN_TYPES` = `normal` / `difficult` / `greater-difficult`,
+    with `TERRAIN_EXTRA_FEET` = 0 / 5 / 10 ft. `setTerrain(x, y, type)`,
+    `getTerrain(x, y)`, `getTerrainExtraFeet(x, y)`,
+    `hasGreaterDifficultTerrain(x, y)`, `isDifficultTerrain(x, y)`, and
+    `getGreaterDifficultTerrainCells()`. The legacy `setDifficultTerrain` /
+    `hasDifficultTerrain` / `difficult` set are preserved; "greater-difficult"
+    lives in a sibling `greaterDifficult` set so existing behaviour is intact.
+  - Hazardous terrain: `setHazardous(x, y, { damage, type } | { damageSpec })`,
+    `getHazardous(x, y)` (→ `{ damage, type }` or null), `hasHazardous(x, y)`,
+    and `getHazardousCells()`. The constructor accepts `terrain` and
+    `hazardous` arrays; `clone()` and `toAscii()` copy/render them.
+- `src/Core/Grid/pathfinding.js` — `terrainExtraFeet` now reads
+  `GridMap.getTerrainExtraFeet`, so greater-difficult terrain adds +10 ft on
+  top of the straight/diagonal base cost (first square into it costs 15 ft).
+- `src/Core/Actions/stride.js` — on entering a hazardous cell the mover takes
+  damage immediately through `takeDamage(amount, { type })`; results carry a
+  `hazardousDamageTaken` array. Armed traps whose `triggerArea` contains an
+  entered cell fire their reaction, stop the mover on that square
+  (`movementInterrupted`, `stoppedAt`), and discharge (`isArmed = false`);
+  results carry a `triggeredHazards` array. `performStride` accepts `hazards`.
+- `src/Core/Actions/step.js` — Step now refuses any difficult terrain
+  (`isDifficultTerrain`), including greater-difficult, and applies/reports
+  `hazardousDamageTaken` when stepping onto hazardous terrain.
+- `src/Core/Grid/distance.js` — canonical 3D distance:
+  - `distance3DSquares(dx, dy, dzFeet)` converts each axis to 5-ft squares,
+    sorts, and applies `floor(doubleDiagonal * 1.75 + diagonal * 1.5 +
+    straight)` — the exact Foundry PF2e `measureDistanceOnGrid` formula, which
+    reduces to the 2D 5-10-5 rule when the elevation delta is zero.
+  - `getDistance3D(a, b)` and `getCombatantDistance3D(a, b)` (edge-to-edge via
+    `Grid.occupiedCellsOf`, so Large creatures keep nearest-edge reach).
+- `src/Core/Entities/combatant.js` — `elevation` (default 0 ft, any finite
+  number), `getElevation()`, and `setElevation(feet)`.
+- `src/Core/Actions/strike.js` — melee reach and ranged range-increment
+  distance now use `getCombatantDistance3D`, so a target 15 ft up is out of a
+  5-ft reach but still targetable by a bow. Because Trips/Shoves/Grapples reuse
+  `Strike.evaluateStrike`, their reach inherits 3D distance too.
+- `src/Core/Entities/hazard.js` — `Hazard` class with `{ id, name, stealthDC,
+  disableDC, disableSkill, hp, maxHP, hardness, brokenThreshold, isBroken,
+  isArmed, reset, triggerArea, reaction }`. `takeDamage` disarms on broken or
+  destroyed. `Hazard.resolveReaction(hazard, target, options)` rolls the
+  reaction's damage (and optional Basic Save via `Rules/spells.js`) without
+  mutating the armed state; `hazard.trigger(...)` discharges. The reaction
+  profile accepts an optional `saveType` / `saveDC`.
+- `src/Core/Actions/disable-hazard.js` — `performDisableHazard({ combatant,
+  hazard, rollD20, rollDie, rollDamageDie })`: 2 actions, `manipulate` trait.
+  Rolls the listed `disableSkill` (default `thievery`) against `disableDC`
+  through the central modifier resolver. Success/Critical Success disarms;
+  Critical Failure fires the trap at the disabler.
+- Tests: `tests/Grid/hazards-verticality.test.js` (12 cases: greater-difficult
+  straight/diagonal cost, terrain-class separation, hazardous Stride/Step
+  damage, elevation defaults, 3D distance values, out-of-reach flying target vs
+  in-range archer, trap firing + discharge, disarmed trap no-op, Thievery
+  disable, and critical-failure backfire). Registered in `tests/run-node.js`.
+  Full Node suite: **472 passed, 0 failed, 34 suites**.
+- Deliberately deferred: View/HTML integration (not modified), 3D distance in
+  Reactive Strike threat scanning, flanking geometry, and AoE templates (those
+  remain 2D), trap triggering on Step (spec scopes trap triggers to Stride,
+  mirroring the existing "Step never scans reactions" rule), the 10-ft reach
+  "two diagonals" exception, hazard re-arm/reset round cadence, and Secrecy/
+  Perception contests for hidden hazards.
+
+## Previous milestone — Phase 17 (complete): Stealth Actions, Senses & Illumination
+
+Status: **implemented and verified**.
+
+- `src/Core/Entities/combatant.js` — senses model:
+  - `senses` is normalized from strings or objects into canonical slugs. The
+    list always includes `"vision"`; supported authoring includes
+    `"low-light-vision"`, `"darkvision"`, `"tremorsense-<N>"`, `"scent-<N>"`,
+    `{ type: "tremorsense", range: 30 }`, and spaced labels such as
+    `"Low-Light Vision"`.
+  - Methods: `getSenses()`, `hasSense(name)` (a base query matches ranged
+    variants), `hasLowLightVision()`, `hasDarkvision()`, `getSenseRange(name)`,
+    `addSense(sense)`, and `removeSense(name)`.
+- `src/Core/Grid/grid-map.js` — per-cell illumination:
+  - `GridMap.ILLUMINATION_LEVELS` = `bright` (default) / `dim` / `darkness`.
+  - Constructor accepts `illumination: [{ x, y, level }]`, `dim: [cells]`, and
+    `darkness: [cells]`.
+  - `setIllumination(x, y, level)` (setting `bright` clears the override),
+    `getIllumination(x, y)`, and `getIlluminationCells(level)`.
+  - `clone()` copies the sparse illumination map.
+- `src/Core/Grid/illumination.js` — pure perception engine:
+  - `getPerceivedVisibility(observer, target, gridMap, options)` returns
+    `{ level, lightLevel, cell, visibility, condition, flatCheckDC, targetable,
+    observed, senses }`.
+  - Bright light → `observed`; dim light → `concealed` (DC 5) unless the
+    observer has low-light vision or darkvision; darkness → `hidden` (DC 11)
+    unless the observer has darkvision, or `undetected` when
+    `{ silent: true }` / `targetNoisy: false` is supplied.
+  - Existing `concealed`/`hidden`/`undetected` conditions and an explicit
+    `invisible` flag are preserved. `{ ignoreConditions: true }` returns the
+    raw light/sense result, which the stealth actions use for concealment.
+  - Large targets use the brightest cell of their footprint.
+- `src/Core/Actions/stealth.js` — four actions, all with injectable `d20` /
+  `rollD20` and shared `Checks` / modifier-resolver pipelines:
+  - `performSeek({ seeker, areaType, origin, direction, radiusFeet, combatants,
+    map, d20, rollD20 })`: 1 action, `concentrate` + `secret`; 30-ft cone
+    (direction required) or 15-ft burst. One Perception check is compared with
+    every hidden/undetected target's Stealth DC. Critical success → `observed`
+    (all visibility conditions cleared); success → `undetected` becomes
+    `hidden` (a hidden target stays hidden); failure/critical failure → no
+    change. Returns the area cells, check audit, per-target degrees, `revealed`,
+    and `downgraded` ids.
+  - `performHide({ combatant, observers, map, d20, rollD20 })`: 1 action,
+    `secret`. Requires standard/greater cover from an observer or concealment
+    (dim/darkness relative to an observer, or an explicit `concealed`
+    condition); otherwise `{ ok: false, reason:
+    "no-cover-or-concealment" }` without spending. Rolls Stealth against the
+    highest Perception DC among observers with line of sight. Success or
+    critical success applies `hidden`; failure clears visibility to observed.
+  - `performSneak({ combatant, destination, observers, map, d20, rollD20 })`:
+    1 action, `move` + `secret`. Requires an existing `hidden`/`undetected`
+    state. Uses `Pathfinding.findPath` (footprint and occupancy aware); the
+    path cost may not exceed `Math.floor(speed / 10) * 5` (Speed 30 → 15 ft),
+    otherwise `exceeds-sneak-speed` without spending. Success moves the token
+    and keeps `hidden` only when the destination still offers cover or
+    concealment; failure moves and becomes observed; critical failure stops at
+    the starting square and becomes observed.
+  - `performPointOut({ combatant, target, allies })`: 1 action, `auditory`,
+    `visual`, `manipulate`. Refuses with `target-not-undetected` otherwise.
+    Replaces the target's `undetected` with `hidden` and reports per-ally
+    awareness.
+- Tests: `tests/Actions/stealth-senses.test.js` (10 cases: sense authoring and
+  ranged senses, dim-light concealed vs low-light vision, darkness hidden /
+  darkvision / silent undetected, Hide behind standard cover, Hide refusal in
+  the open, Sneak half-Speed cap and Hidden retention, Seek burst critical
+  success, Seek success downgrade, 30-ft cone Seek, and Point Out). Registered
+  in `tests/run-node.js`. Full Node suite: **460 passed, 0 failed, 33 suites**.
+- Deliberately deferred: View/HTML integration (not modified), visibility
+  memory per observer, invisibility/see-invisibility effects, tremorsense and
+  scent range substitution for sight, Reactive Strike interruption during
+  Sneak, Seek against merely concealed targets, group Stealth rolls, and
+  Point Out's 30-ft ally range/visual-auditory eligibility filtering.
+
+## Previous milestone — Phase 16 (complete): Advanced Spellcasting & Geometry
+
+Status: **implemented and verified**.
+
+- `src/Core/Grid/aoe.js` — three additional headless area templates, all using
+  the canonical PF2e 5-10-5 distance:
+  - `getLineCells(origin, direction, lengthFeet, widthFeet = 5, gridMap)`:
+    straight line beginning at the edge of the origin cell. Directions accept
+    compass names (`"ne"`, `"south-west"`, ...) or vectors (`{x,y}` /
+    `{dx,dy}`), snapped to the eight grid directions. Orthogonal steps cost
+    5 ft; diagonal steps alternate 5/10 ft. A blocked centreline cell stops the
+    line, so walls block everything behind them. Widths above 5 ft add
+    perpendicular lanes.
+  - `getConeCells(origin, direction, lengthFeet, gridMap)`: 90-degree wedge
+    (45 degrees either side of the axis). A cell is affected when its centre is
+    inside the wedge, its 5-10-5 distance from the apex is within range, it is
+    not an obstacle, and a Bresenham line of effect from the apex is not cut by
+    a wall. The apex cell is excluded.
+  - `getEmanationCells(combatant, radiusFeet, gridMap)`: measured from every
+    cell of `combatant.getOccupiedCells()`. The footprint itself (the caster)
+    is always excluded; blocked cells are skipped and the area is clipped to
+    the map bounds. A Large 2x2 creature with a 10-ft emanation therefore has
+    20 affected cells on an open grid.
+  - `normalizeDirection` is exported for hosts that need the same snapping.
+- `src/Core/Entities/combatant.js` — spellcasting resources:
+  - `spellSlots` normalised from `spellSlots` or `data.spellSlots`; accepted
+    forms are `{ 1: 3 }` and `{ 1: { max: 3, current: 2 } }`. Methods:
+    `getSpellSlots()`, `getSpellSlot(rank)`, `hasSpellSlot(rank)`,
+    `spendSpellSlot(rank)`.
+  - `focusPoints` normalised from `focusPoints` or `data.focusPoints`, default
+    `{ max: 0, current: 0 }`. Methods: `getFocusPoints()`, `hasFocusPoint()`,
+    `spendFocusPoint(count)`, `restoreFocusPoints(amount)`.
+  - `activeSustainedSpells` records `{ id, spellId, spell, target,
+    expiresAtRound }`. Methods: `getActiveSustainedSpells()`,
+    `getActiveSustainedSpell(id)`, `addSustainedSpell(...)`,
+    `extendSustainedSpell(id, round)`, `removeSustainedSpell(id)`, and
+    `expireSustainedSpells(round)`.
+  - `endTurn()` now expires sustained spells at the end of the caster's turn
+    and returns `expiredSustainedSpells`.
+- `src/Core/Actions/cast-spell.js` — resource validation before targeting,
+  reactions, or dice:
+  - a spell with the `cantrip` trait spends nothing (even if a rank is authored);
+  - `focus` spends 1 Focus Point and **not** a spell slot;
+  - any other spell with `rank`/`level` spends one slot of that rank.
+  - Refusals are `{ ok: false, reason: "no-spell-slots" }` and
+    `{ ok: false, reason: "no-focus-points" }`, and spend no action, slot, or
+    Focus Point.
+  - Successful results expose `resourceCost: { type, spent, rank?, remaining }`.
+  - A spell with the `sustained` trait is registered with
+    `expiresAtRound = encounter.round + 1` and returned as `sustainedSpell`.
+  - A disrupted manipulate cast still consumes the slot/Focus Point (the
+    spell is lost), matching the disruption outcome.
+- `src/Core/Actions/sustain-spell.js` — `performSustainSpell({ caster,
+  activeSpellId, encounter })`: 1 action, `concentrate` trait, extends the
+  active spell's expiry to `max(expiry, currentRound) + 1`. Refuses with
+  `not-sustained`, `invalid-active-spell`, `no-actions`, `unconscious`, or
+  `defeated` without mutating state. Returns `actionCost`, `traits`,
+  `previousExpiresAtRound`, `expiresAtRound`, `actionsLeft`, and the updated
+  `sustainedSpell`.
+- Tests: `tests/Actions/advanced-spells.test.js` (14 cases: 15-ft cone +
+  wall occlusion, 30-ft line + wall stop, diagonal 5-10-5 line, 10-ft-wide
+  lane, 2x2 Large 10-ft emanation, slot spend, empty-slot refusal, cantrip,
+  focus spend, empty focus pool, sustained registration/sustain/expiry,
+  unsustained expiry, and sustain refusal paths). Registered in
+  `tests/run-node.js`. Full Node suite: **450 passed, 0 failed, 32 suites**.
+- Deliberately deferred: View/HTML integration (not modified), counteract
+  checks, spell heightening/scaling, spontaneous/prepared casting variants,
+  focus-point daily refocus, line-of-effect for emanations, cone templates
+  placed at grid vertices rather than cell centres, and multi-target
+  sustained-spell tracking beyond the first target recorded on the entry.
+
+## Previous milestone — Phase 15 (complete): Tactical AI Engine
+
+Status: **implemented and verified**.
+
+- `src/Core/AI/tactical-ai.js` — headless, deterministic AI controller with no
+  DOM/Canvas dependency and no encounter-clock ownership.
+  - `planTurn({ combatant, map, combatants, encounter })` returns
+    `{ ok, combatantId, plan, actionsRemaining, actionsSpent, reason? }` without
+    mutating any combatant. The plan is an ordered list of serialisable steps
+    (`stand`, `stride`, `step`, `strike`, `raise-shield`, `take-cover`) with
+    `actionCost`, destination, target id/name, and the planning reason.
+  - `executeAITurn({ combatant, map, combatants, encounter, rollD20,
+    rollDamageDie })` drives the live action pool one action at a time and
+    returns `{ ok, combatantId, executedActions, actionsSpent,
+    actionsRemaining, finalState, reason? }`. Every executed entry carries
+    `type`, `actionCost`, `ok`, `reason`, a summary (`targetId`, `mapPenalty`,
+    hit/critical, damage, HP before/after, destination, reactions), and the raw
+    core-action `result`.
+  - `finalState` exposes `{ id, name, position, currentHP, maxHP,
+    actionsRemaining, reactionsRemaining, attacksThisTurn, isDefeated, prone,
+    shieldRaised, conditions }`.
+  - The execution loop re-snapshots the combatant after every action, so a
+    target that dies mid-rotation is dropped immediately and the remaining
+    action pool is spent on the next living hostile.
+- Decision tree (PF2e Remastered):
+  1. **Recovery** — `dying`, `unconscious`, `paralyzed`, `stunned`, or
+     `isDefeated` ends the turn with no actions. A prone creature that can act
+     uses `Stand` (1 action) first; an immobilized prone creature skips Stand
+     and may still attack.
+  2. **Target acquisition** — only living combatants whose `alliance` differs
+     from the actor. Ranking uses the A* approach cost to the cheapest square
+     from which the actor can Strike the target; ties go to the lowest current
+     HP, then a stable id order. `selectTarget()` exposes the same query.
+  3. **Positioning** — if the target is already inside melee reach no movement
+     action is spent. When an ally already engages the target and the opposite
+     square is free and adjacent, the AI takes a single `Step` to complete the
+     flank (Off-Guard). Out of reach it uses `Pathfinding.findPath` to the
+     cheapest attack cell (footprint-aware, ally/enemy occupancy aware). Routes
+     longer than Speed are split into one-Stride waypoints. A square threatened
+     by an enemy reaction prefers a reaction-free `Step` when a safe advancing
+     square exists, otherwise it Strides.
+  4. **Rotation** — Strike at MAP 0, Strike at MAP -5, then `Raise a Shield`
+     when the authored shield is unbroken/undestroyed and not already raised.
+     Without a usable shield the last action is `Take Cover` when standard
+     cover exists, otherwise a third Strike. A broken/destroyed shield is never
+     raised. Dead targets are never struck again.
+  - Shield state is read through `Entities/shield.js`; `getShieldStatus()` is
+    exported and reports `{ held, usable, shield }`.
+  - Flanking uses the canonical `Grid/flanking.js` direction/reach geometry;
+    large-target flank direction remains the documented Phase 9.1 anchor-cell
+    limitation.
+- Tests: `tests/AI/tactical-ai.test.js` (9 cases: Stand priority, Aggro +
+  Stride + Strike, Strike → Strike → Raise a Shield with MAP 0/-5 and
+  `shield-raised`, target switching after a kill, action-pool exhaustion at 0,
+  the flanking Step, unconscious no-op, and the lowest-HP tie-breaker). Full
+  Node suite: **436 passed, 0 failed, 31 suites**.
+- Deliberately deferred: View/HTML integration (not modified), ranged kiting,
+  spell/consumable selection, reload handling, class-feat reactions, "recall
+  knowledge"/Intimidation-style support actions, difficult-terrain path
+  preference beyond normal cost, large-target flank direction, and any
+  encounter-clock advancement (the host/Encounter still owns initiative).
+
+## Previous milestone — Phase 14 (complete): Hands, Inventory/Interact & Shield Block
+
+Status: **implemented and verified**.
+
+- Hands model (`src/Core/Entities/equipment.js`):
+  - every `Combatant` owns `hands: { mainHand: null, offHand: null }`,
+    defaulting to two free hands;
+  - `getFreeHandsCount()` returns 0/1/2; `getHands()`, `getHeldItems()`,
+    `isItemHeld()`, `findInventoryItem()`, `addInventoryItem()`,
+    `removeInventoryItem()`, and `getInventory()` expose the equipment store;
+  - `equipItem()` / `unequipItem()` / `canEquipItem()` validate slot occupancy;
+    a 2H item fills both slots with the same item reference and appears once in
+    `getHeldItems()`;
+  - `getItemHands()` accepts explicit `hands: 1|2`, `handsRequired`,
+    `twoHanded`, `handUse`, and the `two-hand-dN` trait. Per this slice's rule,
+    `two-hand-dN` occupies both hands.
+- Inventory:
+  - `Combatant({ inventory: [...] })` normalizes plain item objects; shields are
+    normalized through `Entities/shield.js`;
+  - `Combatant({ shield })` adds and wields the shield in `offHand` by default;
+  - `Combatant({ hands: { mainHand, offHand } })` resolves item ids/objects and
+    enforces 2H exclusivity.
+- Maneuver hand requirement:
+  - `Trip`, `Shove`, and `Grapple` return
+    `{ ok: false, reason: "no-free-hand" }` before spending an action, applying
+    MAP, or rolling when no hand is free and the wielded weapon lacks the
+    matching `trip` / `shove` / `grapple` trait;
+  - `Equipment.checkManeuverHands()` is the single shared gate; successful
+    evaluations expose `handRequirement: { freeHands, viaTrait }`.
+- `Actions/interact.js` — `performInteract({ combatant, actionType, item, slot })`:
+  - `draw` (1 action), `stow` (1 action), `swap` (1 action), and `drop`
+    (0 actions / free);
+  - draw/stow/swap carry the `manipulate` trait and run the shared Reactive
+    Strike window when a combatant roster is supplied; a disrupting reaction
+    spends the action and aborts the equipment change;
+  - returns `{ ok, actionType, actionCost, actionsLeft, item, hands,
+    previousItems, manipulate, traits, freeHands }`; drop is deliberately not
+    manipulate.
+- `Entities/shield.js`:
+  - record `{ id, name, type: "shield", hands: 1, hardness: 5, hp: 20,
+    maxHP: 20, brokenThreshold: 10, acBonus: 2, speedPenalty: 0, broken,
+    destroyed }`;
+  - `brokenThreshold` defaults to `floor(maxHP / 2)`; `broken` is
+    `hp > 0 && hp <= brokenThreshold`; `destroyed` is `hp <= 0`;
+  - broken/destroyed shields contribute no AC (`getACBonus()` returns 0) and
+    cannot be raised or used for Shield Block;
+  - `applyShieldDamage()` updates HP and flags, and reports `justBroken` /
+    `justDestroyed`.
+- `Actions/shield-block.js`:
+  - trigger requires a non-broken shield, active `shield-raised`, at least one
+    unspent reaction, and physical damage (bludgeoning/piercing/slashing);
+  - Hardness reduces the post-IWR damage; the remainder damages the shield
+    (capped at current shield HP) and the wielder simultaneously;
+  - one reaction is spent; reaching the Broken Threshold removes
+    `shield-raised` immediately;
+  - returns `{ ok, absorbedByHardness, damageToShield, damageToActor,
+    shieldBroken, shieldDestroyed, shieldRaisedRemoved, reactionSpent,
+    reactionsLeft, shieldState, currentHP, ... }`.
+- Damage-chain integration:
+  - `Combatant.takeDamage(amount, { type })` applies IWR first, then resolves
+    Shield Block automatically when the defender has a raised, unbroken shield,
+    an unspent reaction, and physical damage. `{ shieldBlock: false }` opts out;
+    `{ shieldBlock: true }` also returns a structured failure report when the
+    trigger is illegal;
+  - the result adds `actorDamageApplied` (post-shield damage) and `shieldBlock`
+    (the full report, including ineligible reasons);
+  - `Combatant.canShieldBlock(options)` exposes validation for callers that want
+    to prompt the player before spending the reaction.
+- Raise a Shield now refuses a broken/destroyed authored shield with
+  `shield-broken` / `shield-destroyed` without spending an action. Combatants
+  with no authored shield retain the legacy condition-only fixture behavior.
+  A raised shield's AC modifier uses the shield's authored `acBonus` (default 2)
+  and is suppressed if a stale `shield-raised` record exists on a broken shield.
+- Tests: `tests/Entities/equipment-shields.test.js` (14 cases covering 2H hand
+  occupancy, the `two-hand-dN` trait, shield draw rejection, no-free-hand
+  Grapple, the `grapple` trait bypass, Interact draw/swap/drop/stow, 2H draw,
+  the 12-damage / Hardness 5 split, `takeDamage` integration, non-physical
+  rejection, Broken Threshold removal, destroyed shields, and stale raised
+  records). Full Node suite: **428 passed, 0 failed, 30 suites**.
+- Deliberately deferred: View/HTML integration (not modified in this slice),
+  Bulk/encumbrance, container nesting, armour, ammunition counts, two-hand grip
+  damage bonuses for `two-hand-dN`, shield bash/integrated weapons, shield
+  runes/materials/specific shields, mixed physical+non-physical Shield Block
+  splitting, a player-facing prompt/confirmation for Shield Block, and
+  re-pointing the active Strike profile when Interact draws a different weapon.
+
+## Previous milestone — Phase 13 (complete): Advanced Conditions & Durations
+
+Status: **implemented and verified**.
+
+- `Conditions` now registers three additional states:
+  - `paralyzed` — contributes Off-Guard (`-2 circumstance` AC with source
+    `off-guard`, name `Off-Guard (Paralyzed)`). `Combatant.canAct()` returns
+    `{ ok: false, reason: "paralyzed" }`, so every caller that gates actions
+    through `canAct()` refuses them. Purely mental actions are not modelled.
+  - `stunned N` — `canAct()` returns `{ ok: false, reason: "stunned" }` while
+    the condition is present. At the start of the creature's turn it loses up
+    to N actions from the refreshed pool. The value is paid down by the
+    actions actually lost; when the pool is smaller than N the remaining debt
+    carries into the next turn, and the condition is removed once the value
+    reaches 0. Condition duration metadata survives partial pay-down.
+  - `slowed N` — at the start of the turn the creature regains N fewer
+    actions. It does not block `canAct()` and does not stack with Stunned.
+  - When Stunned and Slowed are both present, only the larger value removes
+    actions (`max(stunned, slowed)`), so Stunned overrides Slowed for the
+    same action loss. Slowed remains until its own duration/removal.
+- Round-duration engine:
+  - `Conditions.createCondition(name, value, { duration, durationOrigin,
+    round })` stores `duration`, `durationOrigin` (`"start"` | `"end"`) and
+    `appliedRound` on the record; `copyCondition` preserves them.
+  - `Combatant.addCondition()` stamps `appliedRound` from its synced
+    `encounterRound` when the caller omits `round`; re-application refreshes
+    the timer when a duration is supplied.
+  - `Combatant.tickDurations({ phase, round })` removes expired records.
+    Semantics: a `start` duration N applied in round R expires at the start
+    phase of round R + N; an `end` duration N expires at the end phase of
+    round R + N - 1 (so a 1-round end effect ends in its application round).
+  - `resetTurn()` runs the start-phase tick before the Stunned/Slowed action
+    loss; `endTurn()` runs the end-phase tick. `Encounter` synchronises every
+    `combatant.encounterRound` with `encounter.round` and passes `round` into
+    both calls. `nextTurn()` exposes `durationExpiry`.
+- Afflictions (`src/Core/Rules/afflictions.js`):
+  - Record contract: `{ type: "affliction", id, name, saveType, saveDC,
+    maxStage, stage, sourceId }`; `stage` starts at 1. `createAffliction`,
+    `copyAffliction`, and `applyStageChange` validate/normalise the record.
+  - End-of-turn save uses `Checks.evaluateCheck` with the creature's save
+    modifier (including condition modifiers such as Frightened) against
+    `saveDC`: critical success `-2`, success `-1`, failure `+1`, critical
+    failure `+2`. Stage is clamped to `[0, maxStage]`; reaching 0 cures the
+    affliction and removes it.
+  - `Combatant` owns `afflictions` with `addAffliction`, `removeAffliction`,
+    `hasAffliction`, `getAffliction`, `getAfflictions`, and constructor
+    authoring. `endTurn()` runs every save and returns `afflictionTick`,
+    `afflictionsChanged`, and `curedAfflictions`. Deterministic callers can
+    inject `afflictionD20` or `rollAfflictionSave`; otherwise `rollD20`,
+    `rollDie(20)`, then `Math.random` are used.
+  - Deliberately no concrete poisons/diseases are authored in this slice.
+- Tests: `tests/Entities/afflictions-durations.test.js` (15 cases covering
+  Paralyzed/Off-Guard/`canAct`, Slowed 1, Stunned 1 removal, Stunned-over-
+  Slowed, Stunned debt carry-over, start/end duration expiry, the Encounter
+  round clock, duration round-trip, Failure/Success stage changes, cure,
+  critical-failure cap, save modifiers, and validation). Full Node suite:
+  **414 passed, 0 failed, 29 suites**.
+- Deliberately deferred: concrete poison/disease stat blocks, affliction
+  onset and maximum duration, virulent/incapacitation traits, stage-specific
+  damage or conditions, multiple simultaneous exposures beyond metadata
+  refresh, mental-only actions under Paralyzed, Slowed's reaction restriction,
+  and View/HTML integration.
+
+## Previous milestone — Phase 12 (partial): Spellcasting Foundation & AoE Burst
+
+Status: **implemented and verified**.
+
+- `Combatant` spellcasting profile — `spellAttackBonus` (default 0),
+  `spellDC` (default `10 + spellAttackBonus`), and `spells` (authored array).
+  A friendly `hp` alias for authored `maxHP` is also accepted.
+- `Rules/spells.js` — `evaluateBasicSave({ saveRoll, saveDC, rawDamage,
+  isNatural20, isNatural1 })` resolves the save through
+  `Checks.evaluateCheck` and applies the Basic Saving Throw table: critical
+  success 0, success `floor(damage / 2)`, failure full, critical failure
+  `damage * 2`. `saveRoll` may be a final total, or a raw d20 when
+  `saveModifier` is supplied (then natural 20/1 adjust automatically).
+  `hasTrait` normalizes string and object spell traits.
+- `Grid/aoe.js` — `getBurstCells(centerOrigin, radiusFeet, gridMap)` measures
+  centre-to-centre with the PF2e 5-10-5 distance and excludes blocked cells;
+  `getTargetsInArea(cells, combatants)` intersects living footprints, including
+  Large/Huge `getOccupiedCells()`.
+- `Actions/cast-spell.js` — `performCastSpell({ caster, spell, target, origin,
+  combatants, map, rollD20, rollDamageDie })`. Validates un/consciousness,
+  actions, and spell type before spending anything. Attack spells use and
+  advance MAP, require the Concealed/Hidden flat check, roll
+  `d20 + spellAttackBonus` vs AC, double damage on a critical success, then run
+  the target's IWR. Save spells never touch MAP; one damage roll feeds an
+  independent save per target (single target or every living target in a
+  burst), with IWR applied after the basic-save multiplier. A `manipulate`
+  spell resolves threatened Reactive Strikes first; a critical or lethal
+  reaction sets `{ ok: false, disrupted: true }` and spends the action cost.
+- Tests: `tests/Actions/cast-spell.test.js` (4 cases: attack MAP/IWR weakness,
+  basic-save half damage, multi-target burst, and burst geometry/walls).
+  Full Node suite: **399 passed, 0 failed, 28 suites**.
+- Deliberately deferred: Cone/Line/Emanation templates, spell slots/heights,
+  counteract checks, non-basic save spell text, spell scaling, line-of-sight
+  for spell targeting, and View/HTML integration. Only Burst is implemented.
+
+## Previous milestone — Phase 11 (complete): Ranged Combat & Thrown Weapons
+
+Status: **implemented and verified**.
+
+- Weapon profile — `WeaponTraits.getWeaponProfile(weapon)` parses
+  `weapon.range` / `weapon.rangeIncrement`, `weapon.reload`, `weapon.volley`,
+  and the `ranged-N`, `thrown-N`, `volley-N`, `reload-N` traits. Melee weapons
+  have `rangeIncrement: null`, `reload: 0`, `volley: null`. `isRanged()` is true
+  for a range increment or the ranged/thrown/volley traits. `Combatant` exposes
+  `weapon`, `getRangeIncrement()`, `getReload()`, `getVolley()`,
+  `requiresReload()`, `isRangedWeapon()`, and `isLoaded` (default true).
+- Range penalties — the first increment is 0; each additional full/partial
+  increment is `-2 untyped` through the central modifier resolver. Six
+  increments are allowed (`0..-10`); beyond `rangeIncrement * 6` the result is
+  `{ ok: false, reason: "out-of-range" }`. Volley adds `-2 untyped` ("Volley
+  Penalty") when the target is at or inside the listed volley range.
+- Reload — a ranged Strike with `reload > 0` sets `combatant.isLoaded = false`;
+  an empty weapon returns `{ ok: false, reason: "not-loaded" }` before spending
+  an action. `Actions/reload.js` exports
+  `performReload({ combatant })`, which spends `weapon.reload` actions (1/2),
+  sets `isLoaded = true`, and returns `{ ok: true, actionsLeft }`. Reload-0
+  weapons (bows, thrown) never discharge.
+- Reactive Strike disruption — before a ranged attack roll, every living
+  hostile with an available reaction that threatens the shooter's square makes
+  a Reactive Strike. A critical or lethal reaction sets `disrupted: true` on
+  the Strike result: the Strike action is spent, no attack roll occurs, no
+  ammunition is consumed, and the target is untouched.
+- Map and alliance notes — `evaluateStrike` accepts an omitted `GridMap` for
+  isolated headless math (LoS/cover are skipped); a supplied map must be a real
+  `GridMap`. An un-authored alliance no longer makes two isolated fixtures
+  allies. `Combatant` also defaults a missing name to its id and a missing
+  speed to 25 ft.
+- Tests: `tests/Actions/ranged-strike.test.js` (13 cases covering profile
+  parsing, increment boundaries, six-increment cap, volley, reload 0/1/2,
+  not-loaded priority, and reaction disruption).
+- Deliberately deferred: ammunition quantities/consumption, weapon drawing and
+  handedness, thrown-weapon recovery, and range-increment cover corners for
+  non-medium shooters. View/HTML was not modified in this slice.
+
+## Previous milestone — Phase 10 (complete): Dying, Wounded, Unconscious & Healing
+
+Status: **implemented and verified**.
+
+- `unconscious` condition — embeds Off-Guard (`-2 circumstance` AC) and Prone
+  (`-2 circumstance` attack), plus a `-4 status` penalty to AC, Reflex saves,
+  and Reflex DC. `Combatant.canAct()` returns `{ ok: false, reason:
+  "unconscious" }` while it is present.
+- `dying N` / `wounded N` — valued conditions. `takeDamage()` now floors HP at
+  0, applies `unconscious` + `prone`, and starts Dying at `1 + Wounded`
+  (`2 + Wounded` on a critical hit, via `isCrit`). Further damage while dying
+  advances the track by 1 (2 on a crit). Dying is capped at 4; reaching 4 sets
+  `isDefeated = true`.
+- `Combatant.applyHealing(amount)` — heals up to max HP, removes Dying, adds
+  Wounded 1 (or increments it), removes Unconscious, and refuses to heal a
+  creature that died at Dying 4 (`{ ok: false, reason: "dead" }`).
+- `Combatant.resolveRecoveryCheck()` runs at the start of `resetTurn()` for a
+  dying creature: flat check against DC `10 + Dying`, with critical success
+  `-2`, success `-1`, failure `+1`, critical failure `+2` (natural 20/1
+  adjusted through `Checks.evaluateCheck`). Reaching 0 removes Dying and
+  leaves the creature stable at 0 HP and unconscious; reaching 4 kills it.
+  The result is exposed as `lastRecoveryCheck`.
+- Tests: `tests/Entities/dying.test.js` (18 cases covering the dying track,
+  wounded stacking, critical hits, healing, death, `canAct`, unconscious
+  modifiers, and all four recovery degrees).
+- Known limitation: 0 HP still sets the legacy `isDefeated` flag for backwards
+  compatibility with Strike/Encounter/grapple cleanup; a stable creature at
+  0 HP therefore remains out of the turn cycle until healed above 0.
+- Earlier milestones (9.x, 8.x, 7.x, 6.x, 5.x, 3.2, 4.x) remain implemented.
+
+## Previous milestone — Phase 9.1 / 9.2 (complete): Large creatures, occupancy & reach
+
+Status: **implemented and verified**.
+
+- 9.1 — `Combatant.size` (`medium` default) with `getFootprint()` (1/2/3 for
+  medium/large/huge) and `getOccupiedCells()` anchored at the top-left cell.
+  `Grid.getCombatantDistance(attacker, target)` measures the closest pair of
+  occupied cells using the canonical 5-10-5 distance. Strike, Reactive Strike,
+  flank reach, and the shared Athletics maneuver pipeline (Trip/Shove/Grapple)
+  use this edge-to-edge measurement.
+- 9.2 — `Occupancy.buildOccupancy` expands every combatant to all occupied
+  cells. `Occupancy.canOccupySpace(x, y, combatant, gridMap, allCombatants)`
+  validates the full footprint. `Pathfinding.findPath` /
+  `reachableCells` accept a `footprint` option; Stride and Step forward the
+  mover's footprint so a 2x2/3x3 creature cannot cross walls or enemies with
+  only its anchor cell.
+- Tests: `tests/Entities/combatant-size.test.js` (4-cell Large footprint,
+  edge-to-edge reach, occupancy rejection, footprint pathfinding, Large Strike).
+- Known limitation: flanking direction is still derived from anchor-cell
+  centres; large-target flank direction is a deferred refinement.
+- Earlier milestones (8.3, 7.x, 6.x, 5.x, 3.2, 4.x) remain implemented.
+
+## Previous milestone — Phase 8.3 (complete): Saves, Skills, Trip, Shove, Grapple, Escape
 
 Status: **implemented and verified**.
 
@@ -737,9 +1511,15 @@ Off-Guard and critical hits. The Goblin's persistent fire demonstrates immunity
 
 ## Verification
 
-- `npm test` / `node tests/run-node.js`: **358 passed, 0 failed** across 24
-  suites.
-- `test_runner.html`: **358 passed, 0 failed**, 24 suites, no console errors.
+- `npm test` / `node tests/run-node.js`: **488 passed, 0 failed** across 35
+  suites (Phase 19 included).
+- `test_runner.html`: the browser runner still loads its earlier subset; it was
+  not extended or re-run in this slice because View/HTML was intentionally left
+  untouched. The new `Encounter/initiative.js` and `State/` modules are loaded
+  by the Node entry point only; `Encounter` contains a fallback comparator and
+  roller so the existing browser entry points keep working.
+- Earlier browser smoke tests through DOM state (Phases 5–12) remain valid and
+  are unchanged by this headless slice.
 - Browser smoke tests through DOM state:
   - the workspace renders the Combat Log in a fixed left column, the battlefield
     in the centre, and the control sidebar on the right at desktop widths; the
@@ -812,6 +1592,12 @@ Off-Guard and critical hits. The Goblin's persistent fire demonstrates immunity
 
 ## Known limitations / deliberately deferred
 
+- Concrete poison/disease stat blocks, affliction onset and maximum duration,
+  virulent/incapacitation traits, stage-specific damage/conditions, and
+  multiple simultaneous exposures (re-adding the same affliction id refreshes
+  its profile and keeps the higher stage rather than incrementing it).
+- Paralyzed has no mental-only action channel, so every engine action is
+  refused. Slowed does not restrict reactions in this slice.
 - Dying, Wounded, Unconscious, and recovery checks.
 - Persistent damage from afflictions/stages and death caused by a persistent
   tick; precision damage as a separate IWR instance; damage-type conversion and
@@ -838,23 +1624,33 @@ Off-Guard and critical hits. The Goblin's persistent fire demonstrates immunity
 - Other conditions beyond Off-Guard, Prone, Frightened, Shield Raised, Greater
   Cover, Concealed, Hidden, Undetected, Grabbed, Restrained, and Immobilized.
 - Enemy AI; the user controls whichever combatant is active.
-- No initiative rolling (values are authored).
+- Initiative can be rolled or authored; surprise rounds and GM adjudication of
+  ambiguous ties are not modelled beyond the deterministic tie-break chain.
 - LoS ignores creatures; creatures provide lesser cover instead of blocking
   sight.
-- Difficult terrain is uniform +5 ft; greater difficult terrain is not modelled.
+- Terrain is data-only; difficult and greater-difficult movement costs are
+  modelled, but other terrain effects are not.
 - Tokens move instantly; no path animation.
 - One token selected at a time; no drag-and-drop.
 - Other weapon traits and deadly-die scaling from striking runes.
 
 ## Next logical slice
 
-**Phase 8.4 (optional polish) — Crawl and Prone movement**:
+**Phase 20 (suggested) — View/HTML Integration for Phase 19**:
 
-1. Add `Crawl.performCrawl`: 1 action, move trait, 5 ft while prone, never
-   provokes; it should remain blocked by Immobilized.
-2. Confirm the prone-specific Take Cover hunker-down rule and whether Crawl can
-   be combined with it.
-3. Add deterministic Crawl tests and the prone movement button.
+1. Load `Core/Encounter/initiative.js` and the `Core/State/` scripts in the
+   browser entry points, then replace authored initiative with
+   `Encounter.rollInitiative()` and an initiative-roll log line.
+2. Subscribe the combat log and token layer to `CombatEventBus` instead of
+   polling combat state (`combatant:damaged`, `combatant:moved`,
+   `condition:*`, `hazard:*`, `turn:*`, `reaction:*`).
+3. Add Save/Load buttons wired to `serializeCombatState` /
+   `deserializeCombatState`, plus a JSON download/upload path for deterministic
+   session resume.
 
-After that: **Phase 9** creature sizes and multi-cell reach/occupancy, then
-**Phase 10** Dying, Wounded, Unconscious, and recovery checks.
+After that: surprise rounds, full hazard roster ownership on `Encounter`, and
+event-driven animation/undo hooks.
+
+Earlier deferred slice (still open): Affliction content and onset — author a
+small poison/disease catalog, add onset delays and maximum duration, and wire
+stage-specific damage/conditions through the existing pipelines.

@@ -51,6 +51,7 @@
     NO_ACTIONS: "no-actions",
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
+    NO_FREE_HAND: "no-free-hand",
   });
 
   const SUCCESS_SQUARES = 1;
@@ -171,7 +172,7 @@
    */
   function evaluateShove(options) {
     const opts = options || {};
-    const evaluation = AthleticsManeuver.evaluate(opts);
+    const evaluation = AthleticsManeuver.evaluate(opts, "shove");
     if (!evaluation.ok) {
       return evaluation;
     }

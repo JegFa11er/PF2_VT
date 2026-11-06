@@ -52,6 +52,7 @@
     NO_ACTIONS: "no-actions",
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
+    NO_FREE_HAND: "no-free-hand",
   });
 
   function sourceTurnOf(source) {
@@ -133,7 +134,7 @@
    * @returns {object}
    */
   function evaluateGrapple(options) {
-    const evaluation = AthleticsManeuver.evaluate(options || {});
+    const evaluation = AthleticsManeuver.evaluate(options || {}, "grapple");
     if (!evaluation.ok) {
       return evaluation;
     }

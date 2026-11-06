@@ -22,6 +22,7 @@
     module.exports = factory(
       require("../Grid/grid-math.js"),
       require("../Grid/los-math.js"),
+      require("../Grid/distance.js"),
       require("../Rules/checks.js"),
       require("../Rules/damage.js"),
       require("../Rules/map.js"),
@@ -38,6 +39,7 @@
     root.PF2e.Core.Actions.Strike = factory(
       root.PF2e.Core.Grid,
       root.PF2e.Core.LosMath,
+      root.PF2e.Core.Distance3D,
       root.PF2e.Core.Rules.Checks,
       root.PF2e.Core.Rules.Damage,
       root.PF2e.Core.Rules.MultipleAttack,
@@ -51,6 +53,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
   Grid,
   LosMath,
+  Distance3D,
   Checks,
   Damage,
   MultipleAttack,
@@ -71,6 +74,9 @@
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
     TARGET_UNDETECTED: "target-undetected",
+    OUT_OF_RANGE: "out-of-range",
+    NOT_LOADED: "not-loaded",
+    DISRUPTED: "disrupted",
   });
 
   const DEFAULT_REACH_FEET = 5;
@@ -241,6 +247,162 @@
     return [];
   }
 
+  /**
+   * A Combatant only establishes hostility when an alliance was authored.
+   * Two isolated combatants that both fall back to the default "player"
+   * alliance are not treated as allies.
+   */
+  function isSameAlliance(a, b) {
+    if (!a || !b || a.alliance === undefined || b.alliance === undefined) {
+      return false;
+    }
+    if (a.alliance !== b.alliance) {
+      return false;
+    }
+    return a.allianceExplicit !== false && b.allianceExplicit !== false;
+  }
+
+  /**
+   * Resolve the ranged weapon profile for this Strike. A per-Strike weapon
+   * override wins; otherwise the attacker's authored weapon profile is used.
+   *
+   * @param {object} options
+   * @param {object} attacker
+   * @returns {object}
+   */
+  function resolveWeaponProfile(options, attacker) {
+    if (options.weapon !== undefined) {
+      const weapon = options.weapon;
+      if (weapon !== null && typeof weapon === "object" && !Array.isArray(weapon)) {
+        const source = Object.assign({}, weapon);
+        if (source.traits === undefined && options.traits !== undefined) {
+          source.traits = options.traits;
+        }
+        return WeaponTraits.getWeaponProfile(source);
+      }
+      return WeaponTraits.getWeaponProfile({
+        formula: weapon,
+        traits: options.traits,
+      });
+    }
+
+    if (
+      attacker !== null &&
+      typeof attacker === "object" &&
+      attacker.weapon !== undefined &&
+      attacker.weapon !== null &&
+      typeof attacker.weapon === "object" &&
+      attacker.weapon.isRanged !== undefined
+    ) {
+      return attacker.weapon;
+    }
+
+    if (attacker !== null && typeof attacker.getWeapon === "function") {
+      return WeaponTraits.getWeaponProfile(attacker.getWeapon());
+    }
+
+    return WeaponTraits.getWeaponProfile(attacker);
+  }
+
+  /**
+   * Resolve Reactive Strike against a ranged attacker before the shot. The
+   * module is loaded lazily to avoid a CommonJS cycle with reactive-strike.js,
+   * which itself depends on this file.
+   *
+   * @returns {object|null}
+   */
+  function getReactiveStrikeModule() {
+    if (typeof module === "object" && module.exports && typeof require === "function") {
+      return require("./reactive-strike.js");
+    }
+    const globalRoot = typeof globalThis !== "undefined" ? globalThis : null;
+    if (
+      globalRoot &&
+      globalRoot.PF2e &&
+      globalRoot.PF2e.Core &&
+      globalRoot.PF2e.Core.Actions
+    ) {
+      return globalRoot.PF2e.Core.Actions.ReactiveStrike || null;
+    }
+    return null;
+  }
+
+  /**
+   * A ranged Strike is a manipulate action while threatened. Every living
+   * enemy with a reaction and the shooter inside its melee reach may make a
+   * Reactive Strike. A critical hit (or a lethal hit) disrupts the shot.
+   *
+   * @param {object} options
+   * @param {object} attacker
+   * @param {object} profile
+   * @returns {{disrupted:boolean, reactions:object[], threats:object[]}}
+   */
+  function resolveRangedReactions(options, attacker, profile) {
+    // Prefer the full roster for threat scanning; `allies` is the flanking
+    // helper and may intentionally contain only the attacker's side.
+    const combatants = Array.isArray(options.combatants)
+      ? options.combatants
+      : normalizeAllies(options);
+    if (profile.isRanged !== true || combatants.length === 0) {
+      return { disrupted: false, reactions: [], threats: [] };
+    }
+
+    const ReactiveStrike = getReactiveStrikeModule();
+    if (!ReactiveStrike) {
+      return { disrupted: false, reactions: [], threats: [] };
+    }
+
+    const cell =
+      attacker.position !== undefined && attacker.position !== null
+        ? attacker.position
+        : { x: attacker.x, y: attacker.y };
+
+    const threats = ReactiveStrike.findThreatenedEnemies({
+      mover: attacker,
+      cell: cell,
+      combatants: combatants,
+      reachFeet: options.reactionReachFeet,
+    });
+
+    const reactions = [];
+    let disrupted = false;
+
+    for (const threat of threats) {
+      const reaction = ReactiveStrike.performReactiveStrike({
+        attacker: threat,
+        target: attacker,
+        map: options.map,
+        combatants: combatants,
+        allies: options.allies,
+        rollD20:
+          typeof options.rollReactionD20 === "function"
+            ? options.rollReactionD20
+            : options.rollD20,
+        rollDamageDie:
+          typeof options.rollReactionDamageDie === "function"
+            ? options.rollReactionDamageDie
+            : options.rollDamageDie,
+        rollDie:
+          typeof options.rollReactionDie === "function"
+            ? options.rollReactionDie
+            : options.rollDie,
+      });
+      reactions.push(reaction);
+
+      if (
+        reaction.ok === true &&
+        (reaction.critical === true ||
+          attacker.isDefeated === true ||
+          attacker.currentHP === 0)
+      ) {
+        disrupted = true;
+        break;
+      }
+    }
+
+    return { disrupted: disrupted, reactions: reactions, threats: threats };
+  }
+
   function detectFlanking(attacker, target, options) {
     const flankers = Flanking.getFlankingAllies(
       target,
@@ -360,13 +522,19 @@
     const opts = options || {};
     assertCombatant(opts.attacker, "attacker");
     assertCombatant(opts.target, "target");
-    if (!opts.map || typeof opts.map.hasObstacle !== "function") {
-      throw new TypeError("Strike requires a GridMap.");
-    }
 
     const attacker = opts.attacker;
     const target = opts.target;
+    const weaponProfile = resolveWeaponProfile(opts, attacker);
+    const ranged = weaponProfile.isRanged === true;
     const reachFeet = resolveReachFeet(opts, attacker);
+
+    // A map is optional for isolated headless math. When supplied it must be
+    // a real GridMap so line of sight and cover stay authoritative.
+    const hasMap = opts.map !== undefined && opts.map !== null;
+    if (hasMap && typeof opts.map.hasObstacle !== "function") {
+      throw new TypeError("Strike map must be a GridMap.");
+    }
 
     if (attacker.isDefeated === true) {
       return { ok: false, reason: STRIKE_REASONS.ATTACKER_DEFEATED };
@@ -384,9 +552,28 @@
     if (attacker.x === target.x && attacker.y === target.y) {
       return { ok: false, reason: STRIKE_REASONS.INVALID_TARGET };
     }
-    if (attacker.alliance === target.alliance) {
+    if (isSameAlliance(attacker, target)) {
       return { ok: false, reason: STRIKE_REASONS.ALLY };
     }
+
+    // Ammunition state is checked before target validity so a discharged
+    // crossbow reports `not-loaded` even if the previous shot dropped the
+    // target. Reload 0 weapons are always ready.
+    if (
+      ranged &&
+      weaponProfile.reload > 0 &&
+      attacker.isLoaded === false
+    ) {
+      return {
+        ok: false,
+        reason: STRIKE_REASONS.NOT_LOADED,
+        ranged: true,
+        rangeIncrement: weaponProfile.rangeIncrement,
+        reload: weaponProfile.reload,
+        isLoaded: false,
+      };
+    }
+
     if (target.isDefeated === true) {
       return { ok: false, reason: STRIKE_REASONS.TARGET_DEFEATED };
     }
@@ -405,8 +592,31 @@
       };
     }
 
-    const distanceFeet = Grid.distanceFeet(attacker, target);
-    if (distanceFeet > reachFeet) {
+    const distanceFeet = Distance3D.getCombatantDistance3D(attacker, target);
+
+    let rangeIncrementResult = null;
+    let rangePenalty = 0;
+    if (ranged) {
+      if (weaponProfile.rangeIncrement !== null) {
+        rangeIncrementResult = WeaponTraits.rangeIncrementPenalty(
+          distanceFeet,
+          weaponProfile.rangeIncrement,
+        );
+        if (!rangeIncrementResult.ok) {
+          return {
+            ok: false,
+            reason: STRIKE_REASONS.OUT_OF_RANGE,
+            distanceFeet: distanceFeet,
+            rangeIncrement: weaponProfile.rangeIncrement,
+            maxRangeFeet: rangeIncrementResult.maxRangeFeet,
+            ranged: true,
+            visibility: visibility,
+            hiddenAttacker: hiddenAttacker,
+          };
+        }
+        rangePenalty = rangeIncrementResult.penalty;
+      }
+    } else if (distanceFeet > reachFeet) {
       return {
         ok: false,
         reason: STRIKE_REASONS.OUT_OF_REACH,
@@ -418,63 +628,75 @@
       };
     }
 
-    const sight = LosMath.traceLineOfSight(
-      { x: attacker.x, y: attacker.y },
-      { x: target.x, y: target.y },
-      opts.map,
-    );
-    if (!sight.visible) {
-      return {
-        ok: false,
-        reason: STRIKE_REASONS.NO_LINE_OF_SIGHT,
-        distanceFeet: distanceFeet,
-        blockedBy: sight.blockedBy,
-        visibility: visibility,
-        flatCheckCondition: visibility.condition,
-        flatCheckDC: visibility.flatCheckDC,
-        hiddenAttacker: hiddenAttacker,
-      };
+    const volleyPenalty = ranged
+      ? WeaponTraits.volleyPenalty(distanceFeet, weaponProfile.volley)
+      : 0;
+
+    let sight = null;
+    let cover = null;
+    if (hasMap) {
+      sight = LosMath.traceLineOfSight(
+        { x: attacker.x, y: attacker.y },
+        { x: target.x, y: target.y },
+        opts.map,
+      );
+      if (!sight.visible) {
+        return {
+          ok: false,
+          reason: STRIKE_REASONS.NO_LINE_OF_SIGHT,
+          distanceFeet: distanceFeet,
+          blockedBy: sight.blockedBy,
+          visibility: visibility,
+          flatCheckCondition: visibility.condition,
+          flatCheckDC: visibility.flatCheckDC,
+          hiddenAttacker: hiddenAttacker,
+        };
+      }
+
+      // The canonical cover check can also prove that all four corner rays
+      // are blocked even when the centre ray grazes the wall. In that case the
+      // target cannot be seen and the Strike is impossible.
+      cover = Cover.determineCover(
+        attacker,
+        target,
+        opts.map,
+        normalizeAllies(opts),
+      );
+      if (cover.noLineOfSight) {
+        return {
+          ok: false,
+          reason: STRIKE_REASONS.NO_LINE_OF_SIGHT,
+          distanceFeet: distanceFeet,
+          blockedBy: sight.blockedBy,
+          cover: cover,
+          coverDegree: cover.degree,
+          coverBonus: cover.acBonus,
+          blockedRaysCount: cover.blockedRaysCount,
+          noLineOfSight: true,
+          visibility: visibility,
+          flatCheckCondition: visibility.condition,
+          flatCheckDC: visibility.flatCheckDC,
+          hiddenAttacker: hiddenAttacker,
+        };
+      }
     }
 
-    // The canonical cover check can also prove that all four corner rays are
-    // blocked even when the centre ray grazes the wall. In that case the
-    // target cannot be seen and the Strike is impossible.
-    const cover = Cover.determineCover(
-      attacker,
-      target,
-      opts.map,
-      normalizeAllies(opts),
-    );
-    if (cover.noLineOfSight) {
-      return {
-        ok: false,
-        reason: STRIKE_REASONS.NO_LINE_OF_SIGHT,
-        distanceFeet: distanceFeet,
-        blockedBy: sight.blockedBy,
-        cover: cover,
-        coverDegree: cover.degree,
-        coverBonus: cover.acBonus,
-        blockedRaysCount: cover.blockedRaysCount,
-        noLineOfSight: true,
-        visibility: visibility,
-        flatCheckCondition: visibility.condition,
-        flatCheckDC: visibility.flatCheckDC,
-        hiddenAttacker: hiddenAttacker,
-      };
-    }
-
-    const flanking = detectFlanking(attacker, target, opts);
+    // Flanking is a melee-only condition. Ranged attacks never benefit from
+    // it, even when allies are geometrically opposite the target.
+    const flanking = ranged
+      ? { flanked: false, flankers: [] }
+      : detectFlanking(attacker, target, opts);
 
     return {
       ok: true,
       distanceFeet: distanceFeet,
       reachFeet: reachFeet,
-      lineOfSight: true,
+      lineOfSight: hasMap ? true : null,
       cover: cover,
-      coverDegree: cover.degree,
-      coverBonus: cover.acBonus,
-      coverRays: cover.rays,
-      blockedRaysCount: cover.blockedRaysCount,
+      coverDegree: cover ? cover.degree : Cover.COVER_DEGREES.NONE,
+      coverBonus: cover ? cover.acBonus : 0,
+      coverRays: cover ? cover.rays : [],
+      blockedRaysCount: cover ? cover.blockedRaysCount : 0,
       flanked: flanking.flanked,
       flankers: flanking.flankers,
       offGuard: flanking.flanked || hiddenAttacker || hasOffGuard(target),
@@ -482,6 +704,18 @@
       visibility: visibility,
       flatCheckCondition: visibility.condition,
       flatCheckDC: visibility.flatCheckDC,
+      ranged: ranged,
+      rangeIncrement: weaponProfile.rangeIncrement,
+      reload: weaponProfile.reload,
+      volley: weaponProfile.volley,
+      rangePenalty: rangePenalty,
+      volleyPenalty: volleyPenalty,
+      rangeIncrementIndex: rangeIncrementResult
+        ? rangeIncrementResult.incrementIndex
+        : 0,
+      maxRangeFeet: rangeIncrementResult
+        ? rangeIncrementResult.maxRangeFeet
+        : null,
     };
   }
 
@@ -583,6 +817,8 @@
     const attackBonus = normalizeAttackBonus(opts, attacker);
     const targetAC = normalizeTargetAC(opts, target);
     const weaponSpec = normalizeWeaponSpec(opts, attacker);
+    const weaponProfile = resolveWeaponProfile(opts, attacker);
+    const ranged = weaponProfile.isRanged === true;
     const agile = normalizeAgile(opts, attacker);
     const mapPenalty = currentMapPenalty(attacker, agile);
     const flanked = evaluation.flanked === true;
@@ -590,6 +826,49 @@
     const offGuard = flanked || hiddenAttacker || hasOffGuard(target);
     const cover = evaluation.cover || null;
     const visibility = evaluation.visibility || Conditions.getVisibility(target);
+
+    // A ranged Strike is a manipulate action while threatened. Resolve every
+    // Reactive Strike before the shot. A critical or lethal reaction disrupts
+    // the attack: the Strike action is spent, no attack roll is made, and the
+    // loaded ammunition is not consumed.
+    const reactionPhase = resolveRangedReactions(opts, attacker, weaponProfile);
+    if (reactionPhase.disrupted) {
+      attacker.spendActions(1);
+      return {
+        ok: false,
+        disrupted: true,
+        reason: STRIKE_REASONS.DISRUPTED,
+        attackerId: attacker.id,
+        targetId: target.id,
+        distanceFeet: evaluation.distanceFeet,
+        ranged: true,
+        rangeIncrement: weaponProfile.rangeIncrement,
+        reload: weaponProfile.reload,
+        volley: weaponProfile.volley,
+        rangePenalty: evaluation.rangePenalty,
+        volleyPenalty: evaluation.volleyPenalty,
+        reactionStrikes: reactionPhase.reactions,
+        reactionStrike:
+          reactionPhase.reactions.length > 0
+            ? reactionPhase.reactions[reactionPhase.reactions.length - 1]
+            : null,
+        reactionThreats: reactionPhase.threats,
+        attackRoll: null,
+        hit: false,
+        isHit: false,
+        critical: false,
+        isCritical: false,
+        damage: null,
+        damageDealt: 0,
+        hpBefore: null,
+        hpAfter: null,
+        targetDefeated: target.isDefeated === true,
+        isLoaded: attacker.isLoaded,
+        attackerDefeated: attacker.isDefeated === true,
+        attacksThisTurn: attacker.attacksThisTurn,
+        actionsLeft: attacker.actionsRemaining,
+      };
+    }
 
     // A Concealed target needs a DC 5 flat check and a Hidden target DC 11.
     // The check happens before the attack roll. On a failure the action and
@@ -607,6 +886,9 @@
         attacker.attacksThisTurn = Number.isInteger(attacker.attacksThisTurn)
           ? attacker.attacksThisTurn + 1
           : 1;
+        if (ranged && weaponProfile.reload > 0) {
+          attacker.isLoaded = false;
+        }
 
         return {
           ok: true,
@@ -616,6 +898,15 @@
           flatCheck: flatCheck,
           visibility: visibility,
           hiddenAttacker: hiddenAttacker,
+          ranged: ranged,
+          rangeIncrement: weaponProfile.rangeIncrement,
+          reload: weaponProfile.reload,
+          volley: weaponProfile.volley,
+          rangePenalty: evaluation.rangePenalty,
+          volleyPenalty: evaluation.volleyPenalty,
+          isLoaded: attacker.isLoaded,
+          disrupted: false,
+          reactionStrikes: reactionPhase.reactions,
           attackRoll: null,
           attackBonus: attackBonus,
           baseAttackBonus: attackBonus,
@@ -652,6 +943,22 @@
     // bonus and base AC are base values; conditions, MAP, flanking, cover, and
     // the Off-Guard penalty from a Hidden attacker are typed modifiers.
     const attackModifiers = collectAttackModifiers(attacker, mapPenalty);
+    if (evaluation.rangePenalty < 0) {
+      attackModifiers.push({
+        name: "Range Increment Penalty",
+        type: Modifiers.MODIFIER_TYPES.UNTYPED,
+        value: evaluation.rangePenalty,
+        source: "range-increment",
+      });
+    }
+    if (evaluation.volleyPenalty < 0) {
+      attackModifiers.push({
+        name: "Volley Penalty",
+        type: Modifiers.MODIFIER_TYPES.UNTYPED,
+        value: evaluation.volleyPenalty,
+        source: "volley",
+      });
+    }
     const attackResolution = Modifiers.resolveModifiers(attackBonus, attackModifiers);
     const defenseModifiers = collectDefenseModifiers(
       target,
@@ -693,6 +1000,12 @@
       ? attacker.attacksThisTurn + 1
       : 1;
 
+    // A fired weapon with a reload cost is discharged. Reload 0 weapons
+    // (bows, thrown weapons) remain ready.
+    if (ranged && weaponProfile.reload > 0) {
+      attacker.isLoaded = false;
+    }
+
     let hpBefore = null;
     let hpAfter = null;
     let targetDefeated = target.isDefeated === true;
@@ -721,6 +1034,17 @@
       targetId: target.id,
       distanceFeet: evaluation.distanceFeet,
       reachFeet: evaluation.reachFeet,
+      ranged: ranged,
+      rangeIncrement: weaponProfile.rangeIncrement,
+      reload: weaponProfile.reload,
+      volley: weaponProfile.volley,
+      rangePenalty: evaluation.rangePenalty,
+      volleyPenalty: evaluation.volleyPenalty,
+      rangeIncrementIndex: evaluation.rangeIncrementIndex,
+      maxRangeFeet: evaluation.maxRangeFeet,
+      isLoaded: attacker.isLoaded,
+      disrupted: false,
+      reactionStrikes: reactionPhase.reactions,
       flatCheck: flatCheck,
       visibility: visibility,
       hiddenAttacker: hiddenAttacker,

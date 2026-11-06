@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PF2e Remastered — Tactical Battlefield</title>
-    <link rel="stylesheet" href="css/main.css?v=8.0" />
+    <link rel="stylesheet" href="css/main.css?v=20.9" />
   </head>
   <body>
     <div class="app">
@@ -13,7 +13,7 @@
           <div class="brand-mark" aria-hidden="true">P2</div>
           <div>
             <h1>Tactical Battlefield</h1>
-            <p>Pathfinder 2E Remastered · Phase 8.3 — Saves, Skills, Trip, Shove &amp; Grapple</p>
+            <p>Pathfinder 2E Remastered · Phase 20 — View &amp; Presentation Integration</p>
           </div>
         </div>
         <div class="topbar-meta">
@@ -23,7 +23,10 @@
           <span class="badge">Cover · Visibility · Flat Checks</span>
           <span class="badge">Typed Damage · IWR</span>
           <span class="badge">Saves · Skills · Reflex DC</span>
-          <span class="badge badge-accent">Trip · Shove · Grapple · Escape</span>
+          <span class="badge">Trip · Shove · Grapple · Escape</span>
+          <span class="badge">Spells · Afflictions · Hazards</span>
+          <span class="badge">Event Bus · Serialization</span>
+          <span class="badge badge-accent">Phase 20 · AoE · AI · Save/Load</span>
         </div>
       </header>
 
@@ -59,7 +62,17 @@
               <span id="round-indicator" class="round-badge">Round 1</span>
             </div>
             <div id="initiative-tracker" class="initiative-tracker" aria-live="polite"></div>
-            <button id="end-turn" class="end-turn-button" type="button">End Turn ▸</button>
+            <div class="turn-actions">
+              <button
+                id="roll-initiative"
+                class="end-turn-button secondary-button"
+                type="button"
+                title="Roll d20 + Perception (or Stealth from cover) and rebuild the queue"
+              >
+                Roll Initiative ⟳
+              </button>
+              <button id="end-turn" class="end-turn-button" type="button">End Turn ▸</button>
+            </div>
           </section>
 
           <section class="panel">
@@ -144,10 +157,115 @@
               >
                 Escape
               </button>
+              <button
+                type="button"
+                id="sneak"
+                class="mode-button"
+                data-mode="sneak"
+                aria-pressed="false"
+                title="Requires Hidden/Undetected · destination costs at most half Speed · 1 action · secret Stealth check"
+                disabled
+              >
+                Sneak
+              </button>
             </div>
             <p id="mode-hint" class="mode-hint">
               Stride moves up to Speed for 1 action. Difficult terrain adds 5 ft per square. Leaving a threatened square can provoke a Reactive Strike; Step never does.
             </p>
+          </section>
+
+          <section class="panel">
+            <h2>Magic &amp; Stealth</h2>
+            <div class="action-grid">
+              <select id="spell-select" class="spell-select" aria-label="Spell selection">
+                <option value="">Choose a spell…</option>
+              </select>
+              <button id="cast-spell" class="mode-button action-button" type="button" disabled>
+                Cast Spell
+              </button>
+              <button
+                id="sustain-spell"
+                class="mode-button action-button"
+                type="button"
+                title="Extend a sustained spell to the end of the next round · 1 action"
+                disabled
+              >
+                Sustain
+              </button>
+              <button
+                id="seek"
+                class="mode-button action-button"
+                type="button"
+                title="Perception vs hidden/undetected Stealth DCs in a 30-ft burst · 1 action · secret"
+                disabled
+              >
+                Seek
+              </button>
+              <button
+                id="hide"
+                class="mode-button action-button"
+                type="button"
+                title="Stealth vs the highest observer Perception DC · needs cover or concealment · 1 action"
+                disabled
+              >
+                Hide
+              </button>
+            </div>
+            <p id="spell-hint" class="mode-hint">
+              Pick a spell, then hover the board to preview its burst, cone, line, or emanation template.
+            </p>
+          </section>
+
+          <section class="panel">
+            <h2>Hazards</h2>
+            <div id="hazard-status" class="hazard-status">No hazards on this battlefield.</div>
+            <button
+              id="disable-hazard"
+              class="mode-button action-button"
+              type="button"
+              title="Disable a Device · 2 actions · manipulate · Thievery vs the hazard's Disable DC"
+              disabled
+            >
+              Disable Hazard
+            </button>
+          </section>
+
+          <section class="panel">
+            <h2>Tactical AI &amp; State</h2>
+            <div class="action-grid">
+              <button
+                id="ai-step"
+                class="mode-button action-button"
+                type="button"
+                title="Let TacticalAI execute exactly one action for the active combatant"
+              >
+                AI Step
+              </button>
+              <button
+                id="ai-turn"
+                class="mode-button action-button"
+                type="button"
+                title="Let TacticalAI execute the active combatant's whole turn"
+              >
+                AI Turn
+              </button>
+              <button
+                id="save-combat"
+                class="mode-button action-button"
+                type="button"
+                title="Serialize the encounter, map, combatants, and hazards to localStorage"
+              >
+                Save Combat
+              </button>
+              <button
+                id="load-combat"
+                class="mode-button action-button"
+                type="button"
+                title="Restore the saved combat state and rebuild the board and initiative"
+              >
+                Load Combat
+              </button>
+            </div>
           </section>
 
           <section class="panel">
@@ -162,40 +280,68 @@
       </main>
     </div>
 
-    <!-- Classic scripts keep the prototype runnable from file:// by double-click. -->
-    <script src="src/Core/Grid/grid-math.js"></script>
-    <script src="src/Core/Grid/grid-map.js"></script>
-    <script src="src/Core/Grid/pathfinding.js"></script>
-    <script src="src/Core/Grid/occupancy.js"></script>
-    <script src="src/Core/Grid/los-math.js"></script>
-    <script src="src/Core/Rules/map.js"></script>
-    <script src="src/Core/Rules/damage.js"></script>
-    <script src="src/Core/Rules/iwr.js"></script>
-    <script src="src/Core/Rules/modifiers.js"></script>
-    <script src="src/Core/Rules/checks.js?v=8.0"></script>
-    <script src="src/Core/Rules/weapon-traits.js?v=7.3"></script>
-    <script src="src/Core/Grid/flanking.js"></script>
-    <script src="src/Core/Grid/cover.js?v=8.0"></script>
-    <script src="src/Core/Entities/conditions.js?v=8.3"></script>
-    <script src="src/Core/Entities/persistent-damage.js"></script>
-    <script src="src/Core/Entities/combatant.js?v=8.3"></script>
-    <script src="src/Core/Encounter/encounter.js?v=8.3"></script>
-    <script src="src/Core/Actions/strike.js?v=8.3"></script>
-    <script src="src/Core/Actions/reactive-strike.js"></script>
-    <script src="src/Core/Actions/stride.js?v=8.3"></script>
-    <script src="src/Core/Actions/step.js?v=8.3"></script>
-    <script src="src/Core/Actions/raise-shield.js"></script>
-    <script src="src/Core/Actions/take-cover.js"></script>
-    <script src="src/Core/Actions/trip.js?v=8.0"></script>
-    <script src="src/Core/Actions/stand.js?v=8.3"></script>
-    <script src="src/Core/Actions/athletics-maneuver.js?v=8.3"></script>
-    <script src="src/Core/Actions/shove.js?v=8.3"></script>
-    <script src="src/Core/Actions/grapple.js?v=8.3"></script>
-    <script src="src/Core/Actions/escape.js?v=8.3"></script>
-    <script src="src/View/Grid/grid-view.js"></script>
-    <script src="src/View/Tokens/token-view.js?v=8.3"></script>
-    <script src="src/View/UI/combat-log.js"></script>
-    <script src="src/View/battlefield-view.js?v=8.3"></script>
-    <script src="src/main.js?v=8.3"></script>
+    <!-- Classic scripts keep the prototype runnable from file:// by double-click.
+         Order matters: geometry → rules → entities → encounter/state → actions
+         → AI → view. Every module self-registers on window.PF2e. -->
+    <script src="src/Core/Grid/grid-math.js?v=20.9"></script>
+    <script src="src/Core/Grid/grid-map.js?v=20.9"></script>
+    <script src="src/Core/Grid/pathfinding.js?v=20.9"></script>
+    <script src="src/Core/Grid/occupancy.js?v=20.9"></script>
+    <script src="src/Core/Grid/los-math.js?v=20.9"></script>
+    <script src="src/Core/Grid/distance.js?v=20.9"></script>
+    <script src="src/Core/Grid/cover.js?v=20.9"></script>
+    <script src="src/Core/Grid/aoe.js?v=20.9"></script>
+    <script src="src/Core/Grid/illumination.js?v=20.9"></script>
+
+    <script src="src/Core/Rules/modifiers.js?v=20.9"></script>
+    <script src="src/Core/Rules/map.js?v=20.9"></script>
+    <script src="src/Core/Rules/damage.js?v=20.9"></script>
+    <script src="src/Core/Rules/iwr.js?v=20.9"></script>
+    <script src="src/Core/Rules/checks.js?v=20.9"></script>
+    <script src="src/Core/Rules/weapon-traits.js?v=20.9"></script>
+    <script src="src/Core/Rules/spells.js?v=20.9"></script>
+    <script src="src/Core/Rules/afflictions.js?v=20.9"></script>
+    <script src="src/Core/Grid/flanking.js?v=20.9"></script>
+
+    <script src="src/Core/Entities/equipment.js?v=20.9"></script>
+    <script src="src/Core/Entities/shield.js?v=20.9"></script>
+    <script src="src/Core/Entities/conditions.js?v=20.9"></script>
+    <script src="src/Core/Entities/persistent-damage.js?v=20.9"></script>
+    <script src="src/Core/Entities/hazard.js?v=20.9"></script>
+    <script src="src/Core/Entities/combatant.js?v=20.9"></script>
+
+    <script src="src/Core/Encounter/initiative.js?v=20.9"></script>
+    <script src="src/Core/Encounter/encounter.js?v=20.9"></script>
+    <script src="src/Core/State/event-bus.js?v=20.9"></script>
+    <script src="src/Core/State/serializer.js?v=20.9"></script>
+
+    <script src="src/Core/Actions/strike.js?v=20.9"></script>
+    <script src="src/Core/Actions/reactive-strike.js?v=20.9"></script>
+    <script src="src/Core/Actions/stride.js?v=20.9"></script>
+    <script src="src/Core/Actions/step.js?v=20.9"></script>
+    <script src="src/Core/Actions/raise-shield.js?v=20.9"></script>
+    <script src="src/Core/Actions/take-cover.js?v=20.9"></script>
+    <script src="src/Core/Actions/trip.js?v=20.9"></script>
+    <script src="src/Core/Actions/stand.js?v=20.9"></script>
+    <script src="src/Core/Actions/athletics-maneuver.js?v=20.9"></script>
+    <script src="src/Core/Actions/shove.js?v=20.9"></script>
+    <script src="src/Core/Actions/grapple.js?v=20.9"></script>
+    <script src="src/Core/Actions/escape.js?v=20.9"></script>
+    <script src="src/Core/Actions/reload.js?v=20.9"></script>
+    <script src="src/Core/Actions/cast-spell.js?v=20.9"></script>
+    <script src="src/Core/Actions/sustain-spell.js?v=20.9"></script>
+    <script src="src/Core/Actions/interact.js?v=20.9"></script>
+    <script src="src/Core/Actions/shield-block.js?v=20.9"></script>
+    <script src="src/Core/Actions/stealth.js?v=20.9"></script>
+    <script src="src/Core/Actions/disable-hazard.js?v=20.9"></script>
+
+    <script src="src/Core/AI/tactical-ai.js?v=20.9"></script>
+
+    <script src="src/View/Grid/grid-view.js?v=20.9"></script>
+    <script src="src/View/Tokens/token-view.js?v=20.9"></script>
+    <script src="src/View/UI/combat-log.js?v=20.9"></script>
+    <script src="src/View/UI/event-log.js?v=20.9"></script>
+    <script src="src/View/battlefield-view.js?v=20.9"></script>
+    <script src="src/main.js?v=20.9"></script>
   </body>
 </html>

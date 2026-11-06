@@ -23,6 +23,7 @@
       require("../Rules/map.js"),
       require("../Rules/modifiers.js"),
       require("./strike.js"),
+      require("../Entities/equipment.js"),
     );
   } else {
     root.PF2e = root.PF2e || {};
@@ -33,6 +34,7 @@
       root.PF2e.Core.Rules.MultipleAttack,
       root.PF2e.Core.Rules.Modifiers,
       root.PF2e.Core.Actions.Strike,
+      root.PF2e.Core.Equipment,
     );
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
@@ -40,6 +42,7 @@
   MultipleAttack,
   Modifiers,
   Strike,
+  Equipment,
 ) {
   "use strict";
 
@@ -53,6 +56,7 @@
     NO_ACTIONS: "no-actions",
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
+    NO_FREE_HAND: "no-free-hand",
   });
 
   function assertCombatant(combatant, label) {
@@ -138,9 +142,10 @@
    *   reachFeet?: number,
    *   agile?: boolean
    * }} options
+   * @param {"shove"|"grapple"} [maneuver] hand-requirement trait to check
    * @returns {object}
    */
-  function evaluate(options) {
+  function evaluate(options, maneuver) {
     const opts = options || {};
     const attacker = opts.attacker;
     const target = opts.target;
@@ -150,6 +155,22 @@
 
     if (attacker.isDefeated === true) {
       return { ok: false, reason: MANEUVER_REASONS.ATTACKER_DEFEATED };
+    }
+
+    // Shove and Grapple need one free hand unless the wielded weapon carries
+    // the matching trait. This is checked before geometry/MAP so an illegal
+    // action spends nothing.
+    let handCheck = null;
+    if (maneuver !== undefined && maneuver !== null) {
+      handCheck = Equipment.checkManeuverHands(attacker, maneuver);
+      if (!handCheck.ok) {
+        return {
+          ok: false,
+          reason: MANEUVER_REASONS.NO_FREE_HAND,
+          freeHands: handCheck.freeHands,
+          handRequirement: handCheck,
+        };
+      }
     }
 
     // Strike validation supplies identity, alliance, reach, visibility, and
@@ -210,6 +231,14 @@
       hiddenAttacker: evaluation.hiddenAttacker === true,
       cover: evaluation.cover || null,
       coverDegree: evaluation.coverDegree || "none",
+      handRequirement:
+        handCheck === null
+          ? null
+          : {
+              ok: true,
+              freeHands: handCheck.freeHands,
+              viaTrait: handCheck.viaTrait,
+            },
     };
   }
 

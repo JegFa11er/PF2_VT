@@ -90,6 +90,64 @@
     return cell.x + "," + cell.y;
   }
 
+  function normalizeFootprint(footprint) {
+    if (footprint === undefined) {
+      return 1;
+    }
+    if (!Number.isInteger(footprint) || footprint < 1) {
+      throw new RangeError("footprint must be a positive integer.");
+    }
+    return footprint;
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {number} footprint
+   * @returns {{x:number,y:number}[]}
+   */
+  function footprintCells(x, y, footprint) {
+    const cells = [];
+    for (let dx = 0; dx < footprint; dx += 1) {
+      for (let dy = 0; dy < footprint; dy += 1) {
+        cells.push({ x: x + dx, y: y + dy });
+      }
+    }
+    return cells;
+  }
+
+  /**
+   * Whether a square footprint intersects a wall, out-of-bounds cell, or an
+   * impassable occupancy cell.
+   */
+  function footprintImpassable(map, x, y, occupancy, footprint) {
+    if (footprint === 1) {
+      return map.isBlocked(x, y) || occupancy.blocked.has(x + "," + y);
+    }
+
+    for (const cell of footprintCells(x, y, footprint)) {
+      if (map.isBlocked(cell.x, cell.y) || occupancy.blocked.has(cellKeyOf(cell))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Whether any cell of a footprint belongs to the given cell set.
+   */
+  function footprintOverlapsSet(x, y, footprint, cells) {
+    if (footprint === 1) {
+      return cells.has(x + "," + y);
+    }
+    for (const cell of footprintCells(x, y, footprint)) {
+      if (cells.has(cellKeyOf(cell))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Occupancy cells may be passed as:
    *   - an array of { x, y } cells,
@@ -153,11 +211,13 @@
     };
   }
 
-  function isImpassable(map, x, y, occupancy) {
-    return map.isBlocked(x, y) || occupancy.blocked.has(x + "," + y);
-  }
-
   function terrainExtraFeet(map, x, y) {
+    // Greater-difficult terrain adds +10 ft; ordinary difficult terrain adds
+    // +5 ft. GridMap exposes the authoritative value; older maps fall back to
+    // the legacy difficult-terrain boolean.
+    if (typeof map.getTerrainExtraFeet === "function") {
+      return map.getTerrainExtraFeet(x, y);
+    }
     return typeof map.hasDifficultTerrain === "function" && map.hasDifficultTerrain(x, y)
       ? DIFFICULT_TERRAIN_EXTRA_FEET
       : 0;
@@ -274,7 +334,8 @@
    *   map: GridMap,
    *   startDiagonalParity?: number,
    *   diagonalCornerPolicy?: string,
-   *   occupancy?: { blockedCells?: any, passThroughCells?: any }
+   *   occupancy?: { blockedCells?: any, passThroughCells?: any },
+   *   footprint?: number
    * }} options
    * @returns {{
    *   found: true,
@@ -294,6 +355,7 @@
     const startParity = normalizeParity(opts.startDiagonalParity);
     const policy = normalizePolicy(opts.diagonalCornerPolicy);
     const occupancy = normalizeOccupancy(opts.occupancy);
+    const footprint = normalizeFootprint(opts.footprint);
 
     if (!map.isInBounds(start.x, start.y)) {
       return fail("out-of-bounds");
@@ -301,16 +363,13 @@
     if (!map.isInBounds(goal.x, goal.y)) {
       return fail("out-of-bounds");
     }
-    if (map.hasObstacle(start.x, start.y)) {
+    if (footprintImpassable(map, start.x, start.y, occupancy, footprint)) {
       return fail("blocked-start");
     }
-    if (occupancy.blocked.has(cellKeyOf(start))) {
-      return fail("blocked-start");
-    }
-    if (map.hasObstacle(goal.x, goal.y) || occupancy.blocked.has(cellKeyOf(goal))) {
+    if (footprintImpassable(map, goal.x, goal.y, occupancy, footprint)) {
       return fail("blocked-goal");
     }
-    if (occupancy.passThrough.has(cellKeyOf(goal))) {
+    if (footprintOverlapsSet(goal.x, goal.y, footprint, occupancy.passThrough)) {
       return fail("goal-occupied");
     }
 
@@ -360,7 +419,7 @@
         const nx = node.x + dir.dx;
         const ny = node.y + dir.dy;
 
-        if (isImpassable(map, nx, ny, occupancy)) {
+        if (footprintImpassable(map, nx, ny, occupancy, footprint)) {
           continue;
         }
 
@@ -433,7 +492,8 @@
    * @param {{
    *   startDiagonalParity?: number,
    *   diagonalCornerPolicy?: string,
-   *   occupancy?: { blockedCells?: any, passThroughCells?: any }
+   *   occupancy?: { blockedCells?: any, passThroughCells?: any },
+   *   footprint?: number
    * }} [options]
    * @returns {{x:number,y:number,costFeet:number}[]}
    */
@@ -445,16 +505,14 @@
     if (!map.isInBounds(origin.x, origin.y)) {
       throw new RangeError("origin must be inside the map.");
     }
-    if (map.hasObstacle(origin.x, origin.y)) {
-      return [];
-    }
 
     const opts = options || {};
     const startParity = normalizeParity(opts.startDiagonalParity);
     const policy = normalizePolicy(opts.diagonalCornerPolicy);
     const occupancy = normalizeOccupancy(opts.occupancy);
+    const footprint = normalizeFootprint(opts.footprint);
 
-    if (occupancy.blocked.has(cellKeyOf(origin))) {
+    if (footprintImpassable(map, origin.x, origin.y, occupancy, footprint)) {
       return [];
     }
 
@@ -489,7 +547,7 @@
         const nx = node.x + dir.dx;
         const ny = node.y + dir.dy;
 
-        if (isImpassable(map, nx, ny, occupancy)) {
+        if (footprintImpassable(map, nx, ny, occupancy, footprint)) {
           continue;
         }
 
@@ -527,7 +585,7 @@
       if (x === origin.x && y === origin.y) {
         continue;
       }
-      if (occupancy.passThrough.has(entry[0])) {
+      if (footprintOverlapsSet(x, y, footprint, occupancy.passThrough)) {
         continue;
       }
       cells.push({ x: x, y: y, costFeet: entry[1] });

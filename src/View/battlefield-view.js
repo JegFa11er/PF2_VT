@@ -17,6 +17,7 @@
   const Trip = NS.Core.Actions.Trip;
   const Shove = NS.Core.Actions.Shove;
   const Grapple = NS.Core.Actions.Grapple;
+  const AoE = NS.Core.Grid.AoE;
   const POLICY = Pathfinding.DIAGONAL_CORNER_POLICIES;
 
   const MODES = Object.freeze({
@@ -26,7 +27,11 @@
     TRIP: "trip",
     SHOVE: "shove",
     GRAPPLE: "grapple",
+    CAST: "cast",
+    SNEAK: "sneak",
   });
+
+  const SPELL_AREA_TYPES = Object.freeze(["burst", "cone", "line", "emanation"]);
 
   function allianceOf(combatant) {
     return combatant.alliance === undefined ? "player" : combatant.alliance;
@@ -135,6 +140,9 @@
       this.tripTargets = [];
       this.shoveTargets = [];
       this.grappleTargets = [];
+      this.spell = null;
+      this.aoeCells = [];
+      this.aoeTargets = [];
 
       this.hover = null;
       this.hoverKey = null;
@@ -155,6 +163,10 @@
         typeof opts.onShoveRequest === "function" ? opts.onShoveRequest : function () {};
       this.onGrappleRequest =
         typeof opts.onGrappleRequest === "function" ? opts.onGrappleRequest : function () {};
+      this.onCastRequest =
+        typeof opts.onCastRequest === "function" ? opts.onCastRequest : function () {};
+      this.onSneakRequest =
+        typeof opts.onSneakRequest === "function" ? opts.onSneakRequest : function () {};
       this.onHoverChange =
         typeof opts.onHoverChange === "function" ? opts.onHoverChange : function () {};
       this.onInactiveToken =
@@ -210,6 +222,46 @@
       return this.mode;
     }
 
+    getSpell() {
+      return this.spell;
+    }
+
+    /** Enter Cast a Spell mode with the selected spell definition. */
+    setSpell(spell) {
+      this.spell = spell || null;
+      if (this.spell) {
+        this.mode = MODES.CAST;
+        this.resetHover();
+        this.refreshReachable();
+        this.refreshAoe(null);
+        this.render();
+        return true;
+      }
+      this.clearSpell();
+      return false;
+    }
+
+    clearSpell() {
+      const wasCast = this.mode === MODES.CAST;
+      this.spell = null;
+      this.aoeCells = [];
+      this.aoeTargets = [];
+      if (wasCast) {
+        this.mode = MODES.STRIDE;
+        this.resetHover();
+        this.refreshReachable();
+        this.render();
+      }
+    }
+
+    getAoeCells() {
+      return this.aoeCells;
+    }
+
+    getAoeTargets() {
+      return this.aoeTargets;
+    }
+
     setMode(mode) {
       if (
         mode !== MODES.STRIDE &&
@@ -217,17 +269,65 @@
         mode !== MODES.STRIKE &&
         mode !== MODES.TRIP &&
         mode !== MODES.SHOVE &&
-        mode !== MODES.GRAPPLE
+        mode !== MODES.GRAPPLE &&
+        mode !== MODES.CAST &&
+        mode !== MODES.SNEAK
       ) {
         throw new RangeError("Unknown action mode: " + String(mode) + ".");
+      }
+      if (mode !== MODES.CAST) {
+        this.spell = null;
       }
       if (this.mode === mode) {
         return;
       }
       this.mode = mode;
+      this.aoeCells = [];
+      this.aoeTargets = [];
       this.resetHover();
       this.refreshReachable();
       this.render();
+    }
+
+    /**
+     * Swap the rendered world after deserialization without replacing the
+     * BattlefieldView instance (and therefore its listeners).
+     */
+    setWorld(combatants, map) {
+      if (!Array.isArray(combatants)) {
+        throw new TypeError("setWorld requires a combatants array.");
+      }
+      if (!map || typeof map.isBlocked !== "function") {
+        throw new TypeError("setWorld requires a GridMap.");
+      }
+      const cellSize = this.grid.cellSize;
+      this.map = map;
+      this.cols = map.cols;
+      this.rows = map.rows;
+      this.grid = new NS.View.GridView({
+        cols: this.cols,
+        rows: this.rows,
+        cellSize: cellSize,
+      });
+      this.combatants = combatants;
+      this.tokenViews = combatants.map(
+        function (combatant) {
+          return new NS.View.TokenView(combatant, this.grid, this.getColor(combatant));
+        }.bind(this),
+      );
+      this.activeCombatantId = null;
+      this.selectedCombatant = null;
+      this.reachable = [];
+      this.strikeTargets = [];
+      this.tripTargets = [];
+      this.shoveTargets = [];
+      this.grappleTargets = [];
+      this.spell = null;
+      this.aoeCells = [];
+      this.aoeTargets = [];
+      this.mode = MODES.STRIDE;
+      this.resetHover();
+      this.resize();
     }
 
     setActiveCombatant(id) {
@@ -253,8 +353,125 @@
 
     findCombatantAtCell(cell) {
       return this.combatants.find(function (combatant) {
-        return combatant.x === cell.x && combatant.y === cell.y;
+        if (
+          combatant.x === cell.x &&
+          combatant.y === cell.y &&
+          (typeof combatant.getFootprint !== "function" || combatant.getFootprint() === 1)
+        ) {
+          return true;
+        }
+        if (typeof combatant.getOccupiedCells === "function") {
+          return combatant.getOccupiedCells().some(function (occupied) {
+            return occupied.x === cell.x && occupied.y === cell.y;
+          });
+        }
+        return false;
       }) || null;
+    }
+
+    /**
+     * Compute the affected cells for the active spell at a hovered origin.
+     *
+     * @param {{x:number,y:number}|null} originCell
+     * @returns {{cells:object[],areaType:string|null}}
+     */
+    computeSpellArea(originCell) {
+      if (!this.spell || !this.spell.area || !this.selectedCombatant) {
+        return { cells: [], areaType: null };
+      }
+      const area = this.spell.area;
+      const areaType = String(area.type === undefined ? "burst" : area.type).toLowerCase();
+      if (SPELL_AREA_TYPES.indexOf(areaType) === -1) {
+        return { cells: [], areaType: areaType };
+      }
+      const radiusFeet =
+        area.radiusFeet !== undefined
+          ? area.radiusFeet
+          : area.radius !== undefined
+            ? area.radius
+            : area.lengthFeet !== undefined
+              ? area.lengthFeet
+              : area.length;
+      if (!Number.isInteger(radiusFeet)) {
+        return { cells: [], areaType: areaType };
+      }
+
+      const caster = this.selectedCombatant;
+      if (areaType === "emanation") {
+        return {
+          cells: AoE.getEmanationCells(caster, radiusFeet, this.map),
+          areaType: areaType,
+        };
+      }
+
+      if (areaType === "burst") {
+        if (!originCell) {
+          return { cells: [], areaType: areaType };
+        }
+        return {
+          cells: AoE.getBurstCells(originCell, radiusFeet, this.map),
+          areaType: areaType,
+        };
+      }
+
+      if (!originCell) {
+        return { cells: [], areaType: areaType };
+      }
+      const dx = originCell.x - caster.x;
+      const dy = originCell.y - caster.y;
+      if (dx === 0 && dy === 0) {
+        return { cells: [], areaType: areaType };
+      }
+      const direction = AoE.normalizeDirection({ x: dx, y: dy });
+      const origin = { x: caster.x, y: caster.y };
+      return {
+        cells:
+          areaType === "cone"
+            ? AoE.getConeCells(origin, direction, radiusFeet, this.map)
+            : AoE.getLineCells(
+                origin,
+                direction,
+                radiusFeet,
+                area.widthFeet === undefined ? 5 : area.widthFeet,
+                this.map,
+              ),
+        areaType: areaType,
+      };
+    }
+
+    refreshAoe(originCell) {
+      const result = this.computeSpellArea(originCell);
+      this.aoeCells = result.cells;
+      this.aoeTargets = [];
+      if (this.aoeCells.length === 0) {
+        return { cells: [], areaType: result.areaType, targets: [] };
+      }
+
+      const keys = new Set(
+        this.aoeCells.map(function (cell) {
+          return cell.x + "," + cell.y;
+        }),
+      );
+      const targets = [];
+      for (let index = 0; index < this.tokenViews.length; index += 1) {
+        const view = this.tokenViews[index];
+        const token = view.token;
+        if (!token || token.isDefeated === true) {
+          continue;
+        }
+        const occupied =
+          typeof token.getOccupiedCells === "function"
+            ? token.getOccupiedCells()
+            : [{ x: token.x, y: token.y }];
+        const caught = occupied.some(function (cell) {
+          return keys.has(cell.x + "," + cell.y);
+        });
+        if (caught) {
+          targets.push(view);
+        }
+      }
+      this.aoeTargets = targets;
+      return { cells: this.aoeCells, areaType: result.areaType, targets: targets };
     }
 
     refreshReachable() {
@@ -279,6 +496,26 @@
         combatant.isImmobilized()
       ) {
         this.reachable = [];
+        return;
+      }
+
+      if (this.mode === MODES.CAST) {
+        this.reachable = [];
+        return;
+      }
+
+      if (this.mode === MODES.SNEAK) {
+        const halfSpeed = Math.floor(combatant.speedFeet / 10) * 5;
+        this.reachable = Pathfinding.reachableCells(
+          this.map,
+          { x: combatant.x, y: combatant.y },
+          halfSpeed,
+          {
+            startDiagonalParity: combatant.diagonalParity,
+            diagonalCornerPolicy: this.cornerPolicy,
+            occupancy: occupancy,
+          },
+        );
         return;
       }
 
@@ -480,6 +717,29 @@
 
       const token = this.findTokenAt(point.x, point.y);
 
+      if (this.mode === MODES.CAST) {
+        if (!this.selectedCombatant || !this.spell) {
+          return;
+        }
+        this.onCastRequest(this.selectedCombatant, this.spell, cell, token);
+        this.render();
+        return;
+      }
+
+      if (this.mode === MODES.SNEAK) {
+        if (!this.selectedCombatant) {
+          return;
+        }
+        if (cell.x === this.selectedCombatant.x && cell.y === this.selectedCombatant.y) {
+          this.clearSelection();
+          return;
+        }
+        this.resetHover();
+        this.onSneakRequest(this.selectedCombatant, cell);
+        this.render();
+        return;
+      }
+
       if (
         this.mode === MODES.STRIKE ||
         this.mode === MODES.TRIP ||
@@ -574,6 +834,11 @@
       this.hoverInfo = null;
       this.hoverPath = null;
 
+      if (this.mode !== MODES.CAST) {
+        this.aoeCells = [];
+        this.aoeTargets = [];
+      }
+
       if (!cell) {
         this.onHoverChange(null);
         this.render();
@@ -604,6 +869,65 @@
           cell: cell,
           label: label,
           combatant: combatant,
+        };
+        this.onHoverChange(this.hoverInfo);
+        this.render();
+        return;
+      }
+
+      if (this.mode === MODES.CAST) {
+        const spell = this.spell;
+        if (!spell) {
+          this.onHoverChange(null);
+          this.render();
+          return;
+        }
+        const area = this.refreshAoe(cell);
+        const isAttack = spell.type === "attack";
+        const validTarget =
+          !isAttack || (occupant !== null && occupant.id !== combatant.id);
+        const hasArea = isAttack || area.cells.length > 0;
+        this.hoverInfo = {
+          status: "cast",
+          cell: cell,
+          label: label,
+          combatant: combatant,
+          spell: spell,
+          target: occupant,
+          areaType: area.areaType,
+          cells: area.cells,
+          valid: validTarget && hasArea,
+        };
+        this.onHoverChange(this.hoverInfo);
+        this.render();
+        return;
+      }
+
+      if (this.mode === MODES.SNEAK) {
+        const pathResult = Pathfinding.findPath(
+          { x: combatant.x, y: combatant.y },
+          cell,
+          {
+            map: this.map,
+            startDiagonalParity: combatant.diagonalParity,
+            diagonalCornerPolicy: this.cornerPolicy,
+            occupancy: occupancy,
+          },
+        );
+        const halfSpeed = Math.floor(combatant.speedFeet / 10) * 5;
+        const tooFar = !pathResult.found || pathResult.costFeet > halfSpeed;
+        if (pathResult.found && !tooFar) {
+          this.hoverPath = pathResult.path;
+        }
+        this.hoverInfo = {
+          status: "sneak",
+          cell: cell,
+          label: label,
+          combatant: combatant,
+          valid: pathResult.found && !tooFar,
+          costFeet: pathResult.found ? pathResult.costFeet : null,
+          maxCostFeet: halfSpeed,
+          path: pathResult.found ? pathResult.path : null,
         };
         this.onHoverChange(this.hoverInfo);
         this.render();
@@ -889,6 +1213,41 @@
 
       const info = this.hoverInfo;
 
+      if (info.status === "cast") {
+        const isAttack = info.spell && info.spell.type === "attack";
+        const label = isAttack
+          ? (info.valid
+              ? (info.spell.name || "Spell") + " → " + (info.target ? info.target.name : "target")
+              : "Select a hostile target")
+          : (info.valid
+              ? (info.spell.name || "Spell") + " · " + (info.areaType || "area") + " · " + info.cells.length + " cells"
+              : "Invalid spell origin");
+        this.grid.drawHoverCell(ctx, info.cell, info.valid);
+        this.grid.drawPathLabel(
+          ctx,
+          info.cell,
+          label,
+          info.valid ? "valid" : "invalid",
+        );
+        return;
+      }
+
+      if (info.status === "sneak") {
+        this.grid.drawHoverCell(ctx, info.cell, info.valid);
+        if (this.hoverPath) {
+          this.grid.drawPath(ctx, this.hoverPath, info.valid);
+        }
+        this.grid.drawPathLabel(
+          ctx,
+          info.cell,
+          info.valid
+            ? "Sneak · " + info.costFeet + " / " + info.maxCostFeet + " ft"
+            : "Sneak · exceeds half Speed",
+          info.valid ? "valid" : "invalid",
+        );
+        return;
+      }
+
       if (info.status === "strike") {
         this.grid.drawHoverCell(ctx, info.cell, info.valid);
         if (info.valid && info.flanked) {
@@ -1113,6 +1472,34 @@
         this.grid.drawDifficultTerrain(ctx, difficultCells);
       }
 
+      const greaterCells =
+        typeof this.map.getGreaterDifficultTerrainCells === "function"
+          ? this.map.getGreaterDifficultTerrainCells()
+          : [];
+      if (greaterCells.length > 0) {
+        this.grid.drawGreaterDifficultTerrain(ctx, greaterCells);
+      }
+
+      const hazardousCells =
+        typeof this.map.getHazardousCells === "function"
+          ? this.map.getHazardousCells()
+          : [];
+      if (hazardousCells.length > 0) {
+        this.grid.drawHazardousTerrain(ctx, hazardousCells);
+      }
+
+      const dimCells =
+        typeof this.map.getIlluminationCells === "function"
+          ? this.map.getIlluminationCells("dim")
+          : [];
+      const darknessCells =
+        typeof this.map.getIlluminationCells === "function"
+          ? this.map.getIlluminationCells("darkness")
+          : [];
+      if (dimCells.length > 0 || darknessCells.length > 0) {
+        this.grid.drawIllumination(ctx, dimCells, darknessCells);
+      }
+
       if (this.reachable.length > 0) {
         this.grid.drawReachable(ctx, this.reachable);
       }
@@ -1131,6 +1518,16 @@
 
       this.grid.drawObstacles(ctx, this.map.getBlockedCells());
 
+      if (this.mode === MODES.CAST && this.aoeCells.length > 0) {
+        const areaType =
+          this.hoverInfo && this.hoverInfo.status === "cast"
+            ? this.hoverInfo.areaType
+            : this.spell && this.spell.area
+              ? this.spell.area.type
+              : "burst";
+        this.grid.drawAoeCells(ctx, this.aoeCells, areaType);
+      }
+
       this.drawHoverOverlay(ctx);
 
       // Draw the selected token last so its ring stays visible.
@@ -1143,6 +1540,10 @@
 
       for (const tokenView of ordered) {
         tokenView.draw(ctx, tokenView.token.id === selectedId);
+      }
+
+      if (this.mode === MODES.CAST && this.aoeTargets.length > 0) {
+        this.grid.drawAoeTargets(ctx, this.aoeTargets);
       }
     }
 

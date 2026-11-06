@@ -303,6 +303,7 @@
         : null;
       const applied = combatant.takeDamage(rolled.total, {
         type: instance.type,
+        source: "persistent",
       });
 
       const recovery = Checks.evaluateFlatCheck({

@@ -449,6 +449,68 @@ button {
   outline-offset: 2px;
 }
 
+.turn-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.turn-actions .end-turn-button {
+  margin-top: 0;
+  padding: 9px 6px;
+  font-size: 11.5px;
+}
+
+.end-turn-button.secondary-button {
+  border-color: rgba(88, 198, 255, 0.45);
+  background: linear-gradient(180deg, rgba(88, 198, 255, 0.16), rgba(88, 198, 255, 0.05));
+  color: #b9e6ff;
+}
+
+.end-turn-button.secondary-button:hover {
+  border-color: rgba(88, 198, 255, 0.85);
+  background: rgba(88, 198, 255, 0.2);
+}
+
+.action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.action-grid > .mode-button {
+  flex: 1 1 calc(50% - 6px);
+}
+
+.spell-select {
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: 8px 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #15191e;
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.spell-select:focus-visible {
+  outline: 2px solid rgba(88, 198, 255, 0.5);
+  outline-offset: 1px;
+}
+
+.hazard-status {
+  margin-bottom: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 148, 84, 0.3);
+  border-radius: 7px;
+  background: rgba(122, 54, 28, 0.16);
+  color: #ffd2b0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 /* ------------------------------------------------------------- action bar */
 
 .action-modes {
@@ -988,6 +1050,43 @@ button {
 .log-entry.log-muted {
   border-left-color: #525b66;
   color: var(--muted);
+}
+
+.log-entry.log-damage {
+  border-left-color: #e05d62;
+  background: rgba(224, 93, 98, 0.09);
+  color: #ffc4c0;
+}
+
+.log-entry.log-condition {
+  border-left-color: #c58cff;
+  background: rgba(197, 140, 255, 0.07);
+  color: #e6d4ff;
+}
+
+.log-entry.log-hazard {
+  border-left-color: #ff944f;
+  background: rgba(255, 148, 84, 0.1);
+  color: #ffd2b0;
+}
+
+.log-entry.log-round {
+  border-left-color: var(--accent);
+  background: rgba(214, 168, 75, 0.1);
+  color: #ffe6b0;
+  font-weight: 700;
+}
+
+.log-entry.log-spell {
+  border-left-color: #58c6ff;
+  background: rgba(88, 198, 255, 0.08);
+  color: #c7efff;
+}
+
+.log-entry.log-save {
+  border-left-color: #9a7be0;
+  background: rgba(154, 123, 224, 0.07);
+  color: #ddd0ff;
 }
 
 /* ---------------------------------------------------------- test runner */

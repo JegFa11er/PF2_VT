@@ -15,6 +15,13 @@
   const Occupancy = window.PF2e.Core.Occupancy;
   const LosMath = window.PF2e.Core.LosMath;
   const Cover = window.PF2e.Core.Cover;
+  const AoE = window.PF2e.Core.Grid.AoE;
+  const Illumination = window.PF2e.Core.Grid.Illumination;
+  const Hazard = window.PF2e.Core.Hazard;
+  const Equipment = window.PF2e.Core.Equipment;
+  const Shield = window.PF2e.Core.Shield;
+  const Afflictions = window.PF2e.Core.Rules.Afflictions;
+  const Spells = window.PF2e.Core.Rules.Spells;
   const Stride = window.PF2e.Core.Actions.Stride;
   const Step = window.PF2e.Core.Actions.Step;
   const Strike = window.PF2e.Core.Actions.Strike;
@@ -25,6 +32,16 @@
   const Shove = window.PF2e.Core.Actions.Shove;
   const Grapple = window.PF2e.Core.Actions.Grapple;
   const Escape = window.PF2e.Core.Actions.Escape;
+  const CastSpell = window.PF2e.Core.Actions.CastSpell;
+  const SustainSpell = window.PF2e.Core.Actions.SustainSpell;
+  const Interact = window.PF2e.Core.Actions.Interact;
+  const ShieldBlock = window.PF2e.Core.Actions.ShieldBlock;
+  const Stealth = window.PF2e.Core.Actions.Stealth;
+  const DisableHazard = window.PF2e.Core.Actions.DisableHazard;
+  const TacticalAI = window.PF2e.Core.AI.TacticalAI;
+  const CombatEventBus = window.PF2e.Core.State.CombatEventBus;
+  const Serializer = window.PF2e.Core.State.Serializer;
+  const Initiative = window.PF2e.Core.Initiative;
   const Conditions = window.PF2e.Core.Conditions;
   const Checks = window.PF2e.Core.Rules.Checks;
   const MultipleAttack = window.PF2e.Core.Rules.MultipleAttack;
@@ -56,15 +73,35 @@
     "...............",
   ];
 
-  const map = GridMap.fromAscii(MAP_ROWS, "#", { difficultChars: "~" });
+  let map = GridMap.fromAscii(MAP_ROWS, "#", { difficultChars: "~" });
+
+  // Demo battlefield decoration for the Phase 20 presentation slice:
+  // greater-difficult rubble, hazardous fire vents, and two light pockets.
+  map.setTerrain(5, 9, "greater-difficult");
+  map.setTerrain(6, 9, "greater-difficult");
+  map.setTerrain(5, 10, "greater-difficult");
+  map.setHazardous(9, 9, { damage: "1d6", type: "fire" });
+  map.setHazardous(10, 9, { damage: "1d6", type: "fire" });
+  for (let y = 0; y <= 2; y += 1) {
+    for (let x = 0; x <= 2; x += 1) {
+      map.setIllumination(x, y, "dim");
+    }
+  }
+  for (let y = 12; y <= 14; y += 1) {
+    for (let x = 0; x <= 2; x += 1) {
+      map.setIllumination(x, y, "darkness");
+    }
+  }
 
   const COLORS = {
     valeros: "#c8553d",
     merisiel: "#2e9e8f",
     goblin: "#d1495b",
+    ogre: "#b07a4a",
+    giant: "#7d6aa8",
   };
 
-  const COMBATANTS = [
+  let COMBATANTS = [
     new Combatant({
       id: "valeros",
       name: "Valeros",
@@ -101,6 +138,89 @@
       saves: { fortitude: 5, reflex: 9, will: 6 },
       skills: { athletics: 4, acrobatics: 9, stealth: 10, perception: 8 },
       agile: true,
+      // Phase 20 demo spellbook: attack cantrips plus burst/cone/line/
+      // emanation save spells and one sustained spell.
+      spellAttackBonus: 9,
+      spellDC: 19,
+      spellSlots: { 1: { max: 2, current: 2 }, 2: { max: 2, current: 2 } },
+      focusPoints: { max: 1, current: 1 },
+      spells: [
+        {
+          id: "ray-of-frost",
+          name: "Ray of Frost",
+          cost: 2,
+          type: "attack",
+          traits: ["attack", "cantrip", "cold"],
+          damage: { formula: "1d8", type: "cold" },
+        },
+        {
+          id: "ignition",
+          name: "Ignition",
+          cost: 2,
+          type: "attack",
+          traits: ["attack", "cantrip", "fire"],
+          damage: { formula: "1d4", type: "fire" },
+        },
+        {
+          id: "fireball",
+          name: "Fireball",
+          cost: 2,
+          type: "save",
+          traits: ["fire", "manipulate"],
+          rank: 2,
+          saveType: "reflex",
+          basic: true,
+          area: { type: "burst", radiusFeet: 20 },
+          damage: { formula: "2d6", type: "fire" },
+        },
+        {
+          id: "burning-hands",
+          name: "Burning Hands",
+          cost: 2,
+          type: "save",
+          traits: ["fire", "manipulate"],
+          rank: 1,
+          saveType: "reflex",
+          basic: true,
+          area: { type: "cone", lengthFeet: 15 },
+          damage: { formula: "2d6", type: "fire" },
+        },
+        {
+          id: "lightning-bolt",
+          name: "Lightning Bolt",
+          cost: 2,
+          type: "save",
+          traits: ["electricity", "manipulate"],
+          rank: 2,
+          saveType: "reflex",
+          basic: true,
+          area: { type: "line", lengthFeet: 30, widthFeet: 5 },
+          damage: { formula: "2d6", type: "electricity" },
+        },
+        {
+          id: "bless",
+          name: "Bless",
+          cost: 2,
+          type: "save",
+          traits: ["mental", "manipulate"],
+          rank: 1,
+          saveType: "will",
+          basic: true,
+          area: { type: "emanation", radiusFeet: 10 },
+        },
+        {
+          id: "flaming-sphere",
+          name: "Flaming Sphere",
+          cost: 2,
+          type: "save",
+          traits: ["fire", "manipulate", "sustained"],
+          rank: 2,
+          saveType: "reflex",
+          basic: true,
+          area: { type: "burst", radiusFeet: 5 },
+          damage: { formula: "1d6", type: "fire" },
+        },
+      ],
     }),
     new Combatant({
       id: "goblin",
@@ -129,6 +249,46 @@
         { formula: "1d6", type: "fire" },
         { formula: "1d4", type: "bleed" },
       ],
+      // Flying a few feet up demonstrates the elevation badge and 3D reach.
+      elevation: 5,
+    }),
+    new Combatant({
+      id: "ogre",
+      name: "Ogre",
+      alliance: "enemy",
+      initiative: 10,
+      x: 12,
+      y: 10,
+      size: "large",
+      speedFeet: 25,
+      maxActions: 3,
+      maxHP: 34,
+      ac: 16,
+      attackBonus: 8,
+      damage: { formula: "1d10+4", type: "bludgeoning" },
+      saves: { fortitude: 8, reflex: 4, will: 3 },
+      skills: { athletics: 9, acrobatics: 4, stealth: 3, perception: 6 },
+      traits: ["reach"],
+      agile: false,
+    }),
+    new Combatant({
+      id: "giant",
+      name: "Hill Giant",
+      alliance: "enemy",
+      initiative: 8,
+      x: 12,
+      y: 12,
+      size: "huge",
+      speedFeet: 30,
+      maxActions: 3,
+      maxHP: 50,
+      ac: 18,
+      attackBonus: 10,
+      damage: { formula: "2d6+5", type: "bludgeoning" },
+      saves: { fortitude: 10, reflex: 5, will: 5 },
+      skills: { athletics: 11, acrobatics: 4, stealth: 2, perception: 7 },
+      traits: ["reach"],
+      agile: false,
     }),
   ];
 
@@ -150,7 +310,39 @@
     demoMerisiel.addCondition("hidden");
   }
 
-  const encounter = new Encounter({ combatants: COMBATANTS });
+  // One event bus feeds the combat log, the round badge, and the active-row
+  // highlight. The Encounter propagates it to every combatant and hazard.
+  const EVENT_BUS = new CombatEventBus({ recordHistory: true });
+
+  let HAZARDS = [
+    new Hazard({
+      id: "spike-trap",
+      name: "Spike Trap",
+      stealthDC: 18,
+      disableDC: 16,
+      disableSkill: "thievery",
+      maxHP: 12,
+      hardness: 4,
+      triggerArea: [{ x: 6, y: 3 }, { x: 6, y: 4 }],
+      reaction: {
+        trigger: "enter",
+        formula: "2d6",
+        type: "piercing",
+        saveType: "reflex",
+        saveDC: 17,
+      },
+    }),
+  ];
+  for (const hazard of HAZARDS) {
+    if (typeof hazard.setEventBus === "function") {
+      hazard.setEventBus(EVENT_BUS);
+    }
+  }
+
+  let encounter = new Encounter({
+    combatants: COMBATANTS,
+    eventBus: EVENT_BUS,
+  });
 
   const canvas = document.getElementById("battlefield");
   const tokenListEl = document.getElementById("token-list");
@@ -159,7 +351,20 @@
   const initiativeEl = document.getElementById("initiative-tracker");
   const roundIndicatorEl = document.getElementById("round-indicator");
   const endTurnEl = document.getElementById("end-turn");
+  const rollInitiativeEl = document.getElementById("roll-initiative");
   const modeHintEl = document.getElementById("mode-hint");
+  const spellSelectEl = document.getElementById("spell-select");
+  const castSpellButton = document.getElementById("cast-spell");
+  const sustainButton = document.getElementById("sustain-spell");
+  const seekButton = document.getElementById("seek");
+  const hideButton = document.getElementById("hide");
+  const sneakButton = document.getElementById("sneak");
+  const aiStepButton = document.getElementById("ai-step");
+  const aiTurnButton = document.getElementById("ai-turn");
+  const saveCombatButton = document.getElementById("save-combat");
+  const loadCombatButton = document.getElementById("load-combat");
+  const disableHazardButton = document.getElementById("disable-hazard");
+  const hazardStatusEl = document.getElementById("hazard-status");
   const modeButtons = Array.from(
     document.querySelectorAll(".mode-button[data-mode]"),
   );
@@ -168,6 +373,21 @@
   const standButton = document.getElementById("stand");
   const escapeButton = document.getElementById("escape");
   const log = new View.CombatLog(document.getElementById("combat-log"));
+  const eventLog = new View.EventLogBridge({
+    bus: EVENT_BUS,
+    log: log,
+    getCombatant: function (id) {
+      return COMBATANTS.find(function (candidate) {
+        return candidate.id === id;
+      }) || null;
+    },
+    roundIndicator: roundIndicatorEl,
+    initiativeContainer: initiativeEl,
+  });
+
+  function flushEventLog() {
+    eventLog.flush();
+  }
 
   /**
    * @type {Map<string, {
@@ -216,6 +436,18 @@
 
   function signedCompact(value) {
     return value >= 0 ? "+" + value : String(value);
+  }
+
+  function rollD20() {
+    return 1 + Math.floor(Math.random() * 20);
+  }
+
+  function rollDamageDie(sides) {
+    return 1 + Math.floor(Math.random() * sides);
+  }
+
+  function rollDie(sides) {
+    return 1 + Math.floor(Math.random() * sides);
   }
 
   function formatSaves(combatant) {
@@ -429,24 +661,7 @@
     }
 
     for (const event of tick.events) {
-      const chain = formatIWRDamage(event.damage, event.iwr);
-      let line =
-        "[PERSISTENT DAMAGE] " +
-        tick.combatantName +
-        " takes " +
-        (chain || event.damageDealt + " " + event.type + " damage") +
-        ". " +
-        tick.combatantName +
-        " HP: " +
-        event.hpBefore +
-        " -> " +
-        event.hpAfter;
-      if (event.defeated) {
-        line += " (Defeated)";
-      }
-      line += ".";
-      log.add(line, "persistent");
-
+      // The damage line itself is emitted by the event bus with the IWR audit.
       const recovery = event.recovery;
       log.add(
         "Recovery Check: Flat Check d20(" +
@@ -651,23 +866,10 @@
     if (result.critical) {
       line += " CRITICAL SUCCESS!";
       if (result.damage) {
-        const iwrText = formatIWRDamage(result.damage, result.iwr);
         line +=
           " " +
           target.name +
-          " is now Prone and takes " +
-          (iwrText ||
-            result.damage.total + " " + result.damage.type + " damage") +
-          ".";
-        line +=
-          " " +
-          target.name +
-          " HP: " +
-          result.hpBefore +
-          " -> " +
-          result.hpAfter +
-          (result.targetDefeated ? " (Defeated)" : "") +
-          ".";
+          " is now Prone; the critical damage result follows from the combat event bus.";
       } else {
         line += " " + target.name + " is now Prone.";
       }
@@ -1003,37 +1205,8 @@
     }
 
     if (result.hit) {
-      const damage = result.damage;
-      const iwrText = formatIWRDamage(damage, result.iwr);
-      line += " Damage: ";
-
-      if (iwrText) {
-        line += iwrText + ". ";
-      } else {
-        const diceText =
-          damage.diceCount > 0
-            ? " [" +
-              damage.rolls.join(" + ") +
-              (damage.modifier === 0 ? "" : " " + signed(damage.modifier)) +
-              "]"
-            : "";
-        line +=
-          result.damageDealt +
-          diceText +
-          (damage.doubled ? " (base " + damage.baseTotal + " × 2)" : "") +
-          ". ";
-      }
-
-      line +=
-        target.name +
-        " HP: " +
-        result.hpBefore +
-        " -> " +
-        result.hpAfter;
-      if (result.targetDefeated) {
-        line += " (Defeated)";
-      }
-      line += ".";
+      // The bus-backed damage line carries the IWR/Shield Block audit.
+      line += " The damage result follows from the combat event bus.";
     } else {
       line +=
         " " +
@@ -1151,7 +1324,7 @@
       if (allianceOf(candidate) === allianceOf(combatant)) {
         continue;
       }
-      const distance = Grid.distanceFeet(combatant, candidate);
+      const distance = Grid.getCombatantDistance(combatant, candidate);
       if (distance < nearestDistance) {
         nearest = candidate;
         nearestDistance = distance;
@@ -1207,6 +1380,18 @@
         ")."
       );
     }
+    if (mode === MODES.CAST) {
+      return (
+        active.name +
+        "'s turn — pick a spell, then hover to preview its burst/cone/line/emanation template and click to cast."
+      );
+    }
+    if (mode === MODES.SNEAK) {
+      return (
+        active.name +
+        "'s turn — click a destination within half Speed (15 ft) to Sneak while Hidden."
+      );
+    }
     return active.name + "'s turn — hover a square to preview a Stride, click to move.";
   }
 
@@ -1257,7 +1442,11 @@
               ? "Shove targets"
               : mode === MODES.GRAPPLE
                 ? "Grapple targets"
-                : "Reachable";
+                : mode === MODES.CAST
+                  ? "Spell template"
+                  : mode === MODES.SNEAK
+                    ? "Sneak targets"
+                    : "Reachable";
 
     addStat("Token", combatant.name, colorOf(combatant));
     addStat("Alliance", allianceLabel(combatant));
@@ -1335,7 +1524,9 @@
             ? battlefield.getShoveTargets().length + " in reach"
             : mode === MODES.GRAPPLE
               ? battlefield.getGrappleTargets().length + " in reach"
-              : cells.length + " squares",
+              : mode === MODES.CAST
+                ? (battlefield.getSpell() ? battlefield.getSpell().name : "No spell selected")
+                : cells.length + " squares",
     );
     addStat(
       "Next diagonal",
@@ -1753,6 +1944,12 @@
       } else if (mode === MODES.GRAPPLE) {
         modeHintEl.textContent =
           "Grapple costs 1 action and has the attack trait. Roll Athletics against Fortitude DC: success = Grabbed, critical success = Restrained, critical failure = you fall Prone. Grabbed/Restrained impose Off-Guard and Immobilized until the end of your next turn, or until you move or are defeated.";
+      } else if (mode === MODES.CAST) {
+        modeHintEl.textContent =
+          "Cast a Spell spends the spell's action cost. Burst/cone/line/emanation templates highlight every affected cell and outline caught tokens in red. Attack spells target a token; save spells use the clicked cell as the area origin.";
+      } else if (mode === MODES.SNEAK) {
+        modeHintEl.textContent =
+          "Sneak costs 1 action and must stay Hidden/Undetected. The destination may cost at most half Speed (15 ft at Speed 30); success keeps Hidden only while the destination still offers cover or concealment.";
       } else {
         modeHintEl.textContent =
           "Stride moves up to Speed for 1 action. Difficult terrain adds 5 ft per square. Leaving a threatened square can provoke a Reactive Strike; Step never does.";
@@ -1766,6 +1963,10 @@
     updateTakeCoverButton();
     updateStandButton();
     updateEscapeButton();
+    updateSpellUi();
+    if (castSpellButton) {
+      castSpellButton.classList.toggle("is-active", mode === MODES.CAST);
+    }
   }
 
   function setSelectedCard(combatantId) {
@@ -1821,6 +2022,8 @@
     updateTakeCoverButton();
     updateStandButton();
     updateEscapeButton();
+    updateSpellUi();
+    updateHazardUi();
   }
 
   function updateHoverStatus(info) {
@@ -1889,6 +2092,58 @@
         statusEl.classList.add("is-invalid");
         statusEl.dataset.state = info.reason;
       }
+      return;
+    }
+
+    if (info.status === "cast") {
+      if (!info.spell) {
+        statusEl.textContent = "Select a spell first.";
+        return;
+      }
+      if (info.valid) {
+        const isAttack = info.spell.type === "attack";
+        statusEl.textContent =
+          info.combatant.name +
+          " casts " +
+          info.spell.name +
+          (isAttack
+            ? " at " + (info.target ? info.target.name : "target")
+            : " · " +
+              info.areaType +
+              " · " +
+              info.cells.length +
+              " cells affected") +
+          " · " +
+          info.spell.cost +
+          " action" +
+          (info.spell.cost === 1 ? "" : "s");
+        statusEl.classList.add("is-valid");
+        statusEl.dataset.state = "cast";
+      } else {
+        statusEl.textContent = info.spell.type === "attack"
+          ? "Select a hostile token to cast " + info.spell.name + "."
+          : "Move the cursor over a valid origin to place " + info.spell.name + ".";
+        statusEl.classList.add("is-invalid");
+        statusEl.dataset.state = "cast-invalid";
+      }
+      return;
+    }
+
+    if (info.status === "sneak") {
+      statusEl.textContent = info.valid
+        ? info.combatant.name +
+          ": Sneak " +
+          info.label +
+          " · " +
+          info.costFeet +
+          " / " +
+          info.maxCostFeet +
+          " ft · 1 action"
+        : "Sneak to " +
+          info.label +
+          " is invalid — the route exceeds half Speed or is blocked.";
+      statusEl.classList.add(info.valid ? "is-valid" : "is-invalid");
+      statusEl.dataset.state = info.valid ? "sneak" : "sneak-invalid";
       return;
     }
 
@@ -2205,8 +2460,12 @@
               ? battlefield.getShoveTargets().length + " shove targets in reach"
               : mode === MODES.GRAPPLE
                 ? battlefield.getGrappleTargets().length + " grapple targets in reach"
-                : cells.length +
-                  (mode === MODES.STEP ? " step targets" : " squares reachable");
+                : mode === MODES.CAST
+                  ? (battlefield.getSpell() ? battlefield.getSpell().name + " ready" : "no spell selected")
+                  : mode === MODES.SNEAK
+                    ? cells.length + " sneak destinations"
+                    : cells.length +
+                      (mode === MODES.STEP ? " step targets" : " squares reachable");
 
       log.add(
         combatant.name +
@@ -2245,6 +2504,7 @@
         diagonalCornerPolicy: CORNER_POLICY,
         occupancy: getOccupancy(combatant),
         combatants: COMBATANTS,
+        hazards: HAZARDS,
         rollD20: function () {
           return 1 + Math.floor(Math.random() * 20);
         },
@@ -2261,18 +2521,7 @@
         return;
       }
 
-      const movementText = result.movementInterrupted
-        ? "Moves " + result.movedCostFeet + " ft before being stopped."
-        : "Moves " + result.movedCostFeet + " ft.";
-      log.add(
-        combatant.name +
-          " uses Stride. " +
-          movementText +
-          " Actions left: " +
-          result.actionsLeft,
-        "move",
-      );
-
+      // The bus-backed [MOVE] line carries distance, squares, and actions.
       logReleasedGrapples(
         combatant.name,
         result.releasedGrapples,
@@ -2286,15 +2535,7 @@
             name: reaction.attackerName,
             maxReactions: 1,
           };
-        log.add(
-          "[REACTION] " +
-            reaction.attackerName +
-            " uses Reactive Strike against " +
-            reaction.targetName +
-            "!",
-          "reaction",
-        );
-
+        // [REACTION] is emitted by the bus with the trigger and reaction pool.
         const spentLine =
           reaction.attackerName +
           " reaction spent · Reactions left: " +
@@ -2321,6 +2562,7 @@
         }
 
         logAttackResolution(reactor, combatant, reaction);
+        flushEventLog();
         log.add(spentLine, "info");
       }
 
@@ -2329,7 +2571,13 @@
       }
 
       if (result.movementInterrupted) {
-        log.add(combatant.name + " is defeated and stops moving.", "warn");
+        log.add(
+          combatant.name +
+            (combatant.isDefeated === true
+              ? " is defeated and stops moving."
+              : " stops moving after the hazard reaction."),
+          "warn",
+        );
       }
 
       if (result.movedDiagonalSteps > 0) {
@@ -2344,6 +2592,7 @@
         );
       }
 
+      flushEventLog();
       battlefield.refresh();
       updateTokenCards();
       renderSelection(combatant, battlefield.getReachableCells());
@@ -2364,14 +2613,7 @@
         return;
       }
 
-      log.add(
-        combatant.name +
-          " uses Step. Moves 5 ft to " +
-          Grid.gridToLabel(cell) +
-          ". Actions left: " +
-          result.actionsLeft,
-        "step",
-      );
+      // The bus-backed [MOVE] line reports the 5-ft Step and action spend.
       if (lostGreaterCover) {
         log.add(combatant.name + " loses Greater Cover after moving.", "info");
       }
@@ -2430,6 +2672,7 @@
       }
 
       logAttackResolution(combatant, target, result);
+      flushEventLog();
       log.add(
         "MAP now " +
           formatMap(combatant.getMultipleAttackPenalty()) +
@@ -2452,6 +2695,12 @@
     onGrappleRequest: function (combatant, target) {
       useGrapple(combatant, target);
     },
+    onCastRequest: function (combatant, spell, cell, token) {
+      useCastSpell(combatant, spell, cell, token);
+    },
+    onSneakRequest: function (combatant, cell) {
+      useSneak(combatant, cell);
+    },
     onHoverChange: updateHoverStatus,
     onInactiveToken: function (combatant) {
       if (combatant.isDefeated === true) {
@@ -2472,6 +2721,7 @@
 
   function advanceTurn() {
     const turn = encounter.nextTurn();
+    flushEventLog();
 
     if (!turn.active) {
       log.add("All combatants are defeated — the encounter is over.", "system");
@@ -2520,19 +2770,8 @@
         "info",
       );
     }
-    if (turn.wrapped) {
-      log.add("Round " + turn.round + " begins.", "turn");
-    }
-    log.add(
-      "Round " +
-        turn.round +
-        " — " +
-        turn.active.name +
-        "'s turn. Actions reset to " +
-        turn.active.actionsRemaining +
-        ".",
-      "turn",
-    );
+    // Round/turn lines are emitted by the event bus (round:started /
+    // turn:changed) so the log, round badge, and active row stay in sync.
 
     suppressSelectionLog = true;
     battlefield.setActiveCombatant(turn.active.id);
@@ -2541,6 +2780,9 @@
     battlefield.selectCombatant(turn.active.id);
     suppressSelectionLog = false;
     updateHoverStatus(null);
+    populateSpellPicker();
+    updateSpellUi();
+    updateHazardUi();
   }
 
   function useRaiseShield() {
@@ -2688,6 +2930,7 @@
     }
 
     logTripResolution(combatant, target, result);
+    flushEventLog();
     log.add(
       "MAP now " +
         formatMap(combatant.getMultipleAttackPenalty(false)) +
@@ -2969,15 +3212,7 @@
           name: reaction.attackerName,
           maxReactions: 1,
         };
-      log.add(
-        "[REACTION] " +
-          reaction.attackerName +
-          " uses Reactive Strike against standing " +
-          active.name +
-          "!",
-        "reaction",
-      );
-
+      // [REACTION] is emitted by the bus; keep the per-attack audit here.
       const spentLine =
         reaction.attackerName +
         " reaction spent · Reactions left: " +
@@ -3000,6 +3235,7 @@
       }
 
       logAttackResolution(reactor, active, reaction);
+      flushEventLog();
       log.add(spentLine, "info");
     }
 
@@ -3018,8 +3254,891 @@
     renderSelection(active, battlefield.getReachableCells());
   }
 
+  // ---------------------------------------------------------- Phase 20 HUD
+
+  function findSpellById(id) {
+    const active = encounter.activeCombatant;
+    if (!active || !Array.isArray(active.spells)) {
+      return null;
+    }
+    return (
+      active.spells.find(function (spell) {
+        return spell.id === id;
+      }) || null
+    );
+  }
+
+  function spellSubtitle(spell) {
+    const kind = spell.type === "attack" ? "Attack" : "Save";
+    const area = spell.area ? " · " + spell.area.type : "";
+    return (
+      spell.name +
+      " · " +
+      spell.cost +
+      " action" +
+      (spell.cost === 1 ? "" : "s") +
+      " · " +
+      kind +
+      area
+    );
+  }
+
+  function populateSpellPicker() {
+    if (!spellSelectEl) {
+      return;
+    }
+    const active = encounter.activeCombatant;
+    const spells = active && Array.isArray(active.spells) ? active.spells : [];
+    const previous = spellSelectEl.value;
+    spellSelectEl.replaceChildren();
+
+    if (spells.length === 0) {
+      const option = document.createElement("option");
+      option.value = "";
+      option.textContent = active ? active.name + " has no spells" : "No active combatant";
+      spellSelectEl.append(option);
+      spellSelectEl.disabled = true;
+      return;
+    }
+
+    spellSelectEl.disabled = false;
+    for (const spell of spells) {
+      const option = document.createElement("option");
+      option.value = spell.id;
+      option.textContent = spellSubtitle(spell);
+      spellSelectEl.append(option);
+    }
+    if (previous && spells.some(function (spell) { return spell.id === previous; })) {
+      spellSelectEl.value = previous;
+    }
+  }
+
+  function activeSustainedSpells(combatant) {
+    return combatant && typeof combatant.getActiveSustainedSpells === "function"
+      ? combatant.getActiveSustainedSpells()
+      : [];
+  }
+
+  function updateSpellUi() {
+    const active = encounter.activeCombatant;
+    const hasActions = Boolean(active && active.actionsRemaining >= 1);
+    const canAct = Boolean(
+      active &&
+        active.isDefeated !== true &&
+        (typeof active.canAct !== "function" || active.canAct().ok),
+    );
+
+    if (castSpellButton) {
+      castSpellButton.disabled =
+        !canAct || !hasActions || !spellSelectEl || !spellSelectEl.value;
+    }
+    if (sustainButton) {
+      const sustained = activeSustainedSpells(active);
+      sustainButton.disabled = !canAct || !hasActions || sustained.length === 0;
+      sustainButton.textContent =
+        sustained.length > 0
+          ? "Sustain (" + (sustained[0].spell ? sustained[0].spell.name : "spell") + ")"
+          : "Sustain";
+    }
+    if (seekButton) {
+      seekButton.disabled = !canAct || !hasActions;
+    }
+    if (hideButton) {
+      hideButton.disabled = !canAct || !hasActions;
+    }
+    if (sneakButton) {
+      const hidden = Boolean(
+        canAct &&
+          active &&
+          typeof active.hasCondition === "function" &&
+          (active.hasCondition("hidden") || active.hasCondition("undetected")),
+      );
+      sneakButton.disabled = !hidden || !hasActions;
+    }
+    if (disableHazardButton) {
+      const nearest = nearestArmedHazard(active);
+      const hasTwoActions =
+        Boolean(active) &&
+        (typeof active.canSpendActions === "function"
+          ? active.canSpendActions(2)
+          : active.actionsRemaining >= 2);
+      disableHazardButton.disabled = !canAct || !nearest || !hasTwoActions;
+      disableHazardButton.title = nearest
+        ? "Disable " +
+          nearest.hazard.name +
+          " · " +
+          nearest.distanceFeet +
+          " ft · " +
+          nearest.hazard.disableSkill +
+          " DC " +
+          nearest.hazard.disableDC +
+          " · 2 actions"
+        : "No armed hazard remains.";
+    }
+  }
+
+  function nearestArmedHazard(combatant) {
+    if (!combatant || !Number.isInteger(combatant.x)) {
+      return null;
+    }
+    let best = null;
+    for (const hazard of HAZARDS) {
+      if (!hazard || hazard.isArmed !== true) {
+        continue;
+      }
+      let distance = Infinity;
+      const area = Array.isArray(hazard.triggerArea) && hazard.triggerArea.length > 0
+        ? hazard.triggerArea
+        : [{ x: combatant.x, y: combatant.y }];
+      for (const cell of area) {
+        const value = Grid.getCombatantDistance(combatant, cell);
+        if (value < distance) {
+          distance = value;
+        }
+      }
+      if (!best || distance < best.distanceFeet) {
+        best = { hazard: hazard, distanceFeet: distance };
+      }
+    }
+    return best;
+  }
+
+  function updateHazardUi() {
+    if (!hazardStatusEl) {
+      return;
+    }
+    if (HAZARDS.length === 0) {
+      hazardStatusEl.textContent = "No hazards on this battlefield.";
+      return;
+    }
+    hazardStatusEl.textContent = HAZARDS.map(function (hazard) {
+      return (
+        hazard.name +
+        " — " +
+        (hazard.isArmed === true ? "armed" : "disarmed") +
+        " · HP " +
+        hazard.hp +
+        "/" +
+        hazard.maxHP
+      );
+    }).join(" · ");
+  }
+
+  function useRollInitiative() {
+    const report = encounter.rollInitiative({ rollD20: rollD20 });
+    for (const entry of report.entries) {
+      log.add(
+        "[INITIATIVE] " +
+          entry.combatantName +
+          ": d20(" +
+          entry.d20 +
+          ") " +
+          signed(entry.modifier) +
+          " = " +
+          entry.total +
+          " (" +
+          entry.statistic +
+          ").",
+        "info",
+      );
+    }
+    flushEventLog();
+
+    const active = report.active;
+    suppressSelectionLog = true;
+    battlefield.setActiveCombatant(active ? active.id : null);
+    renderInitiative();
+    updateTokenCards();
+    if (active) {
+      battlefield.selectCombatant(active.id);
+    } else {
+      battlefield.clearSelection();
+    }
+    suppressSelectionLog = false;
+    updateHoverStatus(null);
+    populateSpellPicker();
+    updateSpellUi();
+    updateHazardUi();
+
+    log.add(
+      "[INITIATIVE] Order: " +
+        report.order
+          .map(function (combatant) {
+            return combatant.name + " " + combatant.initiative;
+          })
+          .join(" → ") +
+        ".",
+      "system",
+    );
+  }
+
+  function castFailureText(result) {
+    switch (result.reason) {
+      case CastSpell.CAST_SPELL_REASONS.NO_ACTIONS:
+        return "not enough actions";
+      case CastSpell.CAST_SPELL_REASONS.NO_SPELL_SLOTS:
+        return "no spell slot of that rank remains";
+      case CastSpell.CAST_SPELL_REASONS.NO_FOCUS_POINTS:
+        return "no Focus Points remain";
+      case CastSpell.CAST_SPELL_REASONS.INVALID_TARGET:
+        return "select a valid hostile target";
+      case CastSpell.CAST_SPELL_REASONS.INVALID_AREA:
+        return "place a valid area template";
+      case CastSpell.CAST_SPELL_REASONS.DISRUPTED:
+        return "disrupted by a Reactive Strike";
+      case CastSpell.CAST_SPELL_REASONS.UNCONSCIOUS:
+        return "unconscious";
+      case CastSpell.CAST_SPELL_REASONS.DEFEATED:
+        return "defeated";
+      default:
+        return result.reason || "unknown reason";
+    }
+  }
+
+  function logCastResolution(caster, spell, result) {
+    if (result.reactionStrikes && result.reactionStrikes.length > 0) {
+      flushEventLog();
+    }
+
+    if (result.type === "attack") {
+      const targetResult = result.results[0];
+      let line =
+        "[SPELL] " +
+        caster.name +
+        " casts " +
+        spell.name +
+        " at " +
+        (targetResult ? targetResult.targetName : "target") +
+        ": ";
+      if (targetResult && targetResult.automaticMiss) {
+        line += "Flat Check FAILED — the spell misses. Action spent.";
+      } else if (targetResult) {
+        line +=
+          "d20(" +
+          targetResult.attackRoll +
+          ") " +
+          signed(targetResult.attackBonus) +
+          " vs AC " +
+          targetResult.targetAC +
+          " -> " +
+          degreeLabel(targetResult.degree) +
+          (targetResult.hit ? "." : " — no damage.");
+      }
+      log.add(line, "spell");
+    } else {
+      log.add(
+        "[SPELL] " +
+          caster.name +
+          " casts " +
+          spell.name +
+          " · " +
+          (result.area ? result.area.type : "save") +
+          " · " +
+          (result.area ? result.area.cells.length + " cells" : "single target") +
+          " · " +
+          capitalize(result.saveType || "save") +
+          " DC " +
+          result.spellDC +
+          " · " +
+          result.results.length +
+          " target(s).",
+        "spell",
+      );
+      for (const entry of result.results) {
+        log.add(
+          "[SAVE] " +
+            entry.targetName +
+            ": d20(" +
+            entry.d20 +
+            ") " +
+            signed(entry.saveModifier) +
+            " = " +
+            entry.saveTotal +
+            " vs DC " +
+            entry.saveDC +
+            " -> " +
+            degreeLabel(entry.degree) +
+            " (" +
+            Math.round(entry.damageMultiplier * 100) +
+            "% damage).",
+          "info",
+        );
+      }
+    }
+
+    if (result.resourceCost) {
+      const cost = result.resourceCost;
+      if (cost.type === "slot") {
+        log.add(
+          "[SPELL] Spell slot spent: rank " +
+            cost.rank +
+            " (" +
+            cost.remaining +
+            " remaining).",
+          "info",
+        );
+      } else if (cost.type === "focus") {
+        log.add(
+          "[SPELL] Focus Point spent (" + cost.remaining + " remaining).",
+          "info",
+        );
+      }
+    }
+    if (result.sustainedSpell) {
+      log.add(
+        "[SPELL] " +
+          spell.name +
+          " is sustained until the end of round " +
+          result.sustainedSpell.expiresAtRound +
+          ".",
+        "info",
+      );
+    }
+  }
+
+  function useCastSpell(caster, spell, cell, token) {
+    const options = {
+      caster: caster,
+      spell: spell,
+      map: map,
+      combatants: COMBATANTS,
+      allies: COMBATANTS,
+      encounter: encounter,
+      rollD20: rollD20,
+      rollDamageDie: rollDamageDie,
+      rollDie: rollDie,
+    };
+
+    if (spell.type === "attack") {
+      options.target = token || null;
+    } else {
+      options.target = token || null;
+      const areaType = spell.area ? String(spell.area.type || "burst").toLowerCase() : "burst";
+      options.origin =
+        areaType === "emanation"
+          ? { x: caster.x, y: caster.y }
+          : { x: cell.x, y: cell.y };
+      if (areaType === "cone" || areaType === "line") {
+        options.direction = { x: cell.x - caster.x, y: cell.y - caster.y };
+      }
+    }
+
+    const result = CastSpell.performCastSpell(options);
+    if (!result.ok) {
+      log.add(
+        "Cast canceled — " + capitalize(spell.name) + ": " + castFailureText(result) + ".",
+        "warn",
+      );
+      return;
+    }
+
+    logCastResolution(caster, spell, result);
+    flushEventLog();
+    battlefield.refresh();
+    updateTokenCards();
+    renderSelection(caster, battlefield.getReachableCells());
+    updateSpellUi();
+  }
+
+  function useSustainSpell() {
+    const active = encounter.activeCombatant;
+    if (!active || active.isDefeated === true) {
+      log.add("No active combatant can Sustain a Spell.", "warn");
+      return;
+    }
+    const sustained = activeSustainedSpells(active);
+    if (sustained.length === 0) {
+      log.add("Sustain canceled — " + active.name + " has no sustained spell.", "warn");
+      return;
+    }
+    const result = SustainSpell.performSustainSpell({
+      caster: active,
+      activeSpellId: sustained[0].id,
+      encounter: encounter,
+    });
+    if (!result.ok) {
+      log.add("Sustain canceled — " + (result.reason || "not possible") + ".", "warn");
+      return;
+    }
+    const spellName = sustained[0].spell ? sustained[0].spell.name : "the spell";
+    log.add(
+      "[SPELL] " +
+        active.name +
+        " sustains " +
+        spellName +
+        " until the end of round " +
+        result.expiresAtRound +
+        ". Actions left: " +
+        result.actionsLeft +
+        ".",
+      "spell",
+    );
+    battlefield.refresh();
+    updateTokenCards();
+    renderSelection(active, battlefield.getReachableCells());
+    updateSpellUi();
+  }
+
+  function useSeek() {
+    const active = encounter.activeCombatant;
+    if (!active || active.isDefeated === true) {
+      log.add("No active combatant can Seek.", "warn");
+      return;
+    }
+    const result = Stealth.performSeek({
+      seeker: active,
+      areaType: "burst",
+      radiusFeet: 30,
+      origin: { x: active.x, y: active.y },
+      combatants: COMBATANTS,
+      map: map,
+      rollD20: rollD20,
+    });
+    if (!result.ok) {
+      log.add("Seek canceled — " + (result.reason || "not possible") + ".", "warn");
+      return;
+    }
+    log.add(
+      "[SEEK] " +
+        active.name +
+        " scans a 30-ft burst" +
+        (result.check
+          ? ": Perception d20(" +
+            result.check.d20 +
+            ") " +
+            signed(result.check.modifier) +
+            " = " +
+            result.check.total
+          : " and finds nothing") +
+        ".",
+      "info",
+    );
+    for (const target of result.targets || []) {
+      log.add(
+        "[SEEK] " +
+          target.targetName +
+          ": " +
+          degreeLabel(target.degree) +
+          " — " +
+          (target.revealed ? "observed" : target.previousVisibility + " -> " + target.visibility) +
+          ".",
+        "info",
+      );
+    }
+    flushEventLog();
+    battlefield.refresh();
+    updateTokenCards();
+    renderSelection(active, battlefield.getReachableCells());
+  }
+
+  function useHide() {
+    const active = encounter.activeCombatant;
+    if (!active || active.isDefeated === true) {
+      log.add("No active combatant can Hide.", "warn");
+      return;
+    }
+    const result = Stealth.performHide({
+      combatant: active,
+      observers: COMBATANTS.filter(function (candidate) {
+        return candidate.id !== active.id && candidate.isDefeated !== true;
+      }),
+      map: map,
+      rollD20: rollD20,
+    });
+    if (!result.ok) {
+      log.add(
+        "Hide canceled — " +
+          (result.reason === Stealth.REASONS.NO_COVER_OR_CONCEALMENT
+            ? "no cover or concealment from an observer"
+            : result.reason || "not possible") +
+          ".",
+        "warn",
+      );
+      return;
+    }
+    log.add(
+      "[HIDE] " +
+        active.name +
+        " rolls Stealth d20(" +
+        (result.check ? result.check.d20 : "?") +
+        ") " +
+        signed(result.stealth ? result.stealth.total : 0) +
+        " vs Perception DC " +
+        (result.perception ? result.perception.dc : "?") +
+        " -> " +
+        degreeLabel(result.check ? result.check.degree : null) +
+        (result.succeeded ? " — Hidden." : " — observed."),
+      "info",
+    );
+    flushEventLog();
+    battlefield.refresh();
+    updateTokenCards();
+    renderSelection(active, battlefield.getReachableCells());
+    updateSpellUi();
+  }
+
+  function useSneak(combatant, cell) {
+    const result = Stealth.performSneak({
+      combatant: combatant,
+      destination: cell,
+      observers: COMBATANTS.filter(function (candidate) {
+        return candidate.id !== combatant.id && candidate.isDefeated !== true;
+      }),
+      map: map,
+      rollD20: rollD20,
+    });
+    if (!result.ok) {
+      log.add("Sneak canceled — " + (result.reason || "not possible") + ".", "warn");
+      return;
+    }
+
+    log.add(
+      "[SNEAK] " +
+        combatant.name +
+        " moves to " +
+        Grid.gridToLabel(result.position || result.destination) +
+        " · " +
+        result.costFeet +
+        "/" +
+        result.maxFeet +
+        " ft" +
+        (result.check
+          ? " · Stealth d20(" +
+            result.check.d20 +
+            ") " +
+            signed(result.check.modifier) +
+            " = " +
+            result.check.total +
+            " vs DC " +
+            result.perceptionDC +
+            " -> " +
+            degreeLabel(result.degree)
+          : "") +
+        (result.keptHidden ? " — stays Hidden." : " — becomes observed."),
+      "info",
+    );
+
+    if (result.moved && typeof combatant.emitEvent === "function") {
+      combatant.emitEvent("combatant:moved", {
+        movementType: "sneak",
+        path: result.path,
+        costFeet: result.costFeet,
+        actionsSpent: 1,
+        actionsLeft: result.actionsLeft,
+        from: result.path && result.path.length > 0 ? result.path[0] : null,
+        to: result.position || result.destination,
+        interrupted: false,
+        destinationReached: true,
+      });
+    }
+    flushEventLog();
+    battlefield.refresh();
+    updateTokenCards();
+    renderSelection(combatant, battlefield.getReachableCells());
+    updateSpellUi();
+  }
+
+  function useDisableHazard() {
+    const active = encounter.activeCombatant;
+    if (!active || active.isDefeated === true) {
+      log.add("No active combatant can disable a hazard.", "warn");
+      return;
+    }
+    const nearest = nearestArmedHazard(active);
+    if (!nearest) {
+      log.add("No armed hazard remains on the battlefield.", "warn");
+      return;
+    }
+    if (nearest.distanceFeet > 10) {
+      log.add(
+        nearest.hazard.name + " is " + nearest.distanceFeet + " ft away — move within 10 ft first.",
+        "warn",
+      );
+      return;
+    }
+
+    const result = DisableHazard.performDisableHazard({
+      combatant: active,
+      hazard: nearest.hazard,
+      rollD20: rollD20,
+    });
+    if (!result.ok) {
+      log.add(
+        "Disable canceled — " +
+          (result.reason === DisableHazard.DISABLE_HAZARD_REASONS.NO_ACTIONS
+            ? "Disable a Device costs 2 actions"
+            : result.reason || "not possible") +
+          ".",
+        "warn",
+      );
+      return;
+    }
+
+    log.add(
+      "[HAZARD] " +
+        active.name +
+        " attempts to disable " +
+        nearest.hazard.name +
+        " (" +
+        result.skill +
+        "): d20(" +
+        result.attackRoll +
+        ") " +
+        signed(result.totalModifier) +
+        " = " +
+        result.total +
+        " vs DC " +
+        result.disableDC +
+        " -> " +
+        degreeLabel(result.degree) +
+        (result.disarmed ? " — disarmed." : result.triggeredReaction ? " — the trap fires!" : " — no effect."),
+      "hazard",
+    );
+    flushEventLog();
+    updateHazardUi();
+    battlefield.refresh();
+    updateTokenCards();
+    renderSelection(active, battlefield.getReachableCells());
+    updateSpellUi();
+  }
+
+  function summarizeAiAction(action) {
+    switch (action.type) {
+      case TacticalAI.ACTION_TYPES.STAND:
+        return "stands up";
+      case TacticalAI.ACTION_TYPES.STRIDE:
+      case TacticalAI.ACTION_TYPES.STEP:
+        return (
+          action.type +
+          " to " +
+          Grid.gridToLabel(action.destination) +
+          (action.costFeet ? " · " + action.costFeet + " ft" : "") +
+          (action.reactions && action.reactions.length > 0
+            ? " · " + action.reactions.length + " reaction(s)"
+            : "")
+        );
+      case TacticalAI.ACTION_TYPES.STRIKE:
+        return (
+          "Strikes " +
+          action.targetName +
+          " (MAP " +
+          (action.mapPenalty === null ? "?" : action.mapPenalty) +
+          ")" +
+          (action.hit
+            ? action.critical
+              ? " — CRITICAL, " + action.damageDealt + " damage"
+              : " — hit, " + action.damageDealt + " damage"
+            : " — miss") +
+          (action.targetDefeated ? " (defeated)" : "")
+        );
+      case TacticalAI.ACTION_TYPES.RAISE_SHIELD:
+        return "raises a shield";
+      case TacticalAI.ACTION_TYPES.TAKE_COVER:
+        return "takes cover";
+      default:
+        return action.type;
+    }
+  }
+
+  function useAiTurn(maxActions) {
+    const active = encounter.activeCombatant;
+    if (!active || active.isDefeated === true) {
+      log.add("No active combatant can take an AI turn.", "warn");
+      return;
+    }
+
+    const result = TacticalAI.executeAITurn({
+      combatant: active,
+      map: map,
+      combatants: COMBATANTS,
+      encounter: encounter,
+      rollD20: rollD20,
+      rollDamageDie: rollDamageDie,
+      maxActions: maxActions,
+    });
+
+    log.add(
+      "[AI] " +
+        active.name +
+        (maxActions === 1 ? " — AI Step" : " — AI Turn") +
+        ": " +
+        result.executedActions.length +
+        " action(s), " +
+        result.actionsRemaining +
+        " remaining.",
+      "system",
+    );
+    for (const action of result.executedActions) {
+      log.add(
+        "[AI] " +
+          active.name +
+          " " +
+          summarizeAiAction(action) +
+          (action.ok ? "." : " — " + (action.reason || "failed") + "."),
+        action.ok ? "info" : "warn",
+      );
+    }
+    if (result.executedActions.length === 0) {
+      log.add("[AI] No legal action found (" + (result.reason || "none") + ").", "warn");
+    }
+
+    flushEventLog();
+    battlefield.refresh();
+    updateTokenCards();
+    if (encounter.activeCombatant) {
+      renderSelection(encounter.activeCombatant, battlefield.getReachableCells());
+    }
+    updateSpellUi();
+    updateHazardUi();
+  }
+
+  function saveCombatState() {
+    try {
+      const state = Serializer.serializeCombatState({
+        encounter: encounter,
+        map: map,
+        combatants: COMBATANTS,
+        hazards: HAZARDS,
+      });
+      const json = JSON.stringify(state);
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("pf2e.combatState", json);
+      }
+      log.add(
+        "[SAVE] Combat state saved (" +
+          COMBATANTS.length +
+          " combatants, " +
+          HAZARDS.length +
+          " hazards, " +
+          json.length +
+          " bytes).",
+        "system",
+      );
+    } catch (error) {
+      log.add("[SAVE] Failed to save combat state: " + error.message, "warn");
+    }
+  }
+
+  function loadCombatState() {
+    try {
+      if (typeof localStorage === "undefined") {
+        throw new Error("localStorage is unavailable.");
+      }
+      const json = localStorage.getItem("pf2e.combatState");
+      if (!json) {
+        log.add("[LOAD] No saved combat state found in localStorage.", "warn");
+        return;
+      }
+
+      const restored = Serializer.deserializeCombatState(json, {
+        eventBus: EVENT_BUS,
+      });
+      encounter = restored.encounter;
+      map = restored.map;
+      COMBATANTS = restored.combatants;
+      HAZARDS = Array.isArray(restored.hazards) ? restored.hazards : [];
+      for (const hazard of HAZARDS) {
+        if (typeof hazard.setEventBus === "function") {
+          hazard.setEventBus(EVENT_BUS);
+        }
+      }
+      if (typeof encounter.setEventBus === "function") {
+        encounter.setEventBus(EVENT_BUS);
+      }
+
+      battlefield.setWorld(COMBATANTS, map);
+      rebuildTokenCards();
+      populateSpellPicker();
+
+      const active = encounter.activeCombatant;
+      suppressSelectionLog = true;
+      battlefield.setActiveCombatant(active ? active.id : null);
+      renderInitiative();
+      updateTokenCards();
+      if (active) {
+        battlefield.selectCombatant(active.id);
+      } else {
+        battlefield.clearSelection();
+      }
+      suppressSelectionLog = false;
+      updateModeUi();
+      updateHoverStatus(null);
+      updateHazardUi();
+
+      log.add(
+        "[LOAD] Combat restored: " +
+          COMBATANTS.length +
+          " combatants, round " +
+          encounter.round +
+          (active ? ", " + active.name + "'s turn" : "") +
+          ".",
+        "system",
+      );
+    } catch (error) {
+      log.add("[LOAD] Failed to restore combat state: " + error.message, "warn");
+    }
+  }
+
   if (endTurnEl) {
     endTurnEl.addEventListener("click", advanceTurn);
+  }
+
+  if (rollInitiativeEl) {
+    rollInitiativeEl.addEventListener("click", useRollInitiative);
+  }
+
+  if (castSpellButton) {
+    castSpellButton.addEventListener("click", function () {
+      const spell = findSpellById(spellSelectEl ? spellSelectEl.value : null);
+      if (!spell) {
+        log.add("Select a spell first.", "warn");
+        return;
+      }
+      battlefield.setSpell(spell);
+      updateModeUi();
+      log.add("Spell prepared: " + spell.name + ". Hover the board to place its template.", "muted");
+    });
+  }
+
+  if (spellSelectEl) {
+    spellSelectEl.addEventListener("change", function () {
+      updateSpellUi();
+      if (battlefield.getMode() === MODES.CAST) {
+        const spell = findSpellById(spellSelectEl.value);
+        if (spell) {
+          battlefield.setSpell(spell);
+        }
+      }
+    });
+  }
+
+  if (sustainButton) {
+    sustainButton.addEventListener("click", useSustainSpell);
+  }
+  if (seekButton) {
+    seekButton.addEventListener("click", useSeek);
+  }
+  if (hideButton) {
+    hideButton.addEventListener("click", useHide);
+  }
+  if (disableHazardButton) {
+    disableHazardButton.addEventListener("click", useDisableHazard);
+  }
+  if (aiStepButton) {
+    aiStepButton.addEventListener("click", function () {
+      useAiTurn(1);
+    });
+  }
+  if (aiTurnButton) {
+    aiTurnButton.addEventListener("click", function () {
+      useAiTurn(Infinity);
+    });
+  }
+  if (saveCombatButton) {
+    saveCombatButton.addEventListener("click", saveCombatState);
+  }
+  if (loadCombatButton) {
+    loadCombatButton.addEventListener("click", loadCombatState);
   }
 
   if (raiseShieldButton) {
@@ -3054,83 +4173,97 @@
     });
   }
 
-  for (const combatant of COMBATANTS) {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "token-card";
-    card.setAttribute("aria-pressed", "false");
-    card.dataset.combatantId = combatant.id;
+  function rebuildTokenCards() {
+    if (!tokenListEl) {
+      return;
+    }
+    tokenListEl.replaceChildren();
+    tokenCards.clear();
 
-    const dot = document.createElement("span");
-    dot.className = "token-dot";
-    dot.style.background =
-      "radial-gradient(circle at 32% 30%, rgba(255,255,255,0.65), " +
-      colorOf(combatant) +
-      " 62%)";
+    for (const combatant of COMBATANTS) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "token-card";
+      card.setAttribute("aria-pressed", "false");
+      card.dataset.combatantId = combatant.id;
 
-    const meta = document.createElement("span");
-    meta.className = "token-meta";
+      const dot = document.createElement("span");
+      dot.className = "token-dot";
+      dot.style.background =
+        "radial-gradient(circle at 32% 30%, rgba(255,255,255,0.65), " +
+        colorOf(combatant) +
+        " 62%)";
 
-    const name = document.createElement("span");
-    name.className = "token-name";
-    name.textContent = combatant.name;
+      const meta = document.createElement("span");
+      meta.className = "token-meta";
 
-    const conditionBadges = document.createElement("span");
-    conditionBadges.className = "token-conditions condition-badges is-empty";
+      const name = document.createElement("span");
+      name.className = "token-name";
+      name.textContent = combatant.name;
 
-    const sub = document.createElement("span");
-    sub.className = "token-sub";
+      const conditionBadges = document.createElement("span");
+      conditionBadges.className = "token-conditions condition-badges is-empty";
 
-    const hp = document.createElement("span");
-    hp.className = "token-hp";
+      const sub = document.createElement("span");
+      sub.className = "token-sub";
 
-    const hpBar = document.createElement("span");
-    hpBar.className = "token-hp-bar";
-    const hpFill = document.createElement("span");
-    hpFill.className = "token-hp-fill";
-    hpBar.append(hpFill);
+      const hp = document.createElement("span");
+      hp.className = "token-hp";
 
-    const hpText = document.createElement("span");
-    hpText.className = "token-hp-text";
+      const hpBar = document.createElement("span");
+      hpBar.className = "token-hp-bar";
+      const hpFill = document.createElement("span");
+      hpFill.className = "token-hp-fill";
+      hpBar.append(hpFill);
 
-    hp.append(hpBar, hpText);
+      const hpText = document.createElement("span");
+      hpText.className = "token-hp-text";
 
-    const pools = document.createElement("span");
-    pools.className = "token-pools";
-    const actionPips = buildPips(combatant, "action", "action-pips token-action-pips");
-    const reactionPips = buildPips(
-      combatant,
-      "reaction",
-      "reaction-pips token-reaction-pips",
-    );
-    pools.append(actionPips.container, reactionPips.container);
+      hp.append(hpBar, hpText);
 
-    meta.append(name, conditionBadges, sub, hp);
-    card.append(dot, meta, pools);
-    card.addEventListener("click", function () {
-      battlefield.selectCombatant(combatant.id);
-    });
+      const pools = document.createElement("span");
+      pools.className = "token-pools";
+      const actionPips = buildPips(combatant, "action", "action-pips token-action-pips");
+      const reactionPips = buildPips(
+        combatant,
+        "reaction",
+        "reaction-pips token-reaction-pips",
+      );
+      pools.append(actionPips.container, reactionPips.container);
 
-    tokenListEl.append(card);
-    tokenCards.set(combatant.id, {
-      card: card,
-      sub: sub,
-      conditionBadges: conditionBadges,
-      pips: actionPips.pips,
-      reactionPips: reactionPips.pips,
-      hpFill: hpFill,
-      hpText: hpText,
-    });
+      meta.append(name, conditionBadges, sub, hp);
+      card.append(dot, meta, pools);
+      card.addEventListener("click", function () {
+        battlefield.selectCombatant(combatant.id);
+      });
+
+      tokenListEl.append(card);
+      tokenCards.set(combatant.id, {
+        card: card,
+        sub: sub,
+        conditionBadges: conditionBadges,
+        pips: actionPips.pips,
+        reactionPips: reactionPips.pips,
+        hpFill: hpFill,
+        hpText: hpText,
+      });
+    }
   }
+
+  rebuildTokenCards();
 
   const firstActive = encounter.startEncounter();
   if (firstActive) {
     battlefield.setActiveCombatant(firstActive.id);
   }
+  populateSpellPicker();
   updateModeUi();
+  updateSpellUi();
+  updateHazardUi();
   renderSelection(null, []);
   updateTokenCards();
   updateHoverStatus(null);
+  flushEventLog();
 
   log.add(
     "Battlefield initialized — " +
@@ -3234,4 +4367,30 @@
   } else {
     log.add("No living combatants remain — the encounter is over.", "system");
   }
+
+  // Small debug/integration surface for the browser console and end-to-end
+  // checks. Rules state remains owned by the live core objects.
+  window.PF2e.App = {
+    get encounter() {
+      return encounter;
+    },
+    get map() {
+      return map;
+    },
+    get combatants() {
+      return COMBATANTS;
+    },
+    get hazards() {
+      return HAZARDS;
+    },
+    battlefield: battlefield,
+    eventBus: EVENT_BUS,
+    eventLog: eventLog,
+    log: log,
+    refreshUi: function () {
+      updateTokenCards();
+      updateModeUi();
+      updateHoverStatus(null);
+    },
+  };
 })();

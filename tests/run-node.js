@@ -16,6 +16,10 @@ const suites = [
     register: require("./Grid/terrain-occupancy.test.js"),
   },
   {
+    name: "Core/Grid — Hazards & Verticality",
+    register: require("./Grid/hazards-verticality.test.js"),
+  },
+  {
     name: "Core/Grid — Line of Sight",
     register: require("./Grid/los.test.js"),
   },
@@ -52,8 +56,24 @@ const suites = [
     register: require("./Entities/conditions.test.js"),
   },
   {
+    name: "Core/Entities — Dying, Wounded, Unconscious & Healing",
+    register: require("./Entities/dying.test.js"),
+  },
+  {
     name: "Core/Entities — Persistent Damage",
     register: require("./Entities/persistent-damage.test.js"),
+  },
+  {
+    name: "Core/Entities — Advanced Conditions, Durations & Afflictions",
+    register: require("./Entities/afflictions-durations.test.js"),
+  },
+  {
+    name: "Core/Entities — Large Creatures, Occupancy & Reach",
+    register: require("./Entities/combatant-size.test.js"),
+  },
+  {
+    name: "Core/Entities — Hands, Inventory & Shields",
+    register: require("./Entities/equipment-shields.test.js"),
   },
   {
     name: "Core/Actions — Step & Strike",
@@ -96,8 +116,32 @@ const suites = [
     register: require("./Actions/reactive-strike.test.js"),
   },
   {
+    name: "Core/Actions — Ranged Combat & Reload",
+    register: require("./Actions/ranged-strike.test.js"),
+  },
+  {
+    name: "Core/Actions — Spellcasting & AoE",
+    register: require("./Actions/cast-spell.test.js"),
+  },
+  {
+    name: "Core/Actions — Advanced Spells & Geometry",
+    register: require("./Actions/advanced-spells.test.js"),
+  },
+  {
+    name: "Core/Actions — Stealth, Senses & Illumination",
+    register: require("./Actions/stealth-senses.test.js"),
+  },
+  {
     name: "Core/Encounter — Initiative & Round Cycle",
     register: require("./Encounter/encounter.test.js"),
+  },
+  {
+    name: "Core/State — Initiative, Serialization & Event Bus",
+    register: require("./State/initiative-serialization.test.js"),
+  },
+  {
+    name: "Core/AI — Tactical AI Engine",
+    register: require("./AI/tactical-ai.test.js"),
   },
 ];
 

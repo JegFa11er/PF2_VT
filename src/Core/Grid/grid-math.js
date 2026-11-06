@@ -122,6 +122,105 @@
   }
 
   /**
+   * A creature's footprint edge length. Plain cells are treated as 1x1.
+   *
+   * @param {object} unit
+   * @returns {number}
+   */
+  function footprintOf(unit) {
+    if (unit !== null && typeof unit === "object" && typeof unit.getFootprint === "function") {
+      return unit.getFootprint();
+    }
+    return 1;
+  }
+
+  /**
+   * Build every cell of a square footprint anchored at its top-left corner.
+   *
+   * @param {number} x
+   * @param {number} y
+   * @param {number} footprint
+   * @returns {Cell[]}
+   */
+  function getFootprintCells(x, y, footprint) {
+    assertInteger(x, "x");
+    assertInteger(y, "y");
+    assertInteger(footprint, "footprint");
+    if (footprint < 1) {
+      throw new RangeError("footprint must be >= 1.");
+    }
+
+    const cells = [];
+    for (let dx = 0; dx < footprint; dx += 1) {
+      for (let dy = 0; dy < footprint; dy += 1) {
+        cells.push({ x: x + dx, y: y + dy });
+      }
+    }
+    return cells;
+  }
+
+  /**
+   * All cells a unit occupies. Combatants expose getOccupiedCells(); a plain
+   * { x, y } cell is treated as a single 1x1 square.
+   *
+   * @param {object} unit
+   * @returns {Cell[]}
+   */
+  function occupiedCellsOf(unit) {
+    if (unit === null || typeof unit !== "object") {
+      throw new TypeError("unit must be a positioned cell or combatant.");
+    }
+    if (typeof unit.getOccupiedCells === "function") {
+      return unit.getOccupiedCells();
+    }
+    assertCell(unit, "unit");
+    return [{ x: unit.x, y: unit.y }];
+  }
+
+  /**
+   * PF2e distance between two sets of occupied cells, taking the closest pair
+   * of edges. This is the canonical reach / threatened-square measurement for
+   * creatures larger than Medium.
+   *
+   * @param {Cell[]} fromCells
+   * @param {Cell[]} toCells
+   * @returns {number}
+   */
+  function getCellsDistance(fromCells, toCells) {
+    if (!Array.isArray(fromCells) || fromCells.length === 0) {
+      throw new TypeError("fromCells must be a non-empty array of cells.");
+    }
+    if (!Array.isArray(toCells) || toCells.length === 0) {
+      throw new TypeError("toCells must be a non-empty array of cells.");
+    }
+
+    let minDistance = Infinity;
+    for (const from of fromCells) {
+      for (const to of toCells) {
+        const distance = distanceFeet(from, to);
+        if (distance < minDistance) {
+          minDistance = distance;
+        }
+      }
+    }
+    return minDistance;
+  }
+
+  /**
+   * Edge-to-edge PF2e distance between two combatants (or plain cells).
+   *
+   * @param {object} attacker
+   * @param {object} target
+   * @returns {number}
+   */
+  function getCombatantDistance(attacker, target) {
+    return getCellsDistance(
+      occupiedCellsOf(attacker),
+      occupiedCellsOf(target),
+    );
+  }
+
+  /**
    * All in-bounds cells reachable from `origin` within a movement budget.
    * The origin cell is excluded because a token cannot "move" to its own square.
    *
@@ -192,14 +291,21 @@
     return column + String(cell.y + 1);
   }
 
-  return Object.freeze({
+  // Deliberately extensible: sibling Grid modules (AoE, Illumination) attach
+  // their namespaces to this object in the classic-script build.
+  return {
     FEET_PER_SQUARE: FEET_PER_SQUARE,
     DIFFICULT_TERRAIN_EXTRA_FEET: DIFFICULT_TERRAIN_EXTRA_FEET,
     diagonalStepCostFeet: diagonalStepCostFeet,
     diagonalDistanceFeet: diagonalDistanceFeet,
     distanceFeet: distanceFeet,
     isWithinDistanceFeet: isWithinDistanceFeet,
+    footprintOf: footprintOf,
+    getFootprintCells: getFootprintCells,
+    occupiedCellsOf: occupiedCellsOf,
+    getCellsDistance: getCellsDistance,
+    getCombatantDistance: getCombatantDistance,
     reachableCells: reachableCells,
     gridToLabel: gridToLabel,
-  });
+  };
 });

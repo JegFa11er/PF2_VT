@@ -19,18 +19,20 @@
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory();
+    module.exports = factory(require("../Entities/shield.js"));
   } else {
     root.PF2e = root.PF2e || {};
     root.PF2e.Core = root.PF2e.Core || {};
     root.PF2e.Core.Actions = root.PF2e.Core.Actions || {};
-    root.PF2e.Core.Actions.RaiseShield = factory();
+    root.PF2e.Core.Actions.RaiseShield = factory(root.PF2e.Core.Shield);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Shield) {
   "use strict";
 
   const RAISE_SHIELD_REASONS = Object.freeze({
     NO_ACTIONS: "no-actions",
+    SHIELD_BROKEN: "shield-broken",
+    SHIELD_DESTROYED: "shield-destroyed",
   });
 
   const ACTION_COST = 1;
@@ -66,6 +68,18 @@
     const combatant = opts.combatant;
 
     assertCombatant(combatant);
+
+    // A broken or destroyed shield cannot be raised. Combatants without an
+    // authored shield keep the legacy condition-only behaviour used by the
+    // isolated headless fixtures.
+    if (Shield && combatant.shield) {
+      if (Shield.isShieldDestroyed(combatant.shield)) {
+        return { ok: false, reason: RAISE_SHIELD_REASONS.SHIELD_DESTROYED };
+      }
+      if (Shield.isShieldBroken(combatant.shield)) {
+        return { ok: false, reason: RAISE_SHIELD_REASONS.SHIELD_BROKEN };
+      }
+    }
 
     if (!combatant.canSpendActions(ACTION_COST)) {
       return { ok: false, reason: RAISE_SHIELD_REASONS.NO_ACTIONS };

@@ -27,6 +27,23 @@
  *   - immobilized: no modifiers of its own. Stride, Step, and Stand refuse to
  *     run while it is present. Grabbed and Restrained are treated as
  *     Immobilized even if the companion condition was authored separately.
+ *   - unconscious: Off-Guard, Prone, and a -4 status penalty to AC, Reflex
+ *     saves, and Reflex DC. Combatant.canAct() refuses every action.
+ *   - dying N / wounded N: valued death-and-recovery states. Dying is capped
+ *     at 4, where the combatant is defeated.
+ *   - paralyzed: Off-Guard and no actions at all. Combatant.canAct() refuses
+ *     every action with reason "paralyzed".
+ *   - stunned N / slowed N: action-pool reductions resolved at the start of
+ *     the creature's turn. Stunned refuses canAct() while the value is above
+ *     zero and is paid down by the actions it removes; slowed merely reduces
+ *     the action pool without blocking the turn. When both are present the
+ *     larger value is applied once, so Stunned overrides Slowed for the
+ *     action loss.
+ *
+ * Duration metadata:
+ *   - `duration` (rounds), `durationOrigin` ("start" | "end"), and the
+ *     `appliedRound` stamp are stored on the condition record. Combatant
+ *     ticks them at the matching turn phase against Encounter.round.
  *
  * Unknown condition slugs are stored for forward compatibility but contribute
  * no modifiers until a definition is added here.
@@ -58,7 +75,23 @@
     IMMOBILIZED: "immobilized",
     GRABBED: "grabbed",
     RESTRAINED: "restrained",
+    UNCONSCIOUS: "unconscious",
+    DYING: "dying",
+    WOUNDED: "wounded",
+    PARALYZED: "paralyzed",
+    STUNNED: "stunned",
+    SLOWED: "slowed",
   });
+
+  /** Conditions that prevent every action through Combatant.canAct(). */
+  const INCAPACITATING_CONDITIONS = Object.freeze([
+    "unconscious",
+    "paralyzed",
+    "stunned",
+  ]);
+
+  /** Legal values for the round-duration phase metadata. */
+  const DURATION_ORIGINS = Object.freeze(["start", "end"]);
 
   /** Conditions that a Grapple action can apply. */
   const GRAPPLE_CONDITIONS = Object.freeze(["grabbed", "restrained"]);
@@ -179,6 +212,48 @@
       description:
         "Off-Guard (-2 circumstance AC) and Immobilized. In this tactical prototype Restrained uses the same movement and AC effects as Grabbed.",
     }),
+    unconscious: Object.freeze({
+      slug: "unconscious",
+      label: "Unconscious",
+      valued: false,
+      description:
+        "Off-Guard (-2 circumstance AC), Prone (-2 circumstance attack), and a -4 status penalty to AC, Reflex saves, and Reflex DC. The creature cannot act.",
+    }),
+    dying: Object.freeze({
+      slug: "dying",
+      label: "Dying",
+      valued: true,
+      description:
+        "The creature is at 0 HP and makes a recovery flat check at the start of each turn against DC 10 + Dying. Dying 4 means death.",
+    }),
+    wounded: Object.freeze({
+      slug: "wounded",
+      label: "Wounded",
+      valued: true,
+      description:
+        "Adds its value to the initial Dying value whenever the creature is reduced to 0 HP.",
+    }),
+    paralyzed: Object.freeze({
+      slug: "paralyzed",
+      label: "Paralyzed",
+      valued: false,
+      description:
+        "Off-Guard (-2 circumstance AC). The creature cannot act at all; only purely mental actions are possible and are not modelled here.",
+    }),
+    stunned: Object.freeze({
+      slug: "stunned",
+      label: "Stunned",
+      valued: true,
+      description:
+        "The creature cannot act while stunned. At the start of its turn it loses a number of actions equal to the value; the value is reduced by the actions actually lost, so any debt carries to the next turn. When Slowed is also present only the larger value removes actions.",
+    }),
+    slowed: Object.freeze({
+      slug: "slowed",
+      label: "Slowed",
+      valued: true,
+      description:
+        "At the start of its turn the creature regains that many fewer actions. Slowed does not block the remaining actions and does not stack with Stunned for the same action loss.",
+    }),
   });
 
   function assertNonEmptyString(value, label) {
@@ -209,17 +284,23 @@
    * Build a normalized condition record. Frightened 0 removes the condition,
    * so this helper returns null for it.
    *
-   * `options` carries source-linked metadata used by Grapple:
+   * `options` carries source-linked metadata used by Grapple and timed
+   * conditions:
    *   - `sourceId`: the combatant that applied the condition;
    *   - `expiresOnSourceTurn`: the source combatant's turn number at whose
    *     end the condition expires. The Grapple action sets this to
    *     `source.turnNumber + 1`, implementing "until the end of your next
    *     turn" without expiring on the turn it was applied.
+   *   - `duration`: round duration (positive integer).
+   *   - `durationOrigin`: "start" (default) or "end"; the turn phase at which
+   *     the duration is checked and counted.
+   *   - `round`: encounter round in which the condition was applied. The
+   *     Combatant stamps its current `encounterRound` when this is omitted.
    *
    * @param {string} name
    * @param {number} [value] required for valued conditions, ignored otherwise
-   * @param {{sourceId?:string,expiresOnSourceTurn?:number}} [options]
-   * @returns {{name:string,slug:string,label:string,value:number|null,sourceId:string|null,expiresOnSourceTurn:number|null}|null}
+   * @param {{sourceId?:string,expiresOnSourceTurn?:number,duration?:number,durationOrigin?:string,round?:number}} [options]
+   * @returns {{name:string,slug:string,label:string,value:number|null,sourceId:string|null,expiresOnSourceTurn:number|null,duration:number|null,durationOrigin:string|null,appliedRound:number|null}|null}
    */
   function createCondition(name, value, options) {
     const slug = normalizeSlug(name);
@@ -235,6 +316,32 @@
     const expiresOnSourceTurn = Number.isInteger(opts.expiresOnSourceTurn)
       ? opts.expiresOnSourceTurn
       : null;
+
+    let duration = null;
+    if (opts.duration !== undefined && opts.duration !== null) {
+      if (!Number.isInteger(opts.duration) || opts.duration <= 0) {
+        throw new RangeError(
+          "condition " + slug + " duration must be a positive integer.",
+        );
+      }
+      duration = opts.duration;
+    }
+
+    let durationOrigin = null;
+    if (duration !== null) {
+      durationOrigin =
+        opts.durationOrigin === undefined ? "start" : opts.durationOrigin;
+      if (DURATION_ORIGINS.indexOf(durationOrigin) === -1) {
+        throw new RangeError(
+          'durationOrigin must be "start" or "end"; received ' +
+            String(durationOrigin) +
+            ".",
+        );
+      }
+    }
+
+    const appliedRound =
+      duration !== null && Number.isInteger(opts.round) ? opts.round : null;
 
     if (isValued) {
       const actualValue = value === undefined ? 1 : value;
@@ -255,6 +362,9 @@
         value: actualValue,
         sourceId: sourceId,
         expiresOnSourceTurn: expiresOnSourceTurn,
+        duration: duration,
+        durationOrigin: durationOrigin,
+        appliedRound: appliedRound,
       };
     }
 
@@ -273,6 +383,9 @@
       value: null,
       sourceId: sourceId,
       expiresOnSourceTurn: expiresOnSourceTurn,
+      duration: duration,
+      durationOrigin: durationOrigin,
+      appliedRound: appliedRound,
     };
   }
 
@@ -290,6 +403,13 @@
         condition.expiresOnSourceTurn === undefined
           ? null
           : condition.expiresOnSourceTurn,
+      duration: condition.duration === undefined ? null : condition.duration,
+      durationOrigin:
+        condition.durationOrigin === undefined
+          ? null
+          : condition.durationOrigin,
+      appliedRound:
+        condition.appliedRound === undefined ? null : condition.appliedRound,
     };
   }
 
@@ -435,6 +555,51 @@
         value: -2,
         source: "off-guard",
       });
+    }
+
+    // Paralyzed embeds Off-Guard. It contributes no attack penalty of its
+    // own; the action lock is enforced by Combatant.canAct().
+    if (condition.name === CONDITION_SLUGS.PARALYZED && appliesToAc) {
+      modifiers.push({
+        name: "Off-Guard (Paralyzed)",
+        type: MODIFIER_TYPES.CIRCUMSTANCE,
+        value: -2,
+        source: "off-guard",
+      });
+    }
+
+    // Unconscious embeds the Off-Guard and Prone penalties and adds its own
+    // -4 status penalty to AC, Reflex saves, and Reflex DC. The Off-Guard and
+    // Prone contributions reuse the canonical sources so the resolver
+    // suppresses duplicates when those conditions are also present.
+    if (condition.name === CONDITION_SLUGS.UNCONSCIOUS) {
+      const penalizesReflex =
+        all || tags.has("save:reflex") || tags.has("dc:reflex");
+
+      if (appliesToAc) {
+        modifiers.push({
+          name: "Off-Guard (Unconscious)",
+          type: MODIFIER_TYPES.CIRCUMSTANCE,
+          value: -2,
+          source: "off-guard",
+        });
+      }
+      if (appliesToAttack) {
+        modifiers.push({
+          name: "Prone (Unconscious)",
+          type: MODIFIER_TYPES.CIRCUMSTANCE,
+          value: -2,
+          source: "prone",
+        });
+      }
+      if (appliesToAc || penalizesReflex) {
+        modifiers.push({
+          name: "Unconscious",
+          type: MODIFIER_TYPES.STATUS,
+          value: -4,
+          source: "unconscious",
+        });
+      }
     }
 
     // Frightened applies to every check and DC, which includes attack rolls,
@@ -622,6 +787,8 @@
     VISIBILITY_PRIORITY: VISIBILITY_PRIORITY,
     GRAPPLE_CONDITIONS: GRAPPLE_CONDITIONS,
     MOVEMENT_BLOCKING_CONDITIONS: MOVEMENT_BLOCKING_CONDITIONS,
+    INCAPACITATING_CONDITIONS: INCAPACITATING_CONDITIONS,
+    DURATION_ORIGINS: DURATION_ORIGINS,
     isKnownCondition: isKnownCondition,
     isVisibilityCondition: isVisibilityCondition,
     visibilityFlatCheckDC: visibilityFlatCheckDC,

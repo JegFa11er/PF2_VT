@@ -249,6 +249,193 @@
       ctx.restore();
     }
 
+    /**
+     * Dim light is a soft blue-black wash; darkness is a deep, near-opaque
+     * veil. Rendered below tokens so creatures stay readable while the cell's
+     * light level remains obvious.
+     */
+    drawIllumination(ctx, dimCells, darknessCells) {
+      ctx.save();
+
+      for (const cell of dimCells || []) {
+        const rect = this.cellRect(cell.x, cell.y);
+        ctx.fillStyle = "rgba(6, 12, 24, 0.30)";
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      }
+
+      for (const cell of darknessCells || []) {
+        const rect = this.cellRect(cell.x, cell.y);
+        const gradient = ctx.createRadialGradient(
+          rect.x + rect.width / 2,
+          rect.y + rect.height / 2,
+          2,
+          rect.x + rect.width / 2,
+          rect.y + rect.height / 2,
+          rect.width * 0.8,
+        );
+        gradient.addColorStop(0, "rgba(0, 0, 0, 0.70)");
+        gradient.addColorStop(1, "rgba(0, 0, 0, 0.84)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        ctx.fillStyle = "rgba(148, 164, 186, 0.25)";
+        ctx.font = "600 9px " + FONT_STACK;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+        ctx.fillText("darkness", rect.x + rect.width - 4, rect.y + 3);
+      }
+
+      ctx.restore();
+    }
+
+    /** Greater difficult terrain: heavier rubble covered in sharp scree. */
+    drawGreaterDifficultTerrain(ctx, cells) {
+      ctx.save();
+
+      for (const cell of cells || []) {
+        const rect = this.cellRect(cell.x, cell.y);
+        const x = rect.x + 2;
+        const y = rect.y + 2;
+        const width = rect.width - 4;
+        const height = rect.height - 4;
+
+        const gradient = ctx.createLinearGradient(x, y, x, y + height);
+        gradient.addColorStop(0, "rgba(92, 66, 112, 0.82)");
+        gradient.addColorStop(1, "rgba(48, 35, 66, 0.86)");
+        roundedRect(ctx, x, y, width, height, 3);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(190, 150, 236, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Jagged rubble strokes.
+        ctx.strokeStyle = "rgba(214, 186, 246, 0.42)";
+        ctx.lineWidth = 1.4;
+        const seed = cell.x * 19 + cell.y * 41;
+        for (let rock = 0; rock < 4; rock += 1) {
+          const rx = x + 5 + pseudoRandom(seed + rock * 2.7) * (width - 10);
+          const ry = y + 5 + pseudoRandom(seed + rock * 4.9 + 7) * (height - 10);
+          ctx.beginPath();
+          ctx.moveTo(rx - 3, ry + 2);
+          ctx.lineTo(rx, ry - 3);
+          ctx.lineTo(rx + 4, ry + 1);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = "rgba(232, 214, 255, 0.7)";
+        ctx.font = "700 8px " + FONT_STACK;
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+        ctx.fillText("+10 ft", x + 3, y + 2);
+      }
+
+      ctx.restore();
+    }
+
+    /** Hazardous terrain: warning hatching and a damage chip. */
+    drawHazardousTerrain(ctx, cells) {
+      ctx.save();
+
+      for (const entry of cells || []) {
+        const cell = entry.cell || entry;
+        const hazard = entry.hazard || entry;
+        const rect = this.cellRect(cell.x, cell.y);
+        const x = rect.x + 2;
+        const y = rect.y + 2;
+        const width = rect.width - 4;
+        const height = rect.height - 4;
+
+        roundedRect(ctx, x, y, width, height, 3);
+        ctx.fillStyle = "rgba(122, 54, 28, 0.48)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 148, 84, 0.72)";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // Diagonal warning stripes.
+        ctx.save();
+        roundedRect(ctx, x, y, width, height, 3);
+        ctx.clip();
+        ctx.strokeStyle = "rgba(255, 170, 96, 0.22)";
+        ctx.lineWidth = 3;
+        for (let offset = -height; offset < width; offset += 9) {
+          ctx.beginPath();
+          ctx.moveTo(x + offset, y + height);
+          ctx.lineTo(x + offset + height, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        const label =
+          hazard && hazard.damage
+            ? String(hazard.damage) + (hazard.type ? " " + hazard.type : "")
+            : "hazard";
+        const chipWidth = Math.min(width - 6, Math.max(24, label.length * 5.2 + 10));
+        roundedRect(ctx, x + 3, y + 3, chipWidth, 13, 3);
+        ctx.fillStyle = "rgba(30, 12, 6, 0.92)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 148, 84, 0.9)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = "#ffd2b0";
+        ctx.font = "700 8px " + FONT_STACK;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, x + 3 + chipWidth / 2, y + 9.5);
+      }
+
+      ctx.restore();
+    }
+
+    /** Translucent spell template cells (burst, cone, line, emanation). */
+    drawAoeCells(ctx, cells, areaType) {
+      if (!Array.isArray(cells) || cells.length === 0) {
+        return;
+      }
+
+      const colors = {
+        burst: { fill: "rgba(255, 156, 74, 0.20)", stroke: "rgba(255, 184, 110, 0.72)" },
+        cone: { fill: "rgba(255, 120, 190, 0.20)", stroke: "rgba(255, 160, 210, 0.72)" },
+        line: { fill: "rgba(120, 220, 255, 0.20)", stroke: "rgba(150, 232, 255, 0.75)" },
+        emanation: { fill: "rgba(152, 236, 148, 0.20)", stroke: "rgba(176, 245, 170, 0.75)" },
+      };
+      const palette = colors[areaType] || colors.burst;
+
+      ctx.save();
+      for (const cell of cells) {
+        const rect = this.cellRect(cell.x, cell.y);
+        ctx.fillStyle = palette.fill;
+        ctx.fillRect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
+        ctx.strokeStyle = palette.stroke;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(rect.x + 1.5, rect.y + 1.5, rect.width - 3, rect.height - 3);
+      }
+      ctx.restore();
+    }
+
+    /**
+     * Red outline on every token caught by the active AoE template.
+     *
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {Array<{center:{x:number,y:number},radius:number}>} tokenViews
+     */
+    drawAoeTargets(ctx, tokenViews) {
+      if (!Array.isArray(tokenViews) || tokenViews.length === 0) {
+        return;
+      }
+      ctx.save();
+      for (const view of tokenViews) {
+        ctx.beginPath();
+        ctx.arc(view.center.x, view.center.y, view.radius + 4, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255, 82, 82, 0.95)";
+        ctx.lineWidth = 3;
+        ctx.shadowColor = "rgba(255, 82, 82, 0.6)";
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     drawStrikeTargets(ctx, cells) {
       ctx.save();
       for (const cell of cells) {

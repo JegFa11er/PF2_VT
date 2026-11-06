@@ -157,7 +157,7 @@
    * flank from two squares away.
    */
   function canReach(target, unit, overrideFeet) {
-    return Grid.distanceFeet(target, unit) <= reachOf(unit, overrideFeet);
+    return Grid.getCombatantDistance(target, unit) <= reachOf(unit, overrideFeet);
   }
 
   /**

@@ -19,6 +19,7 @@
     module.exports = factory(
       require("../Grid/pathfinding.js"),
       require("../Entities/conditions.js"),
+      require("../Rules/damage.js"),
     );
   } else {
     root.PF2e = root.PF2e || {};
@@ -27,11 +28,13 @@
     root.PF2e.Core.Actions.Step = factory(
       root.PF2e.Core.Pathfinding,
       root.PF2e.Core.Conditions,
+      root.PF2e.Core.Rules.Damage,
     );
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
   Pathfinding,
   Conditions,
+  Damage,
 ) {
   "use strict";
 
@@ -152,8 +155,10 @@
       return { ok: false, reason: STEP_REASONS.BLOCKED_DESTINATION };
     }
     if (
-      typeof map.hasDifficultTerrain === "function" &&
-      map.hasDifficultTerrain(destination.x, destination.y)
+      (typeof map.hasDifficultTerrain === "function" &&
+        map.hasDifficultTerrain(destination.x, destination.y)) ||
+      (typeof map.isDifficultTerrain === "function" &&
+        map.isDifficultTerrain(destination.x, destination.y))
     ) {
       return { ok: false, reason: STEP_REASONS.DIFFICULT_TERRAIN };
     }
@@ -166,6 +171,10 @@
         startDiagonalParity: combatant.diagonalParity || 0,
         diagonalCornerPolicy: opts.diagonalCornerPolicy,
         occupancy: opts.occupancy,
+        footprint:
+          typeof combatant.getFootprint === "function"
+            ? combatant.getFootprint()
+            : 1,
       },
     );
 
@@ -220,6 +229,40 @@
     combatant.spendActions(1);
     combatant.setPosition(opts.destination.x, opts.destination.y);
 
+    // Hazardous terrain: entering the cell deals damage immediately.
+    let hazardousDamageTaken = [];
+    if (typeof opts.map.getHazardous === "function") {
+      const hazardRecord = opts.map.getHazardous(opts.destination.x, opts.destination.y);
+      if (hazardRecord) {
+        const rollDie =
+          typeof opts.rollDamageDie === "function"
+            ? opts.rollDamageDie
+            : typeof opts.rollDie === "function"
+              ? opts.rollDie
+              : Damage.defaultRollDie;
+        const damage = Damage.rollDamage({
+          formula: hazardRecord.damage,
+          type: hazardRecord.type,
+          rollDie: rollDie,
+        });
+        const hpBefore = Number.isInteger(combatant.currentHP)
+          ? combatant.currentHP
+          : null;
+        const applied = combatant.takeDamage(damage.total, { type: damage.type });
+        hazardousDamageTaken.push({
+          cell: { x: opts.destination.x, y: opts.destination.y },
+          formula: hazardRecord.damage,
+          type: damage.type,
+          damage: damage,
+          damageDealt:
+            applied.damageApplied === undefined ? damage.total : applied.damageApplied,
+          hpBefore: hpBefore,
+          hpAfter: applied.currentHP,
+          defeated: applied.isDefeated,
+        });
+      }
+    }
+
     // Take Cover's greater cover ends as soon as the creature moves.
     if (typeof combatant.removeCondition === "function") {
       combatant.removeCondition("greater-cover");
@@ -236,7 +279,7 @@
       combatant.id,
     );
 
-    return {
+    const stepResult = {
       ok: true,
       path: [origin, { x: opts.destination.x, y: opts.destination.y }],
       costFeet: 5,
@@ -244,7 +287,24 @@
       diagonalSteps: combatant.diagonalStepsThisTurn,
       diagonalParity: combatant.diagonalParity,
       releasedGrapples: releasedGrapples,
+      hazardousDamageTaken: hazardousDamageTaken,
     };
+
+    if (typeof combatant.emitEvent === "function") {
+      combatant.emitEvent("combatant:moved", {
+        movementType: "step",
+        path: stepResult.path,
+        costFeet: 5,
+        actionsSpent: 1,
+        actionsLeft: combatant.actionsRemaining,
+        from: origin,
+        to: { x: opts.destination.x, y: opts.destination.y },
+        interrupted: false,
+        destinationReached: true,
+      });
+    }
+
+    return stepResult;
   }
 
   /**

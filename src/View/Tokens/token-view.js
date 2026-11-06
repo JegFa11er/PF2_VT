@@ -49,16 +49,46 @@
       this.token = combatant;
       this.grid = grid;
       this.color = color || "#8a94a3";
-      this.radius = grid.cellSize * 0.34;
     }
 
+    /** Grid squares covered by the creature (1 = Medium, 2 = Large, 3 = Huge). */
+    get footprint() {
+      if (typeof this.token.getFootprint === "function") {
+        return Math.max(1, Math.min(3, this.token.getFootprint()));
+      }
+      return 1;
+    }
+
+    /** Pixel width/height of the whole footprint. */
+    get footprintSize() {
+      return this.grid.cellSize * this.footprint;
+    }
+
+    /** Centre of the whole footprint, not just the anchor cell. */
     get center() {
-      return this.grid.cellCenter(this.token.x, this.token.y);
+      const half = this.footprint / 2;
+      return {
+        x: (this.token.x + half) * this.grid.cellSize,
+        y: (this.token.y + half) * this.grid.cellSize,
+      };
+    }
+
+    /** Inscribed circle that fills the footprint, leaving a thin rim inset. */
+    get radius() {
+      return this.footprintSize / 2 - Math.max(2.5, this.grid.cellSize * 0.055);
+    }
+
+    get elevation() {
+      if (typeof this.token.getElevation === "function") {
+        return this.token.getElevation();
+      }
+      return Number.isFinite(this.token.elevation) ? this.token.elevation : 0;
     }
 
     hitTest(px, py) {
       const center = this.center;
-      return Math.hypot(px - center.x, py - center.y) <= this.radius + 3;
+      const half = this.footprintSize / 2 + 2;
+      return Math.abs(px - center.x) <= half && Math.abs(py - center.y) <= half;
     }
 
     draw(ctx, selected) {
@@ -89,6 +119,25 @@
       ctx.save();
       if (obscured) {
         ctx.globalAlpha = 0.5;
+      }
+
+      // Large/Huge creatures visibly occupy their whole 2x2 or 3x3 footprint.
+      if (this.footprint > 1) {
+        const rect = {
+          x: this.token.x * this.grid.cellSize + 3,
+          y: this.token.y * this.grid.cellSize + 3,
+          width: this.footprintSize - 6,
+          height: this.footprintSize - 6,
+        };
+        ctx.save();
+        roundedRect(ctx, rect.x, rect.y, rect.width, rect.height, 7);
+        ctx.fillStyle = "rgba(126, 216, 255, 0.055)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(126, 216, 255, 0.28)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 4]);
+        ctx.stroke();
+        ctx.restore();
       }
 
       // A prone token is rotated 90 degrees around its centre. The HP bar and
@@ -198,13 +247,52 @@
 
       ctx.restore(); // prone rotation
 
-      this.drawHpBar(ctx, cx, cy - radius - 8, radius * 2, defeated);
+      const barWidth = Math.max(28, this.footprintSize - 14);
+      this.drawHpBar(ctx, cx, cy - radius - 8, barWidth, defeated);
+      this.drawElevationBadge(ctx, defeated);
 
       ctx.save();
       ctx.globalAlpha = defeated ? 0.7 : 1;
       this.drawNamePlate(ctx, cx, cy + radius + 9);
       ctx.restore();
 
+      ctx.restore();
+    }
+
+    /**
+     * Contrasting elevation chip in the top-right corner of the footprint.
+     * Only rendered for creatures that are actually off the ground plane.
+     */
+    drawElevationBadge(ctx, defeated) {
+      const feet = this.elevation;
+      if (!Number.isFinite(feet) || feet === 0) {
+        return;
+      }
+
+      const text = (feet > 0 ? "▲ " : "▼ ") + Math.abs(feet) + " ft";
+      const height = Math.round(Math.max(13, this.grid.cellSize * 0.27));
+      const right = this.center.x + this.footprintSize / 2 - 4;
+      const top = this.center.y - this.footprintSize / 2 + 4;
+
+      ctx.save();
+      ctx.font = "700 " + Math.max(9, Math.round(height * 0.68)) + "px " + FONT_STACK;
+      const width = ctx.measureText(text).width + 10;
+      const x = right - width;
+      const y = top;
+
+      roundedRect(ctx, x, y, width, height, 4);
+      ctx.fillStyle = defeated ? "rgba(70, 76, 84, 0.95)" : "rgba(16, 20, 25, 0.95)";
+      ctx.fill();
+      ctx.strokeStyle = feet > 0
+        ? "rgba(126, 216, 255, 0.9)"
+        : "rgba(255, 178, 74, 0.9)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = feet > 0 ? "#c7efff" : "#ffd9a3";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x + width / 2, y + height / 2 + 0.5);
       ctx.restore();
     }
 

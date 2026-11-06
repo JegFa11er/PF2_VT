@@ -67,43 +67,38 @@ If confidence is below 95%, pause and ask targeted clarifying questions about ru
 
 ---
 
-## Hybrid Development Protocol: DeepSeek (Worker) + Gemini Pro (Architect)
+## Hybrid Development Protocol: Adaptive Models + Gemini Architect Escalation
 
-The local execution agent operates strictly as the **Hands / Implementer**, while Gemini Pro (via `gemini "<prompt>"`) acts as the **Head / Rules Architect**. 
-Invoking Gemini is completely free and saves tokens/context. DeepSeek MUST delegate rules design, test matrices, and edge-case resolution to Gemini before writing non-boilerplate code.
+The local agent operates autonomously to implement assigned slices, write Core logic, and run tests. Model tiering is assigned per session prompt. Gemini Pro acts as the external Senior Rules Architect and Escalation Gatekeeper via the local bridge script (`gemini "<query>"`).
 
-### 1. Mandatory Pre-Implementation Query (Zero-Token-Waste Rule)
-Before writing or modifying any Core logic (`src/Core/`), the local agent **MUST** make at least one call to Gemini to fetch the exact algorithmic spec and test cases:
-```bash
-gemini "[Context: Pathfinder 2E Remastered] Plan implementation for <Feature Name>. Requirements: <brief bullets>. Provide exact function signatures, PF2e Remastered math/logic, and 3-5 critical TDD Given-When-Then test cases."
-```
-- **Why:** Prevents blind rule extrapolation and legacy 5e/3.5e assumptions before code is touched.
-- **Rule:** Do not invent formulas or degree-of-success logic autonomously. Implement the architecture provided by Gemini.
+### 1. Model Tiering Strategy
+- **DeepSeek V4.1 Flash** (Primary Workhorse): Standard feature implementations, routine Core actions, large context ingestion, and test authoring. Used when token budget preservation and high context throughput are prioritized.
+- **DeepSeek V4 Pro**: Intricate mechanical interactions, modifier stacking edge-cases, complex duration/affliction trees, and tricky save pipelines.
+- **GPT-6 Luna**: High-complexity geometry (AoE cones/lines, multi-cell raycasting) and tactical AI decision trees.
+- *Rule:* The operator prompt specifies which active model to use for the current session.
 
-### 2. Mandatory Rules Verification Query
-Whenever an implementation touches:
-- Interaction of conditions/modifiers (e.g. Off-Guard, Frightened, Prone).
-- Geometric checks (Cover rays, Flanking angles, LoS, Reach).
-- Reactive triggers or Action Economy edge cases.
-The agent MUST query Gemini for rule confirmation if there is even 1% doubt:
-```bash
-gemini "[Context: Pathfinder 2E Remastered] Rule check: How does <Action/Condition> interact with <Rule/Target> in Remastered? Provide the exact rule resolution and edge cases."
-```
+### 2. Autonomous Implementation Workflow
+1. **Execute from Prompt & Reference**: Implement the feature directly using the session prompt and targeted files in `../pf2e-reference/src/module/`. The agent does not need pre-approval for standard logic or boilerplate.
+2. **Write & Run TDD Suites**: Author accompanying tests in `tests/` and run `npm test`.
+3. **Bridge Query (Complex Rules Only)**: If an intricate PF2e Remastered rule interaction is ambiguous or absent in `../pf2e-reference`, the agent MAY query Gemini via CLI:
+   ```bash
+   gemini "[Context: Pathfinder 2E Remastered] Rule check: How does <Action/Condition> interact with <Rule/Target>? Provide exact resolution."
+   ```
 
 ### 3. Circuit Breaker (Escalation Guardrail)
-1. **First Failure:** If a test or build fails, inspect the error and make **ONE** autonomous fix attempt.
-2. **Second Failure:** If the error persists, **STOP immediately**. Do NOT try a third time.
-3. **Escalate to Gemini:** Execute:
-```bash
-gemini "[Context: Pathfinder 2E Remastered] Build/test failure: <last 5-10 lines of error>. File: <path>. Provide ONLY the minimal, exact corrected code snippet."
-```
-4. Apply the provided fix directly and rerun verification.
+To prevent infinite retry loops and quota depletion:
+1. **Attempt 1 (Autonomous Fix):** If `npm test` fails, inspect the error stack, check logic against `pf2e-reference`, and make one targeted fix.
+2. **Attempt 2 (Root Cause):** If tests still fail, attempt a second targeted correction.
+3. **Escalation Gate (STOP):** If tests fail a third time, **STOP immediately**. Do NOT attempt further modifications. Escalate to Gemini Pro via:
+   ```bash
+   gemini "[Context: Pathfinder 2E Remastered] Build/test failure: <last 5-10 lines of error>. File: <path>. Explain the Remastered rule defect and provide the minimal fix."
+   ```
+4. Apply the returned fix and verify with `npm test`.
 
-### 4. Local Agent Responsibilities (Fast Execution Only)
-- Applying Gemini's architecture to the codebase.
-- Creating and wiring files, running `npm test` or browser test suites.
-- DOM / Canvas layout, rendering, CSS, and UI event binding.
-- Updating `docs/HANDOFF.md` and roadmap status.
+### 4. Session Handoff
+Before ending the session:
+- Ensure `npm test` passes 100% with no broken suites.
+- Update `docs/HANDOFF.md` with newly implemented contracts, test counts, and deferred limitations.
 
 ---
 
@@ -118,7 +113,14 @@ When a mechanical or architectural bug is identified:
 - Local canonical path: `../pf2e-reference` (Read-only reference, do not modify).
 - When implementing rules, math, modifiers, or degree-of-success logic, use `../pf2e-reference/src/module/` as the algorithmic source of truth.
 - STRICT LIMITATION: Never search globally across `../pf2e-reference` (it contains thousands of files). Read ONLY the targeted module file required for the current task:
-  - Distance & Grid: `../pf2e-reference/src/module/canvas/ruler.ts`
-  - Check rolls & Degrees of Success: `../pf2e-reference/src/module/system/rolls.ts` or `src/module/check/`
-  - Modifier stacking math: `../pf2e-reference/src/module/rules/rule-element/`
-  - Conditions data: `../pf2e-reference/src/module/system/conditions/`
+  - **Distance, Grid & AoE Templates:** `../pf2e-reference/src/module/canvas/` (e.g., `ruler.ts`, `measured-template.ts`)
+  - **Check Rolls & Degrees of Success:** `../pf2e-reference/src/module/system/check/` and `src/module/system/statistic/`
+  - **Damage Math & IWR Engine:** `../pf2e-reference/src/module/system/damage/`
+  - **Modifier Stacking & Rule Elements:** `../pf2e-reference/src/module/rules/rule-element/`
+  - **Conditions (Dying, Prone, Off-Guard, etc.):** `../pf2e-reference/src/module/system/conditions/`
+  - **Combat Maneuvers & Base Actions:** `../pf2e-reference/src/module/system/action-macros/`
+  - **Weapons, Ranged Combat, Reload & Traits:** `../pf2e-reference/src/module/item/weapon/`
+  - **Spells, Casting & Magic System:** `../pf2e-reference/src/module/item/spell/`
+  - **Afflictions (Poisons, Diseases, Stages):** `../pf2e-reference/src/module/item/affliction/`
+  - **Shields (Hardness, HP, Shield Block):** `../pf2e-reference/src/module/item/shield/`
+  - **Actor Base, Creature Sizes & Hands/Inventory:** `../pf2e-reference/src/module/actor/`

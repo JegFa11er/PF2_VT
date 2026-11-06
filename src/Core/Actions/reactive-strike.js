@@ -116,6 +116,21 @@
     return a.id !== undefined && b.id !== undefined && a.id === b.id;
   }
 
+  /**
+   * Only explicitly authored alliances establish that two combatants are on
+   * the same side. Isolated headless fixtures that omit `alliance` both fall
+   * back to "player" but are not allies.
+   */
+  function sameAlliance(a, b) {
+    if (!a || !b || a.alliance === undefined || b.alliance === undefined) {
+      return false;
+    }
+    if (a.alliance !== b.alliance) {
+      return false;
+    }
+    return a.allianceExplicit !== false && b.allianceExplicit !== false;
+  }
+
   function normalizeAttackBonus(options, attacker) {
     if (options.attackBonus !== undefined) {
       assertInteger(options.attackBonus, "attackBonus");
@@ -173,6 +188,21 @@
     const overrideReach = opts.reachFeet;
     const threats = [];
 
+    // The mover may itself be Large/Huge: measure from every cell it would
+    // occupy at the departure square, not only from its anchor cell.
+    const moverCells = Grid.getFootprintCells(
+      opts.cell.x,
+      opts.cell.y,
+      Grid.footprintOf(opts.mover),
+    );
+    const moverAtCell = {
+      x: opts.cell.x,
+      y: opts.cell.y,
+      getOccupiedCells: function () {
+        return moverCells;
+      },
+    };
+
     for (const candidate of opts.combatants) {
       if (candidate === null || typeof candidate !== "object") {
         continue;
@@ -183,11 +213,7 @@
       if (isDefeated(candidate)) {
         continue;
       }
-      if (
-        candidate.alliance !== undefined &&
-        opts.mover.alliance !== undefined &&
-        candidate.alliance === opts.mover.alliance
-      ) {
+      if (sameAlliance(candidate, opts.mover)) {
         continue;
       }
       if (
@@ -199,7 +225,8 @@
       if (
         !Number.isInteger(candidate.x) ||
         !Number.isInteger(candidate.y) ||
-        Grid.distanceFeet(opts.cell, candidate) > reachOf(candidate, overrideReach)
+        Grid.getCombatantDistance(moverAtCell, candidate) >
+          reachOf(candidate, overrideReach)
       ) {
         continue;
       }
@@ -292,7 +319,13 @@
       );
 
       if (!flatCheck.passed) {
-        attacker.spendReaction(1);
+        attacker.spendReaction(1, {
+          type: "reactive-strike",
+          trigger: "leave-threatened-square",
+          targetId: target.id,
+          targetName: target.name,
+          automaticMiss: true,
+        });
         return {
           ok: true,
           automaticMiss: true,
@@ -386,7 +419,12 @@
 
     // Spend the reaction only after every validation and roll succeeded.
     // No action is spent and MAP is neither used nor advanced.
-    attacker.spendReaction(1);
+    attacker.spendReaction(1, {
+      type: "reactive-strike",
+      trigger: "leave-threatened-square",
+      targetId: target.id,
+      targetName: target.name,
+    });
 
     let hpBefore = null;
     let hpAfter = null;
