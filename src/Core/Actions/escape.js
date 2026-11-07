@@ -180,7 +180,12 @@
     if (options.source && typeof options.source === "object") {
       return options.source;
     }
-    const sourceId = condition ? condition.sourceId : null;
+    const sourceId =
+      typeof options.sourceId === "string"
+        ? options.sourceId
+        : condition
+          ? condition.sourceId
+          : null;
     if (typeof sourceId !== "string" || !Array.isArray(options.combatants)) {
       return null;
     }
@@ -189,6 +194,41 @@
         return combatant && combatant.id === sourceId;
       }) || null
     );
+  }
+
+  /**
+   * Pick the grapple record maintained by the chosen source when the victim is
+   * held by more than one creature. Falls back to the canonical primary record.
+   *
+   * @param {object} actor
+   * @param {object} options
+   * @returns {object|null}
+   */
+  function grappleConditionFor(actor, options) {
+    const sourceId =
+      options.source && typeof options.source === "object"
+        ? options.source.id
+        : typeof options.sourceId === "string"
+          ? options.sourceId
+          : null;
+
+    if (
+      typeof sourceId === "string" &&
+      typeof actor.getConditionFrom === "function"
+    ) {
+      const restrained = actor.getConditionFrom("restrained", sourceId);
+      if (restrained !== null) {
+        return restrained;
+      }
+      const grabbed = actor.getConditionFrom("grabbed", sourceId);
+      if (grabbed !== null) {
+        return grabbed;
+      }
+    }
+
+    return typeof actor.getGrappleCondition === "function"
+      ? actor.getGrappleCondition()
+      : Conditions.getGrappleCondition(actor);
   }
 
   function athleticsDCOf(grappler) {
@@ -232,10 +272,7 @@
       return { ok: false, reason: ESCAPE_REASONS.ACTOR_DEFEATED };
     }
 
-    const condition =
-      typeof actor.getGrappleCondition === "function"
-        ? actor.getGrappleCondition()
-        : Conditions.getGrappleCondition(actor);
+    const condition = grappleConditionFor(actor, opts);
     if (condition === null) {
       return { ok: false, reason: ESCAPE_REASONS.NOT_GRABBED };
     }

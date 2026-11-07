@@ -26,7 +26,11 @@
 
   const RELOAD_REASONS = Object.freeze({
     NO_ACTIONS: "no-actions",
+    RESTRAINED_ACTION_BLOCKED: "restrained-action-blocked",
+    GRABBED_MANIPULATE_FAILED: "grabbed-manipulate-failed",
   });
+
+  const RELOAD_TRAITS = Object.freeze(["manipulate"]);
 
   function assertCombatant(combatant) {
     if (combatant === null || typeof combatant !== "object") {
@@ -98,11 +102,15 @@
     assertCombatant(combatant);
 
     if (typeof combatant.canAct === "function") {
-      const gate = combatant.canAct();
+      const gate = combatant.canAct({
+        traits: RELOAD_TRAITS,
+        action: "reload",
+      });
       if (!gate.ok) {
         return {
           ok: false,
           reason: gate.reason,
+          canActReason: gate.reason,
           actionsLeft: combatant.actionsRemaining,
           isLoaded: combatant.isLoaded !== false,
         };
@@ -148,6 +156,30 @@
       };
     }
 
+    // Grabbed: the manipulate Reload needs a successful DC 5 flat check. A
+    // failure still spends the actions but the weapon stays unloaded.
+    if (typeof combatant.resolveGrabbedManipulate === "function") {
+      const grabCheck = combatant.resolveGrabbedManipulate({
+        traits: RELOAD_TRAITS,
+        d20: opts.d20,
+        rollFlatCheck: opts.rollFlatCheck,
+        rollD20: opts.rollD20,
+        rollDie: opts.rollDie,
+      });
+      if (grabCheck.required && !grabCheck.passed) {
+        combatant.spendActions(cost);
+        return {
+          ok: false,
+          reason: RELOAD_REASONS.GRABBED_MANIPULATE_FAILED,
+          flatCheck: grabCheck.flatCheck,
+          actionsSpent: cost,
+          actionsLeft: combatant.actionsRemaining,
+          reload: profile.reload,
+          isLoaded: false,
+        };
+      }
+    }
+
     combatant.spendActions(cost);
     combatant.isLoaded = true;
 
@@ -163,6 +195,7 @@
 
   return Object.freeze({
     RELOAD_REASONS: RELOAD_REASONS,
+    RELOAD_TRAITS: RELOAD_TRAITS,
     getReloadCost: getReloadCost,
     performReload: performReload,
   });

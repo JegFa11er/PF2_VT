@@ -24,6 +24,7 @@
       require("../Rules/modifiers.js"),
       require("./strike.js"),
       require("../Entities/equipment.js"),
+      require("../Rules/size.js"),
     );
   } else {
     root.PF2e = root.PF2e || {};
@@ -35,6 +36,7 @@
       root.PF2e.Core.Rules.Modifiers,
       root.PF2e.Core.Actions.Strike,
       root.PF2e.Core.Equipment,
+      root.PF2e.Core.Rules.Size,
     );
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
@@ -43,6 +45,7 @@
   Modifiers,
   Strike,
   Equipment,
+  Size,
 ) {
   "use strict";
 
@@ -57,6 +60,7 @@
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
     NO_FREE_HAND: "no-free-hand",
+    TARGET_TOO_LARGE: "target-too-large",
   });
 
   function assertCombatant(combatant, label) {
@@ -173,6 +177,20 @@
       }
     }
 
+    // A maneuver can target a creature at most one size category larger than
+    // the attacker (tiny 0 .. gargantuan 4). Checked before geometry/MAP so an
+    // illegal attempt spends nothing.
+    if (!Size.canManeuverTarget(attacker, target)) {
+      return {
+        ok: false,
+        reason: MANEUVER_REASONS.TARGET_TOO_LARGE,
+        attackerSize: Size.normalizeSize(attacker.size),
+        targetSize: Size.normalizeSize(target.size),
+        attackerSizeRank: Size.sizeRankOf(attacker),
+        targetSizeRank: Size.sizeRankOf(target),
+      };
+    }
+
     // Strike validation supplies identity, alliance, reach, visibility, and
     // line-of-sight checks. It also computes cover/flanking, which are not
     // used by a Fortitude-DC maneuver but keep the geometry audit consistent.
@@ -229,6 +247,10 @@
       flatCheckDC: evaluation.flatCheckDC,
       flatCheckCondition: evaluation.flatCheckCondition,
       hiddenAttacker: evaluation.hiddenAttacker === true,
+      attackerSize: Size.normalizeSize(attacker.size),
+      targetSize: Size.normalizeSize(target.size),
+      attackerSizeRank: Size.sizeRankOf(attacker),
+      targetSizeRank: Size.sizeRankOf(target),
       cover: evaluation.cover || null,
       coverDegree: evaluation.coverDegree || "none",
       handRequirement:

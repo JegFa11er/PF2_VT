@@ -22,6 +22,7 @@
     module.exports = factory(
       require("../Rules/map.js"),
       require("../Rules/damage.js"),
+      require("../Rules/size.js"),
       require("./conditions.js"),
       require("../Rules/iwr.js"),
       require("../Rules/weapon-traits.js"),
@@ -38,6 +39,7 @@
     root.PF2e.Core.Combatant = factory(
       root.PF2e.Core.Rules.MultipleAttack,
       root.PF2e.Core.Rules.Damage,
+      root.PF2e.Core.Rules.Size,
       root.PF2e.Core.Conditions,
       root.PF2e.Core.Rules.IWR,
       root.PF2e.Core.Rules.WeaponTraits,
@@ -52,6 +54,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
   MultipleAttack,
   Damage,
+  Size,
   Conditions,
   IWR,
   WeaponTraits,
@@ -644,6 +647,12 @@
       this.attacksThisTurn = attacksThisTurn;
       this.isDefeated = currentHP <= 0;
       this.conditions = new Map();
+      // Grabbed/Restrained/Immobilized can exist once per source. The Map above
+      // keeps the canonical primary record per slug (for modifiers and legacy
+      // accessors); this registry keeps every simultaneous instance so a
+      // second grappler no longer overwrites the first source's metadata.
+      this._conditionInstances = new Map();
+      this._conditionInstanceSeq = 0;
       this.persistentDamage = [];
       this.lastRecoveryCheck = null;
       this.lastDurationExpiry = [];
@@ -664,7 +673,7 @@
         throw new RangeError("encounterRound must be a non-negative integer.");
       }
       this.encounterRound = encounterRound;
-      this.size = opts.size || "medium";
+      this.size = Size.normalizeSize(opts.size);
       // Vertical position in feet above the battlefield baseline. Elevation
       // feeds 3D distance / reach and defaults to ground level (0 ft).
       const elevation = opts.elevation === undefined ? 0 : opts.elevation;
@@ -1260,14 +1269,23 @@
 
     /**
      * Number of grid squares along one edge of this creature's footprint.
-     * PF2e sizes: medium = 1x1, large = 2x2, huge = 3x3.
+     * PF2e sizes: tiny/small/medium = 1x1, large = 2x2, huge = 3x3,
+     * gargantuan = 4x4.
      *
      * @returns {number}
      */
     getFootprint() {
-      if (this.size === "large") return 2;
-      if (this.size === "huge") return 3;
-      return 1;
+      return Size.getFootprintForSize(this.size);
+    }
+
+    /**
+     * Canonical size-category rank: tiny 0, small/medium 1, large 2, huge 3,
+     * gargantuan 4.
+     *
+     * @returns {number}
+     */
+    getSizeRank() {
+      return Size.sizeRankOfName(this.size);
     }
 
     /**
@@ -1308,9 +1326,16 @@
      * defeated creature is likewise refused. Callers may surface `reason`
      * directly in the combat log.
      *
-     * @returns {{ok:boolean, reason?:string}}
+     * The optional `options` argument lets callers declare the action's
+     * traits. Restrained then blocks attack/manipulate actions (Escape is the
+     * only exception) with `reason: "restrained-action-blocked"`. Calling
+     * `canAct()` with no arguments keeps the legacy unconditional gate.
+     *
+     * @param {{traits?:string|string[],action?:string,isEscape?:boolean}} [options]
+     * @returns {{ok:boolean, reason?:string, traits?:string[]}}
      */
-    canAct() {
+    canAct(options) {
+      const opts = options || {};
       if (this.hasCondition("unconscious")) {
         return { ok: false, reason: "unconscious" };
       }
@@ -1323,7 +1348,60 @@
       if (this.isDefeated) {
         return { ok: false, reason: "defeated" };
       }
+      if (Conditions.isRestrainedActionBlocked(this, opts)) {
+        return {
+          ok: false,
+          reason: "restrained-action-blocked",
+          traits: Array.isArray(opts.traits)
+            ? opts.traits.slice()
+            : opts.traits === undefined
+              ? []
+              : [opts.traits],
+        };
+      }
       return { ok: true };
+    }
+
+    /**
+     * Resolve the Grabbed manipulate flat check (DC 5). The check is only
+     * required while Grabbed and when the action carries the `manipulate`
+     * trait. This method never spends actions; the caller must spend the
+     * action on a failed check (`passed === false`).
+     *
+     * @param {{traits?:string|string[],d20?:number,rollD20?:Function,rollFlatCheck?:Function,rollDie?:Function}} [options]
+     * @returns {{required:boolean, passed:boolean, flatCheck:object|null, dc:number}}
+     */
+    resolveGrabbedManipulate(options) {
+      const opts = options || {};
+      if (!Conditions.isGrabbedManipulate(this, opts)) {
+        return { required: false, passed: true, flatCheck: null, dc: 5 };
+      }
+
+      let rollD20;
+      if (typeof opts.rollFlatCheck === "function") {
+        rollD20 = opts.rollFlatCheck;
+      } else if (typeof opts.rollD20 === "function") {
+        rollD20 = opts.rollD20;
+      }
+
+      const result = Checks.evaluateFlatCheck({
+        dc: 5,
+        d20: opts.d20,
+        rollD20: rollD20,
+        rollDie: opts.rollDie,
+      });
+
+      return {
+        required: true,
+        passed: result.passed,
+        flatCheck: {
+          passed: result.passed,
+          dc: result.dc,
+          roll: result.d20,
+          condition: "grabbed",
+        },
+        dc: 5,
+      };
     }
 
     /**
@@ -1615,6 +1693,101 @@
     }
 
     /**
+     * Conditions that can exist simultaneously once per source. The Map keeps
+     * the primary record for the slug; the instance registry keeps every
+     * source-linked record.
+     *
+     * @param {string} slug
+     * @returns {boolean}
+     */
+    _isInstancedCondition(slug) {
+      return (
+        slug === Conditions.CONDITION_SLUGS.GRABBED ||
+        slug === Conditions.CONDITION_SLUGS.RESTRAINED ||
+        slug === Conditions.CONDITION_SLUGS.IMMOBILIZED
+      );
+    }
+
+    _instanceSourceKey(sourceId) {
+      return sourceId === null || sourceId === undefined
+        ? "__none__"
+        : sourceId;
+    }
+
+    _instanceList(slug, create) {
+      let list = this._conditionInstances.get(slug);
+      if (list === undefined && create === true) {
+        list = [];
+        this._conditionInstances.set(slug, list);
+      }
+      return list;
+    }
+
+    /**
+     * Re-point the canonical Map entry at the earliest surviving instance.
+     * The first grappler therefore keeps ownership of `getCondition().sourceId`
+     * until that specific grab is removed.
+     *
+     * @param {string} slug
+     * @returns {object|null}
+     */
+    _syncPrimaryInstance(slug) {
+      const list = this._conditionInstances.get(slug);
+      if (list === undefined || list.length === 0) {
+        this._conditionInstances.delete(slug);
+        this.conditions.delete(slug);
+        return null;
+      }
+
+      let primary = list[0];
+      for (const wrapper of list) {
+        if (wrapper.seq < primary.seq) {
+          primary = wrapper;
+        }
+      }
+      this.conditions.set(slug, primary.condition);
+      return primary.condition;
+    }
+
+    /**
+     * Add or refresh one source's instance of a grapple-family condition.
+     *
+     * @param {object} condition
+     * @returns {{condition:object,refreshed:boolean}}
+     */
+    _registerConditionInstance(condition) {
+      const slug = condition.name;
+      const list = this._instanceList(slug, true);
+      const sourceKey = this._instanceSourceKey(condition.sourceId);
+      let wrapper = list.find(function (entry) {
+        return entry.sourceKey === sourceKey;
+      });
+      let refreshed = false;
+
+      if (wrapper === undefined) {
+        wrapper = {
+          seq: ++this._conditionInstanceSeq,
+          sourceKey: sourceKey,
+          condition: condition,
+        };
+        list.push(wrapper);
+      } else {
+        wrapper.condition = condition;
+        refreshed = true;
+      }
+
+      this._syncPrimaryInstance(slug);
+      return {
+        condition: Conditions.copyCondition(condition),
+        refreshed: refreshed,
+      };
+    }
+
+    _clearConditionInstances(slug) {
+      this._conditionInstances.delete(slug);
+    }
+
+    /**
      * Add or refresh a condition. Frightened uses the higher of the old and new
      * values, matching PF2e's non-stacking condition value rule.
      *
@@ -1646,6 +1819,21 @@
       if (condition === null) {
         this.removeCondition(name);
         return null;
+      }
+
+      // Grabbed/Restrained/Immobilized are source-linked instance families.
+      // A record from a different grappler is added alongside the existing one
+      // instead of replacing it.
+      if (this._isInstancedCondition(condition.name)) {
+        const registered = this._registerConditionInstance(condition);
+        const stored = registered.condition;
+        this.emitEvent("condition:added", {
+          condition: stored,
+          name: stored.name,
+          value: stored.value,
+          refreshed: registered.refreshed,
+        });
+        return stored;
       }
 
       const existing = this.conditions.get(condition.name);
@@ -1703,6 +1891,12 @@
      */
     removeCondition(name) {
       const slug = this._conditionKey(name);
+      if (this._isInstancedCondition(slug)) {
+        // A direct removal clears every source's instance of this slug. Escape
+        // and grapple expiry use releaseGrappleFrom / removeConditionFrom to
+        // remove only one source at a time.
+        this._clearConditionInstances(slug);
+      }
       const existing = this.conditions.get(slug);
       if (existing === undefined) {
         return false;
@@ -1724,6 +1918,126 @@
       const slug = this._conditionKey(name);
       const condition = this.conditions.get(slug);
       return condition === undefined ? null : Conditions.copyCondition(condition);
+    }
+
+    /**
+     * Every recorded instance of an instance-family condition (Grabbed,
+     * Restrained, Immobilized), oldest first. Optionally filter by source.
+     *
+     * @param {string} name
+     * @param {string} [sourceId]
+     * @returns {object[]}
+     */
+    getConditionInstances(name, sourceId) {
+      const slug = this._conditionKey(name);
+      const list = this._conditionInstances.get(slug);
+      if (list === undefined) {
+        return [];
+      }
+      return list
+        .slice()
+        .sort(function (a, b) {
+          return a.seq - b.seq;
+        })
+        .filter(function (wrapper) {
+          return (
+            sourceId === undefined ||
+            wrapper.condition.sourceId === sourceId
+          );
+        })
+        .map(function (wrapper) {
+          return Conditions.copyCondition(wrapper.condition);
+        });
+    }
+
+    /**
+     * The specific record one source applied for this slug, or null.
+     *
+     * @param {string} name
+     * @param {string} sourceId
+     * @returns {object|null}
+     */
+    getConditionFrom(name, sourceId) {
+      const instances = this.getConditionInstances(name, sourceId);
+      return instances.length === 0 ? null : instances[0];
+    }
+
+    /**
+     * Every simultaneous Grabbed/Restrained instance, oldest first.
+     *
+     * @param {string} [sourceId]
+     * @returns {object[]}
+     */
+    getGrappleInstances(sourceId) {
+      const instances = [];
+      for (const slug of Conditions.GRAPPLE_CONDITIONS) {
+        const list = this.getConditionInstances(slug, sourceId);
+        for (const condition of list) {
+          instances.push(condition);
+        }
+      }
+      return instances;
+    }
+
+    /**
+     * Stable ids of every source currently maintaining a grapple.
+     *
+     * @returns {string[]}
+     */
+    getGrappleSources() {
+      const sources = [];
+      for (const condition of this.getGrappleInstances()) {
+        if (
+          typeof condition.sourceId === "string" &&
+          sources.indexOf(condition.sourceId) === -1
+        ) {
+          sources.push(condition.sourceId);
+        }
+      }
+      return sources;
+    }
+
+    /**
+     * Remove only the instance one source applied. Other grapplers keep their
+     * holds and the canonical condition remains until the last one is gone.
+     *
+     * @param {string} name
+     * @param {string} sourceId
+     * @returns {object|null} the removed record
+     */
+    removeConditionFrom(name, sourceId) {
+      const slug = this._conditionKey(name);
+      if (!this._isInstancedCondition(slug)) {
+        const existing = this.getCondition(slug);
+        if (
+          existing !== null &&
+          (sourceId === undefined || existing.sourceId === sourceId)
+        ) {
+          this.removeCondition(slug);
+          return existing;
+        }
+        return null;
+      }
+
+      const list = this._instanceList(slug, false);
+      if (list === undefined) {
+        return null;
+      }
+      const index = list.findIndex(function (wrapper) {
+        return wrapper.condition.sourceId === sourceId;
+      });
+      if (index === -1) {
+        return null;
+      }
+      const removed = list.splice(index, 1)[0].condition;
+      this._syncPrimaryInstance(slug);
+      const stored = Conditions.copyCondition(removed);
+      this.emitEvent("condition:removed", {
+        condition: stored,
+        name: slug,
+        value: stored.value,
+      });
+      return stored;
     }
 
     /**
@@ -1767,32 +2081,62 @@
 
     _removeGrappleRecords(sourceId, predicate) {
       const removed = [];
+
       for (const slug of Conditions.GRAPPLE_CONDITIONS) {
-        const condition = this.conditions.get(slug);
-        if (condition === undefined || condition.sourceId !== sourceId) {
+        const list = this._instanceList(slug, false);
+        if (list === undefined) {
           continue;
         }
-        if (!predicate(condition)) {
-          continue;
+        const remaining = [];
+        for (const wrapper of list) {
+          if (
+            wrapper.condition.sourceId === sourceId &&
+            predicate(wrapper.condition)
+          ) {
+            removed.push(Conditions.copyCondition(wrapper.condition));
+          } else {
+            remaining.push(wrapper);
+          }
         }
-        this.conditions.delete(slug);
-        removed.push(Conditions.copyCondition(condition));
+        if (remaining.length === 0) {
+          this._conditionInstances.delete(slug);
+        } else {
+          this._conditionInstances.set(slug, remaining);
+        }
+        this._syncPrimaryInstance(slug);
       }
 
-      if (removed.length > 0) {
-        const immobilized = this.conditions.get(
-          Conditions.CONDITION_SLUGS.IMMOBILIZED,
-        );
-        const stillGrappled =
-          this.hasCondition("grabbed") || this.hasCondition("restrained");
-        if (
-          immobilized !== undefined &&
-          immobilized.sourceId === sourceId &&
-          !stillGrappled
-        ) {
-          this.conditions.delete(Conditions.CONDITION_SLUGS.IMMOBILIZED);
-          removed.push(Conditions.copyCondition(immobilized));
+      // Each source owns its companion Immobilized instance. Release/expiry
+      // removes that source's record even when another grappler still holds the
+      // victim; the other grappler's Immobilized instance keeps them locked
+      // down.
+      const list = this._instanceList(
+        Conditions.CONDITION_SLUGS.IMMOBILIZED,
+        false,
+      );
+      if (list !== undefined) {
+        const remaining = [];
+        for (const wrapper of list) {
+          if (
+            wrapper.condition.sourceId === sourceId &&
+            predicate(wrapper.condition)
+          ) {
+            removed.push(Conditions.copyCondition(wrapper.condition));
+          } else {
+            remaining.push(wrapper);
+          }
         }
+        if (remaining.length === 0) {
+          this._conditionInstances.delete(
+            Conditions.CONDITION_SLUGS.IMMOBILIZED,
+          );
+        } else {
+          this._conditionInstances.set(
+            Conditions.CONDITION_SLUGS.IMMOBILIZED,
+            remaining,
+          );
+        }
+        this._syncPrimaryInstance(Conditions.CONDITION_SLUGS.IMMOBILIZED);
       }
 
       return removed;
@@ -1842,7 +2186,23 @@
      */
     getConditions() {
       const conditions = [];
-      for (const condition of this.conditions.values()) {
+      for (const entry of this.conditions) {
+        const slug = entry[0];
+        const condition = entry[1];
+        if (this._isInstancedCondition(slug)) {
+          const list = this._conditionInstances.get(slug);
+          if (list !== undefined && list.length > 0) {
+            list
+              .slice()
+              .sort(function (a, b) {
+                return a.seq - b.seq;
+              })
+              .forEach(function (wrapper) {
+                conditions.push(Conditions.copyCondition(wrapper.condition));
+              });
+            continue;
+          }
+        }
         conditions.push(Conditions.copyCondition(condition));
       }
       return conditions;
@@ -2137,6 +2497,9 @@
             : Math.max(0, condition.duration - 1);
         if (round - appliedRound >= threshold) {
           this.conditions.delete(slug);
+          if (this._isInstancedCondition(slug)) {
+            this._clearConditionInstances(slug);
+          }
           removed.push(Conditions.copyCondition(condition));
         }
       }

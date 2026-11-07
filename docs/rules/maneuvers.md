@@ -99,12 +99,18 @@ Trip.performTrip({
 action, rolling a d20, or mutating state. The View uses it for target highlights
 and hover text.
 
-### Requirements not modelled
+### Requirements
 
-Trip's printed requirements — at least one free hand and a target no more than
-one size larger — are not enforced because the engine has no hands, inventory, or
-creature-size model. They are listed as a deferred limitation, not silently
-approximated.
+Trip's printed requirements are enforced before geometry or MAP:
+
+- at least one free hand, unless the wielded weapon carries the `trip` trait
+  (`Equipment.checkManeuverHands`); a violation returns `no-free-hand`;
+- the target may be at most one size category larger. Size ranks are tiny 0,
+  small 1, medium 1, large 2, huge 3, gargantuan 4
+  (`Rules/size.js::canManeuverTarget`); a violation returns `target-too-large`.
+
+Shove and Grapple share the same two gates through
+`Actions/athletics-maneuver.js` with the `shove`/`grapple` trait.
 
 ## Shove
 
@@ -240,9 +246,14 @@ Immediate breaks:
 - **Grapple critical failure:** the attacker's own hold on the target is
   released.
 
-Multiple simultaneous grapplers on one target are not fully modelled: the
-condition store keeps one record per slug, so a second grappler replaces the
-first grappler's `sourceId`. This is a documented prototype limitation.
+### Multiple simultaneous grapplers
+
+Grabbed/Restrained/Immobilized are tracked as source-linked instances.
+`Combatant.getGrappleInstances()` and `getGrappleSources()` expose every
+simultaneous hold; the canonical `getCondition()` record keeps the earliest
+source's `sourceId`. Escape releases only the chosen source, so the victim stays
+Grabbed until the last instance is removed. A second grappler no longer
+overwrites the first grappler's source metadata.
 
 ## Escape
 
@@ -363,14 +374,10 @@ Valeros is no longer Prone.
 
 ## Deferred
 
-- Crawl, hands/free-hand requirements, target size, and creature size. Shove's
-  optional "move with the target" clause and Grapple's free-hand/size
-  requirements are not modelled.
-- Multiple simultaneous grapplers on one target (one condition record per slug).
+- Crawl.
+- Shove's optional "move with the target" clause.
 - Remastered's full Grapple critical-failure choice (reverse the grab or knock
   the attacker prone); the prototype uses attacker prone plus release.
-- Restrained's extra attack/manipulate restrictions and Grabbed's DC 5
-  manipulate flat check beyond Off-Guard and Immobilized.
 - Area-effect spells that would consume the Reflex save path; the cover bonus is
   wired to both Reflex saves and Reflex DC, but no spell/area targeting exists
   yet.

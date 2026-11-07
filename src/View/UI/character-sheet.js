@@ -116,6 +116,27 @@
     }
   }
 
+  function writeHotbarDrag(dataTransfer, kind, combatant, entry) {
+    if (!dataTransfer || !combatant || !entry) {
+      return false;
+    }
+    const payload = {
+      type: "hotbar-binding",
+      kind: kind,
+      combatantId: combatant.id,
+      entry: entry,
+    };
+    const raw = JSON.stringify(payload);
+    try {
+      dataTransfer.effectAllowed = "copy";
+      dataTransfer.setData("application/json", raw);
+      dataTransfer.setData("text/plain", raw);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
   class CharacterSheet {
     constructor(options) {
       const opts = options || {};
@@ -362,6 +383,32 @@
       const panel = this.buildPanel("actions", "Действия");
 
       this.weaponCard = make(doc, "div", "sheet-weapon-card");
+      this.weaponHotbarEntry = null;
+      this.weaponCard.draggable = false;
+      this.weaponCard.addEventListener(
+        "dragstart",
+        function (event) {
+          const combatant = this.combatantId
+            ? this.getCombatant(this.combatantId)
+            : null;
+          const entry = this.weaponHotbarEntry;
+          if (!combatant || !entry) {
+            event.preventDefault();
+            return;
+          }
+          if (!writeHotbarDrag(event.dataTransfer, "weapon", combatant, entry)) {
+            event.preventDefault();
+            return;
+          }
+          this.weaponCard.classList.add("is-dragging");
+        }.bind(this),
+      );
+      this.weaponCard.addEventListener(
+        "dragend",
+        function () {
+          this.weaponCard.classList.remove("is-dragging");
+        }.bind(this),
+      );
       panel.append(this.weaponCard);
 
       this.mapControls = make(doc, "div", "sheet-map-controls");
@@ -1057,6 +1104,13 @@
               ? "Weapon"
               : "Unarmed";
 
+      this.weaponHotbarEntry =
+        main && (main.type === "weapon" || main.type === "shield") ? main : null;
+      this.weaponCard.draggable = Boolean(this.weaponHotbarEntry);
+      this.weaponCard.title = this.weaponHotbarEntry
+        ? "Перетащите " + this.weaponHotbarEntry.name + " в слот хотбара"
+        : "";
+
       this.weaponCard.replaceChildren();
       const weaponHead = make(doc, "div", "sheet-weapon-head");
       weaponHead.append(
@@ -1239,6 +1293,24 @@
       } else {
         for (const item of stowed) {
           const row = make(doc, "div", "sheet-item-row");
+          row.draggable = item.type === "weapon" || item.type === "shield";
+          if (row.draggable) {
+            row.classList.add("is-hotbar-source");
+            row.title = "Перетащите " + (item.name || item.id) + " в слот хотбара";
+            row.addEventListener(
+              "dragstart",
+              function (event) {
+                if (!writeHotbarDrag(event.dataTransfer, "weapon", combatant, item)) {
+                  event.preventDefault();
+                  return;
+                }
+                row.classList.add("is-dragging");
+              }.bind(this),
+            );
+            row.addEventListener("dragend", function () {
+              row.classList.remove("is-dragging");
+            });
+          }
           const meta = make(doc, "div", "sheet-item-meta");
           meta.append(
             make(doc, "span", "sheet-item-name", item.name || item.id),
@@ -1293,6 +1365,21 @@
     renderHand(combatant, slot, label, item, active, canSpend) {
       const doc = this.document;
       const card = make(doc, "div", "sheet-hand");
+      if (item && (item.type === "weapon" || item.type === "shield")) {
+        card.draggable = true;
+        card.classList.add("is-hotbar-source");
+        card.title = "Перетащите " + (item.name || item.id) + " в слот хотбара";
+        card.addEventListener("dragstart", function (event) {
+          if (!writeHotbarDrag(event.dataTransfer, "weapon", combatant, item)) {
+            event.preventDefault();
+            return;
+          }
+          card.classList.add("is-dragging");
+        });
+        card.addEventListener("dragend", function () {
+          card.classList.remove("is-dragging");
+        });
+      }
       const head = make(doc, "div", "sheet-hand-head");
       head.append(
         make(doc, "span", "sheet-hand-label", label),
@@ -1658,6 +1745,22 @@
     renderSpellRow(combatant, spell, active, canSpend, round) {
       const doc = this.document;
       const row = make(doc, "div", "sheet-spell-row");
+      row.draggable = true;
+      row.classList.add("is-hotbar-source");
+      row.title =
+        "Перетащите " +
+        (spell.name || spell.id) +
+        " в слот хотбара для быстрого каста";
+      row.addEventListener("dragstart", function (event) {
+        if (!writeHotbarDrag(event.dataTransfer, "spell", combatant, spell)) {
+          event.preventDefault();
+          return;
+        }
+        row.classList.add("is-dragging");
+      });
+      row.addEventListener("dragend", function () {
+        row.classList.remove("is-dragging");
+      });
       const meta = make(doc, "div", "sheet-spell-meta");
 
       const cost = Number.isInteger(spell.cost) ? spell.cost : 2;

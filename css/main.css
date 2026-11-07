@@ -3656,3 +3656,330 @@ body.dialog-open {
     font-size: 10.5px;
   }
 }
+
+/* =========================================================================
+   PHASE 26 — FOUNDRY MACRO HOTBAR
+   ========================================================================= */
+
+.hotbar-layer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 14px 11px;
+  border-top: 1px solid var(--border);
+  background:
+    linear-gradient(180deg, rgba(22, 26, 31, 0.97), rgba(9, 11, 14, 0.99));
+  box-shadow:
+    0 -12px 30px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.hotbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.hotbar-caption {
+  flex: none;
+  max-width: 72px;
+  color: rgba(214, 168, 75, 0.75);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1.25;
+  text-align: center;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.hotbar-slots {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.hotbar-slot {
+  position: relative;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 14px 4px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(42, 49, 58, 0.82), rgba(18, 22, 27, 0.92));
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    border-color 110ms ease,
+    background 110ms ease,
+    transform 80ms ease,
+    box-shadow 110ms ease;
+}
+
+.hotbar-slot:hover:not(:disabled) {
+  border-color: rgba(214, 168, 75, 0.6);
+  background:
+    linear-gradient(180deg, rgba(58, 52, 38, 0.88), rgba(26, 25, 20, 0.94));
+  box-shadow: 0 0 12px rgba(214, 168, 75, 0.14);
+}
+
+.hotbar-slot:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.hotbar-slot:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(214, 168, 75, 0.32);
+}
+
+.hotbar-slot.is-empty {
+  border-style: dashed;
+  border-color: rgba(86, 96, 109, 0.55);
+  background: rgba(12, 15, 19, 0.7);
+  color: #5e6875;
+}
+
+.hotbar-slot.is-bound {
+  border-color: rgba(214, 168, 75, 0.3);
+}
+
+.hotbar-slot.is-manual {
+  border-color: rgba(88, 198, 255, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(88, 198, 255, 0.12);
+}
+
+.hotbar-slot.is-manual .hotbar-name {
+  color: #bde8ff;
+}
+
+.hotbar-slot.is-dragover {
+  border-color: rgba(126, 230, 157, 0.85);
+  background: rgba(60, 120, 78, 0.28);
+  box-shadow: 0 0 16px rgba(126, 230, 157, 0.32);
+}
+
+.hotbar-slot:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.hotbar-key {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  color: rgba(214, 168, 75, 0.78);
+  font-size: 9px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.hotbar-icon {
+  font-size: 18px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.65));
+}
+
+.hotbar-name {
+  width: 100%;
+  overflow: hidden;
+  color: #cfd6df;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================================
+   PHASE 27/28 — RULER & MEASURED TEMPLATE OVERLAYS
+   ========================================================================= */
+
+.ruler-overlay,
+.template-overlay {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+.template-overlay {
+  z-index: 3;
+}
+
+.ruler-overlay[hidden],
+.template-overlay[hidden] {
+  display: none;
+}
+
+.ruler-button.is-active,
+.template-button.is-active {
+  border-color: rgba(88, 198, 255, 0.72);
+  background: rgba(88, 198, 255, 0.14);
+  color: #bfeaff;
+  box-shadow: 0 0 10px rgba(88, 198, 255, 0.16);
+}
+
+.scene-template-group {
+  padding-left: 10px;
+  border-left: 1px solid rgba(61, 70, 82, 0.65);
+}
+
+.template-select {
+  max-width: 128px;
+  padding: 5px 7px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--field);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+
+.template-size-select {
+  max-width: 78px;
+}
+
+.template-spell-select {
+  max-width: 168px;
+}
+
+.template-select:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(214, 168, 75, 0.2);
+}
+
+.template-select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.template-apply-button {
+  padding: 6px 11px;
+  border: 1px solid rgba(214, 168, 75, 0.58);
+  border-radius: 6px;
+  background: rgba(214, 168, 75, 0.16);
+  color: #f4d79c;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 110ms ease,
+    background 110ms ease,
+    transform 80ms ease;
+}
+
+.template-apply-button:hover:not(:disabled) {
+  border-color: rgba(244, 215, 156, 0.92);
+  background: rgba(214, 168, 75, 0.26);
+}
+
+.template-apply-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.template-apply-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.template-clear-button {
+  width: 30px;
+  height: 29px;
+  padding: 0;
+  border: 1px solid rgba(224, 93, 98, 0.45);
+  border-radius: 6px;
+  background: rgba(150, 48, 54, 0.16);
+  color: #ffb0a8;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.template-clear-button:hover:not(:disabled) {
+  border-color: rgba(255, 124, 116, 0.8);
+  background: rgba(178, 58, 62, 0.3);
+}
+
+.template-clear-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.board-status.is-warning {
+  color: #ffcf6a;
+}
+
+/* Character-sheet items are Phase 26 drag sources. */
+.sheet-spell-row.is-hotbar-source,
+.sheet-item-row.is-hotbar-source,
+.sheet-hand.is-hotbar-source,
+.sheet-weapon-card[draggable="true"] {
+  cursor: grab;
+}
+
+.sheet-spell-row.is-hotbar-source:active,
+.sheet-item-row.is-hotbar-source:active,
+.sheet-hand.is-hotbar-source:active,
+.sheet-weapon-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.sheet-spell-row.is-dragging,
+.sheet-item-row.is-dragging,
+.sheet-hand.is-dragging,
+.sheet-weapon-card.is-dragging {
+  opacity: 0.52;
+  outline: 1px dashed rgba(88, 198, 255, 0.72);
+  outline-offset: -2px;
+}
+
+@media (max-width: 1180px) {
+  .scene-template-group {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .template-spell-select {
+    max-width: 138px;
+  }
+}
+
+@media (max-width: 900px) {
+  .hotbar-caption {
+    display: none;
+  }
+
+  .hotbar-slot {
+    width: 48px;
+    height: 52px;
+  }
+
+  .hotbar-icon {
+    font-size: 16px;
+  }
+
+  .hotbar-name {
+    font-size: 8px;
+  }
+}

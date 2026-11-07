@@ -52,6 +52,7 @@
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
     NO_FREE_HAND: "no-free-hand",
+    TARGET_TOO_LARGE: "target-too-large",
   });
 
   const SUCCESS_SQUARES = 1;

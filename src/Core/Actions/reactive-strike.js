@@ -20,6 +20,7 @@
   if (typeof module === "object" && module.exports) {
     module.exports = factory(
       require("../Grid/grid-math.js"),
+      require("../Grid/distance.js"),
       require("../Rules/checks.js"),
       require("../Rules/damage.js"),
       require("../Rules/modifiers.js"),
@@ -32,6 +33,7 @@
     root.PF2e.Core.Actions = root.PF2e.Core.Actions || {};
     root.PF2e.Core.Actions.ReactiveStrike = factory(
       root.PF2e.Core.Grid,
+      root.PF2e.Core.Distance3D,
       root.PF2e.Core.Rules.Checks,
       root.PF2e.Core.Rules.Damage,
       root.PF2e.Core.Rules.Modifiers,
@@ -41,6 +43,7 @@
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
   Grid,
+  Distance3D,
   Checks,
   Damage,
   Modifiers,
@@ -222,12 +225,13 @@
       ) {
         continue;
       }
-      if (
-        !Number.isInteger(candidate.x) ||
-        !Number.isInteger(candidate.y) ||
-        Grid.getCombatantDistance(moverAtCell, candidate) >
-          reachOf(candidate, overrideReach)
-      ) {
+      if (!Number.isInteger(candidate.x) || !Number.isInteger(candidate.y)) {
+        continue;
+      }
+      // Reach-aware distance: a 10-ft reach also threatens the second
+      // diagonal square, which the raw 5-10-5 distance reports as 15 ft.
+      const candidateReach = reachOf(candidate, overrideReach);
+      if (!Distance3D.canReach(moverAtCell, candidate, candidateReach)) {
         continue;
       }
       threats.push(candidate);
@@ -326,9 +330,13 @@
           targetName: target.name,
           automaticMiss: true,
         });
+        const reveal = Strike.resolveHostileReveal(attacker);
         return {
           ok: true,
           automaticMiss: true,
+          revealed: reveal.revealed,
+          revealedConditions: reveal.revealedConditions,
+          visibilityAfter: reveal.visibilityAfter,
           reaction: true,
           reactionTrigger: "leave-threatened-square",
           reactionSpent: true,
@@ -448,8 +456,13 @@
       targetDefeated = applied.isDefeated;
     }
 
+    const reveal = Strike.resolveHostileReveal(attacker);
+
     return {
       ok: true,
+      revealed: reveal.revealed,
+      revealedConditions: reveal.revealedConditions,
+      visibilityAfter: reveal.visibilityAfter,
       reaction: true,
       reactionTrigger: "leave-threatened-square",
       reactionSpent: true,

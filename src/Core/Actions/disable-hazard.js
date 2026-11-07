@@ -41,6 +41,8 @@
     NO_ACTIONS: "no-actions",
     NOT_ARMED: "not-armed",
     INVALID_HAZARD: "invalid-hazard",
+    RESTRAINED_ACTION_BLOCKED: "restrained-action-blocked",
+    GRABBED_MANIPULATE_FAILED: "grabbed-manipulate-failed",
   });
 
   const DISABLE_ACTION_COST = 2;
@@ -103,6 +105,43 @@
 
     if (hazard.isArmed !== true) {
       return { ok: false, reason: DISABLE_HAZARD_REASONS.NOT_ARMED };
+    }
+
+    // Disable a Hazard is a manipulate activity: Restrained blocks it and
+    // Grabbed requires a successful DC 5 flat check.
+    if (typeof combatant.canAct === "function") {
+      const gate = combatant.canAct({
+        traits: DISABLE_TRAITS,
+        action: "disable-hazard",
+      });
+      if (!gate.ok) {
+        return {
+          ok: false,
+          reason: gate.reason,
+          canActReason: gate.reason,
+          actionsLeft: combatant.actionsRemaining,
+        };
+      }
+    }
+
+    if (typeof combatant.resolveGrabbedManipulate === "function") {
+      const grabCheck = combatant.resolveGrabbedManipulate({
+        traits: DISABLE_TRAITS,
+        d20: opts.d20,
+        rollFlatCheck: opts.rollFlatCheck,
+        rollD20: opts.rollD20,
+        rollDie: opts.rollDie,
+      });
+      if (grabCheck.required && !grabCheck.passed) {
+        combatant.spendActions(DISABLE_ACTION_COST);
+        return {
+          ok: false,
+          reason: DISABLE_HAZARD_REASONS.GRABBED_MANIPULATE_FAILED,
+          traits: DISABLE_TRAITS,
+          flatCheck: grabCheck.flatCheck,
+          actionsLeft: combatant.actionsRemaining,
+        };
+      }
     }
 
     const skill = normalizeSkill(hazard);

@@ -79,6 +79,8 @@
     UNREACHABLE: "unreachable",
     MISSING_DIRECTION: "missing-direction",
     INVALID_DESTINATION: "invalid-destination",
+    RESTRAINED_ACTION_BLOCKED: "restrained-action-blocked",
+    GRABBED_MANIPULATE_FAILED: "grabbed-manipulate-failed",
   });
 
   const VISIBILITY_CONDITIONS = Object.freeze([
@@ -148,9 +150,9 @@
    * @param {object} actor
    * @returns {{ok:boolean,reason?:string}}
    */
-  function actionGate(actor) {
+  function actionGate(actor, options) {
     if (typeof actor.canAct === "function") {
-      const gate = actor.canAct();
+      const gate = actor.canAct(options);
       if (gate === null || typeof gate !== "object" || gate.ok !== true) {
         return {
           ok: false,
@@ -856,9 +858,33 @@
       throw new TypeError("target must be a Combatant instance.");
     }
 
-    const gate = actionGate(combatant);
+    const gate = actionGate(combatant, {
+      traits: TRAITS.POINT_OUT,
+      action: "point-out",
+    });
     if (!gate.ok) {
       return { ok: false, reason: gate.reason };
+    }
+
+    // Point Out is a manipulate action. Grabbed forces the DC 5 flat check; a
+    // failure spends the action but does not reveal the target.
+    if (typeof combatant.resolveGrabbedManipulate === "function") {
+      const grabCheck = combatant.resolveGrabbedManipulate({
+        traits: TRAITS.POINT_OUT,
+        d20: opts.d20,
+        rollFlatCheck: opts.rollFlatCheck,
+        rollD20: opts.rollD20,
+        rollDie: opts.rollDie,
+      });
+      if (grabCheck.required && !grabCheck.passed) {
+        combatant.spendActions(ACTION_COST);
+        return {
+          ok: false,
+          reason: REASONS.GRABBED_MANIPULATE_FAILED,
+          flatCheck: grabCheck.flatCheck,
+          actionsLeft: combatant.actionsRemaining,
+        };
+      }
     }
 
     if (!target.hasCondition("undetected")) {

@@ -53,6 +53,7 @@
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
     NO_FREE_HAND: "no-free-hand",
+    TARGET_TOO_LARGE: "target-too-large",
   });
 
   function sourceTurnOf(source) {
@@ -88,16 +89,29 @@
       ? opts.expiresOnSourceTurn
       : sourceTurnOf(source) + 1;
 
-    // Restrained supersedes a Grabbed from the same grappler. A Grabbed never
-    // downgrades an existing Restrained from the same grappler.
-    const grabbed = target.getCondition(GRAB);
-    const restrained = target.getCondition(RESTRAIN);
+    // Restrained supersedes a Grabbed from the same grappler only. Holds from
+    // other sources remain intact. A Grabbed never downgrades an existing
+    // Restrained from the same grappler.
+    const supportsInstances =
+      typeof target.getConditionFrom === "function" &&
+      typeof target.removeConditionFrom === "function";
+    const grabbed = supportsInstances
+      ? target.getConditionFrom(GRAB, source.id)
+      : target.getCondition(GRAB);
+    const restrained = supportsInstances
+      ? target.getConditionFrom(RESTRAIN, source.id)
+      : target.getCondition(RESTRAIN);
+
     if (
       name === RESTRAIN &&
       grabbed !== null &&
       grabbed.sourceId === source.id
     ) {
-      target.removeCondition(GRAB);
+      if (supportsInstances) {
+        target.removeConditionFrom(GRAB, source.id);
+      } else {
+        target.removeCondition(GRAB);
+      }
     }
     if (
       name === GRAB &&

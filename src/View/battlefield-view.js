@@ -201,6 +201,10 @@
       this.spell = null;
       this.aoeCells = [];
       this.aoeTargets = [];
+      // Phase 27/28: ruler and measured-template overlays are external View
+      // tools. While one consumes input, the battlefield click/hover handlers
+      // stay out of the way; the tool owns the pointer interaction.
+      this.externalTool = null;
 
       this.hover = null;
       this.hoverKey = null;
@@ -314,6 +318,51 @@
 
     isPainting() {
       return this.paintTool !== PAINT_TOOLS.SELECT;
+    }
+
+    /**
+     * Attach or detach an external pointer tool (ruler / measured template).
+     * The tool may expose consumesClicks(), consumesHover(), and getCursor().
+     */
+    setExternalTool(tool) {
+      const next = tool || null;
+      if (this.externalTool === next) {
+        return;
+      }
+      this.externalTool = next;
+      const consumesHover = Boolean(
+        next &&
+          typeof next.consumesHover === "function" &&
+          next.consumesHover(),
+      );
+      if (consumesHover) {
+        // The external tool owns the status line while it is active. Clear the
+        // battlefield hover state without firing a default status callback.
+        this.hover = null;
+        this.hoverKey = null;
+        this.hoverInfo = null;
+        this.hoverPath = null;
+        this.render();
+        return;
+      }
+      this.resetHover();
+      this.render();
+    }
+
+    externalToolConsumesClicks() {
+      return Boolean(
+        this.externalTool &&
+          typeof this.externalTool.consumesClicks === "function" &&
+          this.externalTool.consumesClicks(),
+      );
+    }
+
+    externalToolConsumesHover() {
+      return Boolean(
+        this.externalTool &&
+          typeof this.externalTool.consumesHover === "function" &&
+          this.externalTool.consumesHover(),
+      );
     }
 
     getSpell() {
@@ -815,6 +864,9 @@
     }
 
     handleClick(event) {
+      if (this.externalToolConsumesClicks()) {
+        return;
+      }
       const point = this.eventPoint(event);
       if (!point) {
         return;
@@ -920,6 +972,9 @@
     }
 
     handleMouseMove(event) {
+      if (this.externalToolConsumesHover()) {
+        return;
+      }
       const point = this.eventPoint(event);
       if (!point) {
         return;
@@ -1629,16 +1684,22 @@
 
     render() {
       const ctx = this.ctx;
-      this.canvas.style.cursor = this.isPainting()
-        ? "crosshair"
-        : this.hoverInfo &&
-        (this.hoverInfo.status === "strike" ||
-          this.hoverInfo.status === "trip" ||
-          this.hoverInfo.status === "shove" ||
-          this.hoverInfo.status === "grapple") &&
-        this.hoverInfo.reason === Strike.STRIKE_REASONS.TARGET_UNDETECTED
-          ? "not-allowed"
-          : "";
+      const externalCursor =
+        this.externalTool && typeof this.externalTool.getCursor === "function"
+          ? this.externalTool.getCursor()
+          : null;
+      this.canvas.style.cursor = externalCursor
+        ? externalCursor
+        : this.isPainting()
+          ? "crosshair"
+          : this.hoverInfo &&
+            (this.hoverInfo.status === "strike" ||
+              this.hoverInfo.status === "trip" ||
+              this.hoverInfo.status === "shove" ||
+              this.hoverInfo.status === "grapple") &&
+            this.hoverInfo.reason === Strike.STRIKE_REASONS.TARGET_UNDETECTED
+            ? "not-allowed"
+            : "";
       ctx.clearRect(0, 0, this.grid.width, this.grid.height);
       this.grid.draw(ctx);
 

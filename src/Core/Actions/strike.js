@@ -77,6 +77,7 @@
     OUT_OF_RANGE: "out-of-range",
     NOT_LOADED: "not-loaded",
     DISRUPTED: "disrupted",
+    RESTRAINED_ACTION_BLOCKED: "restrained-action-blocked",
   });
 
   const DEFAULT_REACH_FEET = 5;
@@ -539,6 +540,23 @@
     if (attacker.isDefeated === true) {
       return { ok: false, reason: STRIKE_REASONS.ATTACKER_DEFEATED };
     }
+
+    // Restrained blocks every attack-trait action. Strike is an attack action
+    // and is therefore refused before any target, geometry, or dice work.
+    if (
+      typeof Conditions.isRestrainedActionBlocked === "function" &&
+      Conditions.isRestrainedActionBlocked(attacker, {
+        traits: ["attack"],
+        action: "strike",
+      })
+    ) {
+      return {
+        ok: false,
+        reason: STRIKE_REASONS.RESTRAINED_ACTION_BLOCKED,
+        traits: ["attack"],
+      };
+    }
+
     if (attacker === target) {
       return { ok: false, reason: STRIKE_REASONS.INVALID_TARGET };
     }
@@ -593,6 +611,11 @@
     }
 
     const distanceFeet = Distance3D.getCombatantDistance3D(attacker, target);
+    // Melee reach uses the reach-aware distance so a 10-ft reach can target
+    // the second diagonal square even though it normally costs 15 ft.
+    const reachDistanceFeet = ranged
+      ? distanceFeet
+      : Distance3D.getCombatantReachDistance3D(attacker, target, reachFeet);
 
     let rangeIncrementResult = null;
     let rangePenalty = 0;
@@ -616,11 +639,12 @@
         }
         rangePenalty = rangeIncrementResult.penalty;
       }
-    } else if (distanceFeet > reachFeet) {
+    } else if (reachDistanceFeet > reachFeet) {
       return {
         ok: false,
         reason: STRIKE_REASONS.OUT_OF_REACH,
         distanceFeet: distanceFeet,
+        reachDistanceFeet: reachDistanceFeet,
         visibility: visibility,
         flatCheckCondition: visibility.condition,
         flatCheckDC: visibility.flatCheckDC,
@@ -690,6 +714,7 @@
     return {
       ok: true,
       distanceFeet: distanceFeet,
+      reachDistanceFeet: reachDistanceFeet,
       reachFeet: reachFeet,
       lineOfSight: hasMap ? true : null,
       cover: cover,
@@ -779,6 +804,28 @@
   }
 
   /**
+   * A resolved hostile Strike ends the attacker's Hidden/Undetected state.
+   * The helper only runs after the action was actually spent; rejected
+   * attempts never call it.
+   *
+   * @param {object} attacker
+   * @returns {{revealed:boolean,revealedConditions:string[],visibilityAfter:object}}
+   */
+  function resolveHostileReveal(attacker) {
+    const reveal =
+      typeof Conditions.revealAfterHostileAction === "function"
+        ? Conditions.revealAfterHostileAction(attacker)
+        : { removed: [], visibility: Conditions.getVisibility(attacker) };
+    return {
+      revealed: reveal.removed.length > 0,
+      revealedConditions: reveal.removed.map(function (condition) {
+        return condition.slug || condition.name;
+      }),
+      visibilityAfter: reveal.visibility,
+    };
+  }
+
+  /**
    * @param {{
    *   attacker: object,
    *   target: object,
@@ -834,9 +881,13 @@
     const reactionPhase = resolveRangedReactions(opts, attacker, weaponProfile);
     if (reactionPhase.disrupted) {
       attacker.spendActions(1);
+      const reveal = resolveHostileReveal(attacker);
       return {
         ok: false,
         disrupted: true,
+        revealed: reveal.revealed,
+        revealedConditions: reveal.revealedConditions,
+        visibilityAfter: reveal.visibilityAfter,
         reason: STRIKE_REASONS.DISRUPTED,
         attackerId: attacker.id,
         targetId: target.id,
@@ -890,9 +941,13 @@
           attacker.isLoaded = false;
         }
 
+        const reveal = resolveHostileReveal(attacker);
         return {
           ok: true,
           automaticMiss: true,
+          revealed: reveal.revealed,
+          revealedConditions: reveal.revealedConditions,
+          visibilityAfter: reveal.visibilityAfter,
           attackerId: attacker.id,
           targetId: target.id,
           flatCheck: flatCheck,
@@ -1028,11 +1083,19 @@
       targetDefeated = applied.isDefeated;
     }
 
+    // The hostile action resolved, so any Hidden/Undetected state ends now.
+    // The attack above still used the hidden-attacker Off-Guard benefit.
+    const reveal = resolveHostileReveal(attacker);
+
     return {
       ok: true,
+      revealed: reveal.revealed,
+      revealedConditions: reveal.revealedConditions,
+      visibilityAfter: reveal.visibilityAfter,
       attackerId: attacker.id,
       targetId: target.id,
       distanceFeet: evaluation.distanceFeet,
+      reachDistanceFeet: evaluation.reachDistanceFeet,
       reachFeet: evaluation.reachFeet,
       ranged: ranged,
       rangeIncrement: weaponProfile.rangeIncrement,
@@ -1129,6 +1192,7 @@
     rollAttack: rollAttack,
     rollVisibilityFlatCheck: rollVisibilityFlatCheck,
     resolveDamageDie: resolveDamageDie,
+    resolveHostileReveal: resolveHostileReveal,
     resolveReachFeet: resolveReachFeet,
     // Shared with Reactive Strike so both attacks resolve the same typed
     // damage contract and weapon traits.

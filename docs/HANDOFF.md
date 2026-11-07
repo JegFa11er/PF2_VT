@@ -1,6 +1,187 @@
 # Handoff
 
-## Current milestone — Phase 24 (complete): Battlefield Editor, Scene Presets & Token Management
+## Current milestone — Phase 25.1 (complete): Final mechanical-debt cleanup
+
+Status: **implemented and verified**; full suite **549/549 tests pass, 37 suites**.
+
+```text
+Feature Readiness:
+- goal: remove the last documented mechanical assumptions from the Core: hostile
+  actions breaking stealth, maneuver free-hand/size requirements,
+  whole-footprint flanking for multi-cell creatures, and multiple simultaneous
+  grapples. Re-verify the Phase 25 Reach-10 and Restrained/Grabbed gates.
+- pf2e_remaster_rule:
+  * Using a hostile action (a Strike or a damaging/save spell) ends Hidden and
+    Undetected; the creature becomes observed.
+  * Trip, Shove, and Grapple require a free hand unless the wielded weapon has
+    the matching `trip`/`shove`/`grapple` trait, and may target a creature at
+    most one size category larger. Size ranks: tiny 0, small 1, medium 1,
+    large 2, huge 3, gargantuan 4.
+  * Flanking is decided by the line between the flankers' footprint centres
+    crossing opposite sides of the target's whole footprint, matching Foundry
+    `TokenPF2e#onOppositeSides`.
+  * Grabbed/Restrained/Immobilized are source-linked instances. Two grapplers
+    coexist; Escape releases only the selected source, and the victim is free
+    only once every instance is gone.
+- behavior_and_boundaries:
+  * `Conditions.revealAfterHostileAction` removes only Hidden/Undetected.
+    Light-based Concealed is a separate sensory state and survives.
+  * Strike, Reactive Strike, and Cast a Spell call the helper only after the
+    action actually resolved. Rejected/out-of-reach attempts and grabbed flat
+    check failures never reveal. A non-damaging attack spell without a save is
+    not treated as stealth-breaking.
+  * The size gate runs before geometry/MAP and spends nothing; the free-hand
+    gate remains first.
+  * Flanking uses `Grid.occupiedCellsOf`, which now derives a plain object's
+    footprint from its authored `size` as well as from a Combatant.
+  * The canonical condition Map still holds one primary record per slug (the
+    earliest source keeps `sourceId`); `getGrappleInstances()` /
+    `getGrappleSources()` expose every simultaneous instance.
+  * Phase 25's Reach-10 second-diagonal exception and the Restrained/Grabbed
+    action gates are unchanged and still covered by their original suite.
+- data_contracts:
+  * `Rules/size.js`: `SIZE_RANKS`, `SIZE_FOOTPRINTS`, `normalizeSize`,
+    `sizeRankOfName`, `getFootprintForSize`, `sizeRankOf`, `canManeuverTarget`.
+  * `Combatant`: normalized `size`, `getSizeRank()`, 4x4 gargantuan
+    `getFootprint()`, `getConditionInstances`, `getConditionFrom`,
+    `getGrappleInstances`, `getGrappleSources`, `removeConditionFrom`.
+  * `Conditions`: `HOSTILE_VISIBILITY_CONDITIONS`, `revealAfterHostileAction`.
+  * `Flanking`: `footprintBounds`, `footprintCenter`, `segmentsIntersect`,
+    `onOppositeSides`.
+  * Maneuver result reason: `"target-too-large"`. Reload, Disable a Hazard, and
+    Point Out now also honour `"restrained-action-blocked"` and
+    `"grabbed-manipulate-failed"`.
+- acceptance_tests:
+  * `tests/Rules/canonical-compliance.test.js` adds 17 cases: Hidden/Undetected
+    removal on Strike and attack/save spells, no reveal on a rejected attempt or
+    non-damaging attack spell, the size-rank ladder and size gate, the
+    trip-trait free-hand bypass, Large/Huge footprint flanking, two-grappler
+    coexistence, Escape releasing one source at a time, same-source refresh,
+    and a Restrained hold from a second source.
+- delegated_assumptions:
+  * Per the requested rule, both Hidden and Undetected become observed after a
+    hostile action (Undetected is not merely downgraded to Hidden).
+  * A stealth-breaking spell is a save spell or an attack spell with a damage
+    formula, mirroring the requested scope.
+  * Grapple critical failure keeps the approved attacker-prone-plus-release
+    simplification.
+- confidence: 98%
+```
+
+- `src/Core/Rules/size.js` — new pure size module: the canonical 0–4 rank
+  ladder, size normalization, footprint sizes, and `canManeuverTarget`.
+- `src/Core/Grid/grid-math.js` — `footprintOf`/`occupiedCellsOf` honour a plain
+  object's authored `size`, so multi-cell geometry works with lightweight
+  fixtures as well as `Combatant` instances.
+- `src/Core/Grid/flanking.js` — whole-footprint flanking: the segment between
+  the two flankers' footprint centres must cross both left/right edges or both
+  top/bottom edges of the target's footprint (inclusive corner touches).
+- `src/Core/Entities/combatant.js` — size normalization and `getSizeRank()`;
+  gargantuan footprints (4x4); per-source Grabbed/Restrained/Immobilized
+  instances with `getGrappleInstances`/`getGrappleSources`/`getConditionFrom`/
+  `removeConditionFrom`.
+- `src/Core/Entities/conditions.js` — `revealAfterHostileAction` and
+  `HOSTILE_VISIBILITY_CONDITIONS`.
+- `src/Core/Actions/strike.js` / `reactive-strike.js` — a resolved attack clears
+  Hidden/Undetected after the roll and damage, while still using the hidden
+  attacker Off-Guard benefit for that attack.
+- `src/Core/Actions/cast-spell.js` — a save spell or damaging attack spell
+  clears the caster's Hidden/Undetected after resolution.
+- `src/Core/Actions/athletics-maneuver.js` / `trip.js` / `shove.js` /
+  `grapple.js` — shared free-hand + `target-too-large` gates; Grapple applies
+  per-source instances.
+- `src/Core/Actions/escape.js` — unchanged call path now removes only the chosen
+  source from the instance registry, so another grappler keeps its hold.
+- `src/Core/Actions/disable-hazard.js` / `reload.js` / `stealth.js` — the
+  manipulate gates now cover Disable a Hazard, Reload, and Point Out.
+- Tests: **549 passed, 0 failed, 37 suites**. `docs/rules/` and
+  `docs/RULES_COMPLIANCE.md` were updated to remove the corresponding
+  limitation notes.
+
+## Previous milestone — Phase 25 (complete): Rules-compliance hardening (Reach-10 & Grabbed/Restrained)
+
+Status: **implemented and verified**; full suite **532/532 tests pass, 37 suites**.
+
+```text
+Feature Readiness:
+- goal: remove the two mechanical simplifications left by the compliance audit:
+  the Reach-10 "two diagonals" exception and the Grabbed/Restrained action
+  restrictions.
+- pf2e_remaster_rule:
+  * CRB p.455 — "Unlike with measuring most distances, 10-foot reach can reach
+    2 squares diagonally." The reference
+    canvas/helpers.ts::measureDistanceOnGrid subtracts one square when
+    reach === 10 and diagonal + doubleDiagonal > 1.
+  * Restrained — "you can't use actions with the attack or manipulate traits,
+    except to Escape."
+  * Grabbed — "If you attempt a manipulate action while grabbed, you must
+    succeed at a DC 5 flat check or it is lost."
+- behavior_and_boundaries:
+  * distance.js keeps reporting the raw 15-ft second diagonal; the new
+    reach-aware helpers (reachDistance3DSquares / getCombatantReachDistance3D /
+    canReach3D / getCombatantReachDistance / canReach) apply the reduction only
+    to reach validation. Strike (and therefore Trip/Shove/Grapple and Reactive
+    Strike) uses the 3D helper; Reactive Strike threat scanning and flanking
+    use the flat helper.
+  * Combatant.canAct({ traits, action }) blocks attack/manipulate while
+    Restrained with reason "restrained-action-blocked"; Escape is exempt.
+    Strike also checks the predicate directly because it never called canAct.
+    Cast a Spell and Interact call the gate and return the same reason.
+  * Combatant.resolveGrabbedManipulate({ traits, ...dice }) performs the DC 5
+    flat check for manipulate actions. Cast a Spell and Interact spend the
+    action on failure and return "grabbed-manipulate-failed".
+  * Grabbed-only (not Restrained) triggers the flat check; Restrained already
+    hard-blocks the action.
+- data_contracts:
+  * Distance3D: REACH_TWO_DIAGONAL_FEET, reachDistance3DSquares,
+    getCombatantReachDistance3D, getCombatantReachDistance, canReach3D, canReach.
+  * Strike result: reachDistanceFeet; STRIKE_REASONS.RESTRAINED_ACTION_BLOCKED.
+  * Conditions: ACTION_TRAITS, normalizeActionTraits, isEscapeAction,
+    isRestrainedActionBlocked, isGrabbedManipulate.
+  * Combatant: canAct(options), resolveGrabbedManipulate(options).
+  * CastSpell/Interact reasons: "restrained-action-blocked",
+    "grabbed-manipulate-failed".
+- acceptance_tests:
+  * reach-10 Strike on (dx=2, dy=2) is valid with distanceFeet 15,
+    reachDistanceFeet 10; reach-5 is out-of-reach.
+  * reach-10 Reactive Strike threatens the (2,2) cell; reach-5 does not.
+  * reach-10 flanking works across the two-diagonal opposite corners.
+  * Restrained blocks Strike/Trip/CastSpell/Interact before spending; Escape
+    still succeeds; canAct exempts Escape.
+  * Grabbed + manipulate CastSpell with a failed DC 5 flat check spends the
+    action and returns "grabbed-manipulate-failed"; a passed check resolves the
+    spell; a non-manipulate spell is not gated.
+  * Grabbed + manipulate Interact fails/passes the same way.
+- delegated_assumptions:
+  * Only Escape is excepted from Restrained (Force Open is not modelled).
+  * A failed Grabbed check spends the action but does not consume the spell
+    slot/Focus Point (the cast never begins); a disrupted manipulate cast keeps
+    the existing behaviour of consuming the resource.
+- confidence: 97%
+```
+
+- `src/Core/Grid/distance.js` — new reach-aware helpers (see contracts above).
+  `distance3DSquares` / `getDistance3D` are unchanged, so the raw 5-10-5 cost
+  of the second diagonal remains 15 ft.
+- `src/Core/Actions/strike.js` — `evaluateStrike` refuses a Restrained attacker
+  with `restrained-action-blocked`; the melee reach check now uses
+  `getCombatantReachDistance3D`, and the evaluation/result expose
+  `reachDistanceFeet`.
+- `src/Core/Actions/reactive-strike.js` / `src/Core/Grid/flanking.js` — threat
+  scanning and flanking reach now use `Distance3D.canReach` (flat variant) so a
+  reach-10 creature covers the second diagonal.
+- `src/Core/Entities/conditions.js` — `ACTION_TRAITS`,
+  `isRestrainedActionBlocked`, `isGrabbedManipulate`, plus trait normalization.
+- `src/Core/Entities/combatant.js` — `canAct(options)` gains the Restrained gate;
+  `resolveGrabbedManipulate(options)` resolves the DC 5 flat check.
+- `src/Core/Actions/cast-spell.js` / `src/Core/Actions/interact.js` — apply the
+  Restrained gate and the Grabbed flat check to manipulate actions.
+- Tests: `tests/Rules/reach-and-restrictions.test.js` (19 cases) registered in
+  both runners. Full suite: **532 passed, 0 failed, 37 suites**.
+- `docs/RULES_COMPLIANCE.md` — removed the Reach-10 and Restrained limitation
+  notes, added Sections 5–6, updated the compliance table.
+
+## Previous milestone — Phase 24 (complete): Battlefield Editor, Scene Presets & Token Management
 
 Status: **implemented and verified in the browser**; Core business logic is
 unchanged (492/492 tests pass, 35 suites).
@@ -549,9 +730,9 @@ Status: **implemented and verified**.
      raised. Dead targets are never struck again.
   - Shield state is read through `Entities/shield.js`; `getShieldStatus()` is
     exported and reports `{ held, usable, shield }`.
-  - Flanking uses the canonical `Grid/flanking.js` direction/reach geometry;
-    large-target flank direction remains the documented Phase 9.1 anchor-cell
-    limitation.
+  - Flanking uses the canonical `Grid/flanking.js` whole-footprint
+    opposite-side geometry, so Large/Huge/Gargantuan targets are handled from
+    their entire footprint rather than only the anchor cell.
 - Tests: `tests/AI/tactical-ai.test.js` (9 cases: Stand priority, Aggro +
   Stride + Strike, Strike → Strike → Raise a Shield with MAP 0/-5 and
   `shield-raised`, target switching after a kill, action-pool exhaustion at 0,
@@ -560,8 +741,8 @@ Status: **implemented and verified**.
 - Deliberately deferred: View/HTML integration (not modified), ranged kiting,
   spell/consumable selection, reload handling, class-feat reactions, "recall
   knowledge"/Intimidation-style support actions, difficult-terrain path
-  preference beyond normal cost, large-target flank direction, and any
-  encounter-clock advancement (the host/Encounter still owns initiative).
+  preference beyond normal cost, and any encounter-clock advancement (the
+  host/Encounter still owns initiative).
 
 ## Previous milestone — Phase 14 (complete): Hands, Inventory/Interact & Shield Block
 
@@ -834,8 +1015,9 @@ Status: **implemented and verified**.
   only its anchor cell.
 - Tests: `tests/Entities/combatant-size.test.js` (4-cell Large footprint,
   edge-to-edge reach, occupancy rejection, footprint pathfinding, Large Strike).
-- Known limitation: flanking direction is still derived from anchor-cell
-  centres; large-target flank direction is a deferred refinement.
+- Flanking direction is derived from whole-footprint centres and opposite
+  footprint sides/corners (Phase 25.1), so 2x2/3x3/4x4 targets no longer use the
+  anchor-cell shortcut.
 - Earlier milestones (8.3, 7.x, 6.x, 5.x, 3.2, 4.x) remain implemented.
 
 ## Previous milestone — Phase 8.3 (complete): Saves, Skills, Trip, Shove, Grapple, Escape
@@ -1110,7 +1292,8 @@ Status: **implemented and verified**.
     the defence.
   - Critical damage uses `Damage.rollDamage` and `takeDamage(..., { type:
     "bludgeoning" })`, so IWR is applied once through the canonical pipeline.
-  - Requirements needing hands/size are not enforced (documented limitation).
+  - Free-hand and target-size requirements are enforced by the shared maneuver
+    gate (Phase 25.1).
 - `Actions/athletics-maneuver.js`
   - Shared 1-action Athletics-vs-Fortitude-DC pipeline for Shove and Grapple:
     reach/LoS/visibility validation through `Strike.evaluateStrike`, skill
@@ -1535,8 +1718,11 @@ Off-Guard and critical hits. The Goblin's persistent fire demonstrates immunity
     creature is still prone, so the reaction sees the Off-Guard AC penalty. A
     defeating reaction leaves `prone` in place; otherwise the condition is
     removed at the end of the action.
-48. **Hands and target size are not modelled.** Trip's free-hand and size
-    requirements are deliberately deferred rather than approximated.
+48. **Maneuvers enforce a free hand and target size.** Trip, Shove, and Grapple
+    need one free hand unless the wielded weapon carries the matching trait, and
+    the target may be at most one size category larger (tiny 0, small/medium 1,
+    large 2, huge 3, gargantuan 4). Violations return `no-free-hand` or
+    `target-too-large` before spending anything.
 49. **Shove and Grapple share one Athletics pipeline.** Both use
     `athletics-maneuver.js`: 1 action, attack trait, Athletics vs Fortitude DC,
     current MAP then advance, and the Concealed/Hidden flat check. They are
@@ -1569,9 +1755,11 @@ Off-Guard and critical hits. The Goblin's persistent fire demonstrates immunity
 58. **Immobilized is enforced in the core.** Stride, Step, and Stand return
     `reason: "immobilized"` without spending. The View suppression of highlights
     is a presentation mirror, not the rule.
-59. **One grapple record per slug.** The condition store cannot represent two
-    simultaneous grapplers on one target with separate durations; a second
-    grappler replaces `sourceId`. This is a documented prototype limitation.
+59. **Multiple grapplers are tracked per source.** Grabbed/Restrained/
+    Immobilized keep one source-linked instance each. The canonical Map entry
+    remains the earliest source (for legacy accessors and modifiers), while
+    `getGrappleInstances()` exposes every simultaneous hold. Escape removes only
+    the selected source; the victim stays grabbed until all instances are gone.
 
 ## Verification
 
@@ -1666,17 +1854,10 @@ Off-Guard and critical hits. The Goblin's persistent fire demonstrates immunity
 - Persistent damage from afflictions/stages and death caused by a persistent
   tick; precision damage as a separate IWR instance; damage-type conversion and
   splash damage.
-- Seek/Hide/Sneak/Point Out actions, automatic loss of Hidden after an attack,
-  creature size, elevation, multi-cell reach, and Large-target flank arcs.
-- Crawl, and multiple simultaneous grapplers on one target (the store keeps
-  one record per slug, so a second grappler replaces `sourceId`).
+- Crawl.
 - Remastered's full Grapple critical-failure choice (the victim reverses the grab
   or knocks the attacker prone); the prototype uses attacker prone + release.
-- Restrained's additional attack/manipulate restrictions and Grabbed's DC 5
-  manipulate flat check beyond Off-Guard and Immobilized.
-- Trip's free-hand and target-size requirements (no hands/inventory/size model),
-  and the same printed requirements for Shove/Grapple. Shove's optional move
-  with the target is also deferred.
+- Shove's optional move with the target is deferred.
 - Escape's Unarmed Attack option uses `Combatant.attackBonus` because the engine
   has no separate unarmed profile.
 - Prone-specific ranged-cover hunker-down and the ability to Take Cover while

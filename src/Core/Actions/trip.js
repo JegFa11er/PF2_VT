@@ -30,6 +30,7 @@
       require("../Rules/modifiers.js"),
       require("./strike.js"),
       require("../Entities/equipment.js"),
+      require("../Rules/size.js"),
     );
   } else {
     root.PF2e = root.PF2e || {};
@@ -42,6 +43,7 @@
       root.PF2e.Core.Rules.Modifiers,
       root.PF2e.Core.Actions.Strike,
       root.PF2e.Core.Equipment,
+      root.PF2e.Core.Rules.Size,
     );
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
@@ -51,6 +53,7 @@
   Modifiers,
   Strike,
   Equipment,
+  Size,
 ) {
   "use strict";
 
@@ -59,6 +62,7 @@
     ATTACKER_DEFEATED: "attacker-defeated",
     TARGET_DEFEATED: "target-defeated",
     NO_FREE_HAND: "no-free-hand",
+    TARGET_TOO_LARGE: "target-too-large",
   });
 
   const ACTION_COST = 1;
@@ -182,6 +186,18 @@
       };
     }
 
+    // Trip cannot target a creature more than one size category larger.
+    if (!Size.canManeuverTarget(attacker, target)) {
+      return {
+        ok: false,
+        reason: TRIP_REASONS.TARGET_TOO_LARGE,
+        attackerSize: Size.normalizeSize(attacker.size),
+        targetSize: Size.normalizeSize(target.size),
+        attackerSizeRank: Size.sizeRankOf(attacker),
+        targetSizeRank: Size.sizeRankOf(target),
+      };
+    }
+
     // Strike validation covers target identity, alliance, reach, visibility,
     // and line of sight. Trip adds no separate geometry of its own.
     const evaluation = Strike.evaluateStrike(opts);
@@ -241,6 +257,10 @@
       flatCheckDC: evaluation.flatCheckDC,
       flatCheckCondition: evaluation.flatCheckCondition,
       hiddenAttacker: evaluation.hiddenAttacker === true,
+      attackerSize: Size.normalizeSize(attacker.size),
+      targetSize: Size.normalizeSize(target.size),
+      attackerSizeRank: Size.sizeRankOf(attacker),
+      targetSizeRank: Size.sizeRankOf(target),
       handRequirement: {
         ok: true,
         freeHands: handCheck.freeHands,

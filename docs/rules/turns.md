@@ -190,8 +190,6 @@ Failure reasons: `no-actions`, `already-there`, `not-adjacent`, `out-of-bounds`,
 
 - Dying, Wounded, Unconscious, and recovery checks.
 - Free actions, Detect/Disrupt, and other reaction types.
-- Seek/Hide/Sneak actions, creature size, multi-cell reach, elevation,
-  and Large-target flank arcs.
 - Enemy AI; the active combatant is controlled by the user.
 - Creature occupancy in line-of-sight (creatures provide lesser cover instead of
   blocking sight).

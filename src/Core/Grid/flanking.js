@@ -29,6 +29,7 @@
   if (typeof module === "object" && module.exports) {
     module.exports = factory(
       require("../Grid/grid-math.js"),
+      require("../Grid/distance.js"),
       require("../Rules/weapon-traits.js"),
     );
   } else {
@@ -36,10 +37,15 @@
     root.PF2e.Core = root.PF2e.Core || {};
     root.PF2e.Core.Flanking = factory(
       root.PF2e.Core.Grid,
+      root.PF2e.Core.Distance3D,
       root.PF2e.Core.Rules.WeaponTraits,
     );
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function (Grid, WeaponTraits) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (
+  Grid,
+  Distance3D,
+  WeaponTraits,
+) {
   "use strict";
 
   const DEFAULT_REACH_FEET = 5;
@@ -95,7 +101,9 @@
     if (!gridMap || typeof gridMap.isInBounds !== "function") {
       return true;
     }
-    return gridMap.isInBounds(unit.x, unit.y);
+    return Grid.occupiedCellsOf(unit).every(function (cell) {
+      return gridMap.isInBounds(cell.x, cell.y);
+    });
   }
 
   function sign(value) {
@@ -122,6 +130,133 @@
 
   function isOppositeDirection(a, b) {
     return a.x === -b.x && a.y === -b.y && !(a.x === 0 && a.y === 0);
+  }
+
+  /**
+   * Axis-aligned bounds of a creature's whole footprint, in grid coordinates.
+   * A 1x1 creature at (5,5) has bounds x 5..6, y 5..6; a 2x2 Large creature
+   * anchored at (5,5) has bounds x 5..7, y 5..7.
+   *
+   * @param {object} unit
+   * @returns {{left:number,top:number,right:number,bottom:number}}
+   */
+  function footprintBounds(unit) {
+    const cells = Grid.occupiedCellsOf(unit);
+    let left = Infinity;
+    let top = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+    for (const cell of cells) {
+      if (cell.x < left) left = cell.x;
+      if (cell.y < top) top = cell.y;
+      if (cell.x > right) right = cell.x;
+      if (cell.y > bottom) bottom = cell.y;
+    }
+    return { left: left, top: top, right: right + 1, bottom: bottom + 1 };
+  }
+
+  /**
+   * Centre of the creature's whole footprint, used as the endpoint of the
+   * flanking line (mirrors Foundry's `mechanicalBounds` centre).
+   *
+   * @param {object} unit
+   * @returns {{x:number,y:number}}
+   */
+  function footprintCenter(unit) {
+    const bounds = footprintBounds(unit);
+    return {
+      x: (bounds.left + bounds.right) / 2,
+      y: (bounds.top + bounds.bottom) / 2,
+    };
+  }
+
+  function cross(origin, a, b) {
+    return (
+      (a.x - origin.x) * (b.y - origin.y) -
+      (a.y - origin.y) * (b.x - origin.x)
+    );
+  }
+
+  function onSegment(a, b, point) {
+    return (
+      point.x >= Math.min(a.x, b.x) &&
+      point.x <= Math.max(a.x, b.x) &&
+      point.y >= Math.min(a.y, b.y) &&
+      point.y <= Math.max(a.y, b.y)
+    );
+  }
+
+  /**
+   * Inclusive segment intersection. Endpoint/corner touches count, which is
+   * required for "opposite corners" flanking.
+   *
+   * @param {{x:number,y:number}} a
+   * @param {{x:number,y:number}} b
+   * @param {{x:number,y:number}} c
+   * @param {{x:number,y:number}} d
+   * @returns {boolean}
+   */
+  function segmentsIntersect(a, b, c, d) {
+    const d1 = cross(c, d, a);
+    const d2 = cross(c, d, b);
+    const d3 = cross(a, b, c);
+    const d4 = cross(a, b, d);
+
+    if (
+      ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+      ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))
+    ) {
+      return true;
+    }
+    if (d1 === 0 && onSegment(c, d, a)) return true;
+    if (d2 === 0 && onSegment(c, d, b)) return true;
+    if (d3 === 0 && onSegment(a, b, c)) return true;
+    if (d4 === 0 && onSegment(a, b, d)) return true;
+    return false;
+  }
+
+  /**
+   * Whether two potential flankers lie on opposite sides of the target's whole
+   * footprint. The line between their footprint centres must cross both the
+   * left and right edges, or both the top and bottom edges. This is the same
+   * rule Foundry PF2e uses in `TokenPF2e#onOppositeSides` and correctly treats
+   * Large/Huge/Gargantuan targets whose anchor cell is not their centre.
+   *
+   * @param {object} target
+   * @param {object} attacker
+   * @param {object} ally
+   * @returns {boolean}
+   */
+  function onOppositeSides(target, attacker, ally) {
+    const bounds = footprintBounds(target);
+    const centerA = footprintCenter(attacker);
+    const centerB = footprintCenter(ally);
+
+    const left = {
+      a: { x: bounds.left, y: bounds.top },
+      b: { x: bounds.left, y: bounds.bottom },
+    };
+    const right = {
+      a: { x: bounds.right, y: bounds.top },
+      b: { x: bounds.right, y: bounds.bottom },
+    };
+    const top = {
+      a: { x: bounds.left, y: bounds.top },
+      b: { x: bounds.right, y: bounds.top },
+    };
+    const bottom = {
+      a: { x: bounds.left, y: bounds.bottom },
+      b: { x: bounds.right, y: bounds.bottom },
+    };
+
+    const crosses = function (side) {
+      return segmentsIntersect(centerA, centerB, side.a, side.b);
+    };
+
+    return (
+      (crosses(left) && crosses(right)) ||
+      (crosses(top) && crosses(bottom))
+    );
   }
 
   /**
@@ -157,7 +292,9 @@
    * flank from two squares away.
    */
   function canReach(target, unit, overrideFeet) {
-    return Grid.getCombatantDistance(target, unit) <= reachOf(unit, overrideFeet);
+    // Reach-aware: a 10-ft reach can flank from the second diagonal square,
+    // which the raw 5-10-5 distance reports as 15 ft.
+    return Distance3D.canReach(target, unit, reachOf(unit, overrideFeet));
   }
 
   /**
@@ -215,8 +352,7 @@
         continue;
       }
 
-      const allyDirection = directionFrom(target, ally);
-      if (isOppositeDirection(attackerDirection, allyDirection)) {
+      if (onOppositeSides(target, attacker, ally)) {
         flankers.push(ally);
       }
     }
@@ -240,6 +376,10 @@
     DEFAULT_REACH_FEET: DEFAULT_REACH_FEET,
     directionFrom: directionFrom,
     isOppositeDirection: isOppositeDirection,
+    footprintBounds: footprintBounds,
+    footprintCenter: footprintCenter,
+    segmentsIntersect: segmentsIntersect,
+    onOppositeSides: onOppositeSides,
     isAdjacent: isAdjacent,
     getFlankingAllies: getFlankingAllies,
     isFlanked: isFlanked,

@@ -197,8 +197,6 @@ Valeros strikes Goblin: d20(12) + 9 (base) = 21 vs AC 20 (16 + 2 Shield Raised [
 
 ## Explicitly deferred
 
-- Seek/Hide/Sneak actions and automatic loss of Hidden after an attack.
-- Creature size, elevation, and multi-cell footprints.
 - Ranged-specific cover interactions and ranged Strikes in the UI.
 - Cover from held items or tower shields.
 - Reflex bonuses from Take Cover's `greater-cover` condition (geometric cover

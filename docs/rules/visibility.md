@@ -143,10 +143,19 @@ Valeros strikes Goblin: d20(12) + 9 (base) = 21 vs AC 15 (16 - 1 Frightened 1 [s
 - A Hidden attacker is called out explicitly and the AC breakdown reads
   `- 2 Off-Guard (Hidden Attacker) [circumstance]`.
 
+## Hostile actions
+
+A hostile action that actually resolves ends the acting creature's Hidden and
+Undetected states (`Conditions.revealAfterHostileAction`). Covered actions are a
+Strike (including Reactive Strike), a save spell, and an attack spell with a
+damage formula. The creature becomes observed; light-based Concealed survives
+because it is a separate sensory state. Rejected attempts (out of reach, invalid
+target, no actions) do not reveal, and the strike itself still benefits from the
+hidden-attacker Off-Guard penalty.
+
 ## Explicitly deferred
 
 - `Seek`, `Hide`, `Sneak`, and `Point Out` actions.
-- Automatically losing Hidden after an attack.
 - Ranged attacks, thrown weapons, and reload.
 - Creature size, elevation, and special senses such as tremorsense.
 - Invisibility spells and counteracts.

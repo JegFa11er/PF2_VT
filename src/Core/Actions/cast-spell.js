@@ -77,6 +77,8 @@
     DISRUPTED: "disrupted",
     NO_SPELL_SLOTS: "no-spell-slots",
     NO_FOCUS_POINTS: "no-focus-points",
+    RESTRAINED_ACTION_BLOCKED: "restrained-action-blocked",
+    GRABBED_MANIPULATE_FAILED: "grabbed-manipulate-failed",
   });
 
   const DEFAULT_ACTION_COST = 2;
@@ -281,6 +283,48 @@
           ? caster.encounterRound
           : 0;
     return caster.addSustainedSpell(spell, target, round + 1);
+  }
+
+  /**
+   * A spell is a hostile stealth-breaking action when it makes an attack that
+   * deals damage or when it requires a saving throw. Utility/attack spells with
+   * no damage and no save do not reveal the caster.
+   *
+   * @param {object} spell
+   * @returns {boolean}
+   */
+  function spellBreaksStealth(spell) {
+    if (spell === null || typeof spell !== "object") {
+      return false;
+    }
+    if (spell.type === Spells.SPELL_TYPES.SAVE) {
+      return true;
+    }
+    return (
+      spell.type === Spells.SPELL_TYPES.ATTACK &&
+      resolveDamageSpec(spell) !== null
+    );
+  }
+
+  /**
+   * @param {object} caster
+   * @param {object} result
+   * @returns {object}
+   */
+  function applyHostileReveal(caster, result) {
+    if (!spellBreaksStealth(result.spell)) {
+      return result;
+    }
+    const reveal =
+      typeof Conditions.revealAfterHostileAction === "function"
+        ? Conditions.revealAfterHostileAction(caster)
+        : { removed: [], visibility: Conditions.getVisibility(caster) };
+    result.revealed = reveal.removed.length > 0;
+    result.revealedConditions = reveal.removed.map(function (condition) {
+      return condition.slug || condition.name;
+    });
+    result.visibilityAfter = reveal.visibility;
+    return result;
   }
 
   function normalizeCost(spell) {
@@ -927,15 +971,32 @@
     const type = normalizeSpellType(spell);
     const cost = normalizeCost(spell);
 
+    // Traits of this cast, used by the Grabbed/Restrained gates. An attack
+    // spell is an attack-trait action; a spell with the manipulate trait
+    // (i.e. not Subtle) is a manipulate action.
+    const actionTraits = [];
+    if (Spells.hasTrait(spell, "manipulate")) {
+      actionTraits.push("manipulate");
+    }
+    if (type === Spells.SPELL_TYPES.ATTACK) {
+      actionTraits.push("attack");
+    }
+
     if (typeof caster.canAct === "function") {
-      const canAct = caster.canAct();
+      const canAct = caster.canAct({
+        traits: actionTraits,
+        action: "cast-spell",
+      });
       if (!canAct.ok) {
+        let reason = CAST_SPELL_REASONS.UNCONSCIOUS;
+        if (canAct.reason === "defeated") {
+          reason = CAST_SPELL_REASONS.DEFEATED;
+        } else if (canAct.reason === "restrained-action-blocked") {
+          reason = CAST_SPELL_REASONS.RESTRAINED_ACTION_BLOCKED;
+        }
         return {
           ok: false,
-          reason:
-            canAct.reason === "defeated"
-              ? CAST_SPELL_REASONS.DEFEATED
-              : CAST_SPELL_REASONS.UNCONSCIOUS,
+          reason: reason,
           canActReason: canAct.reason,
           spell: spell,
           spellId: spellIdOf(spell),
@@ -1004,6 +1065,32 @@
       );
     }
 
+    // Grabbed: a manipulate action needs a successful DC 5 flat check or the
+    // action is lost ("grabbed-manipulate-failed"). The action cost is spent;
+    // the spell itself was never cast, so no slot/Focus Point is consumed.
+    if (typeof caster.resolveGrabbedManipulate === "function") {
+      const grabCheck = caster.resolveGrabbedManipulate({
+        traits: actionTraits,
+        d20: opts.d20,
+        rollFlatCheck: opts.rollFlatCheck,
+        rollD20: opts.rollD20,
+        rollDie: opts.rollDie,
+      });
+      if (grabCheck.required && !grabCheck.passed) {
+        caster.spendActions(cost);
+        return {
+          ok: false,
+          reason: CAST_SPELL_REASONS.GRABBED_MANIPULATE_FAILED,
+          flatCheck: grabCheck.flatCheck,
+          spell: spell,
+          spellId: spellIdOf(spell),
+          casterId: caster.id,
+          results: [],
+          actionsLeft: caster.actionsRemaining,
+        };
+      }
+    }
+
     // A manipulate spell provokes before any attack/save is resolved.
     const reactionPhase = resolveManipulateReactions(opts, caster, spell);
     if (reactionPhase.disrupted) {
@@ -1050,7 +1137,7 @@
     if (sustained !== null) {
       result.sustainedSpell = sustained;
     }
-    return result;
+    return applyHostileReveal(caster, result);
   }
 
   return Object.freeze({

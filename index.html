@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PF2e Remastered — Tactical Battlefield</title>
-    <link rel="stylesheet" href="css/main.css?v=25.0" />
+    <link rel="stylesheet" href="css/main.css?v=28.0" />
   </head>
   <body>
     <div class="app">
@@ -13,7 +13,7 @@
           <div class="brand-mark" aria-hidden="true">P2</div>
           <div>
             <h1>Tactical Battlefield</h1>
-            <p>Pathfinder 2E Remastered · Phase 25 — Compendium Drag &amp; Drop</p>
+            <p>Pathfinder 2E Remastered · Phase 28 — Hotbar, Ruler &amp; Templates</p>
           </div>
         </div>
         <div class="topbar-meta">
@@ -26,7 +26,7 @@
           <span class="badge">Trip · Shove · Grapple · Escape</span>
           <span class="badge">Spells · Afflictions · Hazards</span>
           <span class="badge">Event Bus · Serialization</span>
-          <span class="badge badge-accent">Phase 25 · Drag &amp; Drop</span>
+          <span class="badge badge-accent">Phase 28 · Hotbar · Ruler · Templates</span>
         </div>
       </header>
 
@@ -110,6 +110,87 @@
                 title="Циклически переключает свет клетки: bright → dim → darkness"
               >
                 🌑 Illumination
+              </button>
+              <button
+                type="button"
+                class="brush-button ruler-button"
+                data-ruler-toggle
+                aria-pressed="false"
+                title="Тактическая линейка: 5-10-5, сложный ландшафт и стены. Также удерживайте Space."
+              >
+                📏 Ruler
+              </button>
+            </div>
+
+            <div
+              class="scene-toolbar-group scene-template-group"
+              data-template-toolbar
+              role="group"
+              aria-label="Измеряемые шаблоны заклинаний"
+            >
+              <span class="scene-toolbar-label">Шаблоны</span>
+              <button
+                type="button"
+                class="brush-button template-button"
+                data-template-tool="burst"
+                aria-pressed="false"
+                title="Круглый шаблон: клик фиксирует центр"
+              >
+                ⭕ Burst
+              </button>
+              <button
+                type="button"
+                class="brush-button template-button"
+                data-template-tool="cone"
+                aria-pressed="false"
+                title="Конус 90°: вершина у кастера, мышь задаёт направление"
+              >
+                📐 Cone
+              </button>
+              <button
+                type="button"
+                class="brush-button template-button"
+                data-template-tool="line"
+                aria-pressed="false"
+                title="Линия: вершина у кастера, мышь задаёт направление"
+              >
+                📏 Line
+              </button>
+              <select
+                class="template-select template-size-select"
+                data-template-size
+                aria-label="Размер шаблона"
+                disabled
+              ></select>
+              <select
+                class="template-select"
+                data-template-caster
+                aria-label="Кастер шаблона"
+                disabled
+              ></select>
+              <select
+                class="template-select template-spell-select"
+                data-template-spell
+                aria-label="Заклинание шаблона"
+                disabled
+              ></select>
+              <button
+                type="button"
+                class="template-apply-button"
+                data-template-apply
+                disabled
+                title="Сделать спасброски и применить урон через IWR"
+              >
+                Применить заклинание
+              </button>
+              <button
+                type="button"
+                class="template-clear-button"
+                data-template-clear
+                disabled
+                title="Удалить шаблон с поля"
+              >
+                ✖
               </button>
             </div>
 
@@ -484,6 +565,8 @@
           </div>
         </aside>
       </main>
+
+      <footer id="hotbar" class="hotbar-layer" aria-label="Foundry macro hotbar"></footer>
     </div>
 
     <div id="character-sheet-layer" class="character-sheet-layer" aria-live="off"></div>
@@ -491,6 +574,7 @@
     <!-- Classic scripts keep the prototype runnable from file:// by double-click.
          Order matters: geometry → rules → entities → encounter/state → actions
          → AI → view. Every module self-registers on window.PF2e. -->
+    <script src="src/Core/Rules/size.js?v=20.9"></script>
     <script src="src/Core/Grid/grid-math.js?v=20.9"></script>
     <script src="src/Core/Grid/grid-map.js?v=20.9"></script>
     <script src="src/Core/Grid/pathfinding.js?v=20.9"></script>
@@ -546,6 +630,8 @@
     <script src="src/Core/AI/tactical-ai.js?v=20.9"></script>
 
     <script src="src/View/Grid/grid-view.js?v=20.9"></script>
+    <script src="src/View/Grid/ruler.js?v=27.0"></script>
+    <script src="src/View/Grid/template-tool.js?v=28.0"></script>
     <script src="src/View/Tokens/token-view.js?v=22.0"></script>
     <script src="src/View/Tokens/token-hud.js?v=21.0"></script>
     <script src="src/View/UI/combat-log.js?v=20.9"></script>
@@ -553,9 +639,10 @@
     <script src="src/View/UI/sidebar.js?v=22.0"></script>
     <script src="src/View/UI/confirm-dialog.js?v=24.0"></script>
     <script src="src/View/UI/scene-editor.js?v=24.0"></script>
-    <script src="src/View/UI/character-sheet.js?v=25.0"></script>
+    <script src="src/View/UI/character-sheet.js?v=28.0"></script>
+    <script src="src/View/UI/hotbar.js?v=26.0"></script>
     <script src="src/View/UI/compendium-browser.js?v=25.0"></script>
-    <script src="src/View/battlefield-view.js?v=25.0"></script>
-    <script src="src/main.js?v=25.0"></script>
+    <script src="src/View/battlefield-view.js?v=28.0"></script>
+    <script src="src/main.js?v=28.0"></script>
   </body>
 </html>

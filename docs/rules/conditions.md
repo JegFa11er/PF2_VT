@@ -342,8 +342,6 @@ Valeros strikes Goblin: d20(12) + 9 (base) = 21 vs AC 20 (16 + 2 Shield Raised [
 
 ## Explicitly deferred
 
-- Seek/Hide/Sneak/Point Out, automatic loss of Hidden after an attack, creature
-  size, elevation, and Large-target flank arcs.
 - Shield Block, shield Hardness/HP, shield items, and multiple shield types.
 - Dying, Wounded, Unconscious, and recovery checks.
 - Damage types and IWR are covered by `docs/rules/iwr.md`; persistent damage by

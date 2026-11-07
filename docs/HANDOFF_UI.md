@@ -1,3 +1,236 @@
+# UI Handoff — Phases 26-28: Macro Hotbar, Tactical Ruler & Measured Templates
+
+Status: **implemented and verified in the browser** (Core untouched; 492/492
+tests still pass, 35 suites).
+
+```text
+Feature Readiness:
+- goal: add a Foundry-style bottom macro hotbar with drag-bound spells/weapons,
+  a tactical ruler with 5-10-5 distance, difficult-terrain surcharges, walls and
+  waypoints, and interactive burst/cone/line measured templates that apply a
+  real basic saving throw through the headless Core.
+- pf2e_remaster_rule: ruler distance uses the canonical 5-10-5 alternation
+  (5 ft, 10 ft, 5 ft, 10 ft ...); entering difficult terrain adds +5 ft and
+  greater-difficult terrain adds +10 ft; a wall in the measured line marks the
+  segment blocked. Templates reuse Core/Grid/AoE geometry. Apply calls
+  Core/Rules/Spells.evaluateBasicSave once per affected creature with the
+  caster's spell DC, then Combatant.takeDamage applies the existing IWR
+  pipeline. Hotbar actions delegate to the existing Stride, Step, Strike,
+  Raise Shield, Take Cover, Stand, Trip, Shove, Grapple and Cast preparation
+  paths. No Core module was modified.
+- behavior_and_boundaries: the hotbar shows ten slots (1-9, 0), auto-fills
+  basic actions per active combatant, and keeps per-combatant manual bindings
+  in memory. Spells/weapons can be dragged from the floating character sheet.
+  The ruler activates from the 📏 button, by holding Space, or with a middle-
+  button drag. Ctrl or X adds a waypoint. Colour bands compare the total with
+  the selected/active combatant's Speed: green ≤ Speed, amber ≤ 2 × Speed, red
+  above or blocked. Templates are free placement/damage tools: they do not
+  spend actions, spell slots, or touch the initiative queue.
+- data_contracts: new View modules `src/View/UI/hotbar.js`
+  (PF2e.View.Hotbar), `src/View/Grid/ruler.js` (PF2e.View.Ruler) and
+  `src/View/Grid/template-tool.js` (PF2e.View.TemplateTool).
+  BattlefieldView gains `setExternalTool(tool)` plus click/hover/cursor
+  arbitration. CharacterSheet writes `{type:"hotbar-binding", kind, combatantId,
+  entry}` drag payloads. main.js adds `hotbarContext`, `activateHotbarSlot`,
+  `updateRulerStatus`, `templateSpellcasters`, `templateSpellsFor`,
+  `spellDCFor`, `applyMeasuredTemplate`, and exposes `hotbar`, `ruler`,
+  `templateTool`, `applyMeasuredTemplate`, `templateSpellcasters` and
+  `templateSpellsFor` on `window.PF2e.App`.
+- acceptance_tests: npm test = 492 passed, 0 failed (35 suites). Browser checks:
+  Valeros hotbar = Stride/Step/Strike/Take Cover/Trip/Shove/Grapple with the
+  stowed shield and non-prone Stand slots empty; keys 2, 3 and 5 switch to Step,
+  arm Strike and execute Take Cover; dragging Fireball from Merisiel's sheet to
+  slot 0 stores a manual binding and key 0 prepares the spell in Cast mode;
+  the binding survives a full turn cycle and remains per-combatant; Space ruler
+  from K9→N9 reports 15 ft within Speed 25; a waypoint at N9 then N11 reports
+  25 ft and N13 reports 35 ft (2× Speed); greater-difficult terrain E10→F10
+  reports 15 ft including +10 terrain; a measured line through the wall at row
+  8 is marked blocked; a 20-ft burst at L10 highlights 51 cells and 3 targets;
+  applying Lightning Bolt makes Reflex DC 19 saves and applies IWR (Goblin 7
+  electricity → defeated, Ogre critical failure 14 electricity → 34→20 HP,
+  Merisiel success 3 electricity → 16→13 HP); cone 15 ft = 11 cells, line 30 ft
+  = 6 cells; clear removes the fixed template. Console has no errors or
+  warnings.
+- delegated_assumptions: hotbar bindings are session-only and are not saved in
+  localStorage. A dragged sheet item must belong to the active combatant.
+  Ruler segments use a deterministic diagonal-first line, not an obstacle-
+  avoiding A* path; wall crossing marks the segment blocked but does not reroute
+  it. The diagonal alternation continues across all segments of one ruler
+  measurement. Templates only offer save spells with a damage formula and apply
+  basic-save damage semantics. The template Apply button intentionally does not
+  spend actions or spell slots.
+- confidence: 98%
+```
+
+## 1. Bottom macro hotbar (Phase 26)
+
+- `src/View/UI/hotbar.js` builds the ten-slot Foundry-style bar inside the
+  `#hotbar` footer. Number badges run `1 2 3 4 5 6 7 8 9 0`.
+- On every active-turn change the slots are rebuilt:
+  - 1 Stride, 2 Step, 3 Strike (title shows the current MAP),
+  - 4 Raise a Shield only when an intact shield is held,
+  - 5 Take Cover only when `TakeCover.canTakeCover()` finds standard cover,
+  - 6 Stand only while Prone,
+  - 7 Trip, 8 Shove, 9 Grapple,
+  - 0 free.
+- Manual bindings are stored per combatant. A manual binding overrides the
+  auto-filled slot and survives turn changes for that combatant. Right-click
+  clears a manual binding.
+- Activation: click or press the slot key. Stride/Step arm the movement mode;
+  Strike performs the nearest strike or arms Strike mode; Trip/Shove/Grapple,
+  Raise Shield, Take Cover and Stand go through the existing sheet action
+  helpers; a bound spell calls `prepareSheetSpell` and arms Cast mode; a bound
+  weapon performs the current strike flow.
+- Drag sources: the character sheet's spell rows, both hand cards, stowed
+  weapon/shield rows and the main-hand weapon card are draggable. The payload is
+  `{type:"hotbar-binding", kind:"spell"|"weapon", combatantId, entry}`. The
+  hotbar also accepts the existing compendium payload as a convenience.
+- The hotbar lives as a flex footer inside `.app`, not as a fixed overlay, so it
+  never covers `#board-status` and does not stretch the page.
+
+## 2. Tactical ruler (Phase 27)
+
+- `src/View/Grid/ruler.js` creates a transparent `.ruler-overlay` canvas aligned
+  exactly over `#battlefield`; BattlefieldView keeps rendering the board.
+- Activation:
+  - the 📏 button toggles a persistent ruler tool;
+  - holding Space starts a temporary measurement from the pointer cell (or the
+    selected/active combatant when the pointer is not on the board);
+  - middle-button drag measures without changing the cursor mode.
+- `measureSegment()` walks the line with a deterministic diagonal-first step:
+  diagonal steps alternate 5/10 ft exactly like PF2e movement, straight steps
+  cost 5 ft, and every entered cell adds its terrain surcharge
+  (`getTerrainExtraFeet`: +5 difficult, +10 greater difficult).
+- Ctrl or X pushes the current cell into `waypoints`; the total is the sum of
+  start → waypoint(s) → cursor. Escape or releasing Space/toggling the button
+  clears it.
+- A blocked cell marks the segment red and the status shows
+  `ЗАБЛОКИРОВАНО стеной`. The label reports cells (`K9 → N9`), total feet,
+  terrain surcharge, waypoint count, Speed band and `BLOCKED` when relevant.
+- Reach bands: green ≤ Speed, amber ≤ 2 × Speed, red above 2 × Speed or any
+  blocked segment. With no selected combatant the line uses the neutral cyan
+  distance style.
+
+## 3. Measured templates (Phase 28)
+
+- `src/View/Grid/template-tool.js` adds ⭕ Burst, 📐 Cone and 📏 Line buttons to
+  the scene toolbar, plus a size select, caster select, save-spell select,
+  **Применить заклинание** and ✖ clear button.
+- Sizes: Burst 5/10/15/20/30 ft, Cone 15/30 ft, Line 30/60 ft. The default is
+  20 ft burst / 15 ft cone / 30 ft line.
+- Geometry uses the Core AoE contract:
+  - Burst: `AoE.getBurstCells(hoveredCell, size, map)`;
+  - Cone: apex at the selected caster, direction snapped to the eight grid
+    directions, `AoE.getConeCells(origin, direction, size, map)`;
+  - Line: same apex/direction, `AoE.getLineCells(origin, direction, size, 5, map)`.
+- Hover previews the template and target count. A click fixes it; the Apply and
+  ✖ buttons become enabled. Fixed templates outline every living combatant whose
+  footprint intersects the cells.
+- Apply performs:
+  1. one `Damage.rollDamage()` for the spell's damage formula and type;
+  2. for every affected living creature, `Spells.evaluateBasicSave()` with its
+     save modifier, the caster's spell DC, the rolled damage and natural 20/1
+     handling;
+  3. `Combatant.takeDamage(save.damage, {type, source})`, which applies the
+     existing Immunity → Weakness → Resistance chain;
+  4. combat-log lines `[SPELL]`, `[SAVE]`, `[IWR]` and a defeated summary.
+- The caster select lists every living spellcaster; the spell select lists only
+  `type:"save"` spells that carry a damage formula. The template is a damage
+  application tool and deliberately does not spend actions or spell slots.
+- The ✖ button removes the fixed template; it never undoes damage already
+  applied.
+
+## 4. Styling and layout
+
+- `css/main.css` adds the dark translucent Foundry hotbar, numbered slot
+  badges, manual-binding accent, drop highlight, ruler/template active buttons,
+  template selects/buttons and drag-source styles.
+- The hotbar is a normal flex footer (`flex: 0 0 auto`) inside `.app`; the
+  workspace keeps its own scroll/overflow behaviour and the board status stays
+  above the bar.
+- Ruler and template canvases use `pointer-events: none` and are absolutely
+  positioned over the battlefield; they sync to the displayed canvas rect on
+  render, window resize and container scroll.
+
+## 5. Files
+
+- `src/View/UI/hotbar.js` — macro bar, slot defaults, per-combatant manual
+  bindings, keyboard 1-0, drag/drop and right-click clearing.
+- `src/View/Grid/ruler.js` — overlay canvas, 5-10-5 and terrain measurement,
+  wall blocking, waypoints, Speed bands and labels.
+- `src/View/Grid/template-tool.js` — burst/cone/line geometry, preview/fixed
+  state, target rings, caster/spell/size controls and Apply/Clear intents.
+- `src/View/UI/character-sheet.js` — draggable spell rows, both hand cards,
+  stowed weapon rows and the main-hand weapon card writing `hotbar-binding`
+  payloads.
+- `src/View/battlefield-view.js` — `externalTool` arbitration for clicks,
+  hover and cursor plus `setExternalTool()`.
+- `src/main.js` — hotbar context/activation, ruler status and tool switching,
+  template caster/spell adaptation, `applyMeasuredTemplate`, overlay cleanup
+  after scene/roster replacement, and `window.PF2e.App` debug exposure.
+- `index.html` — hotbar footer, ruler/template toolbar controls, Phase 28
+  labels and cache-busted script includes.
+- `css/main.css` — Phase 26-28 styling and responsive hotbar sizing.
+
+## 6. Verification
+
+```bash
+npm test   # 492 passed, 0 failed (35 suites)
+```
+
+Browser run against `http://127.0.0.1:8765/index.html`:
+
+1. Valeros's hotbar auto-fills Stride, Step, Strike, Take Cover, Trip, Shove and
+   Grapple. Raise Shield is absent because the Steel Shield is stowed; Stand is
+   absent because Valeros is not Prone.
+2. Key `2` switches the battlefield to Step, key `3` arms Strike, key `5`
+   executes Take Cover and reduces Valeros's actions from 3 to 2.
+3. Merisiel becomes active after two End Turn clicks; opening her sheet, opening
+   the Магия tab and dragging Fireball to slot `0` stores a manual binding.
+   Pressing `0` prepares Fireball and switches to Cast mode.
+4. The Fireball binding persists through Ogre, Hill Giant and Valeros turns,
+   then appears again when Merisiel's turn returns; other combatants see an
+   empty slot `0`.
+5. Space-ruler from K9 to N9 reports 15 ft · within Speed 25 ft. Adding a
+   waypoint at N9 and moving to N11 reports 25 ft; N13 reports 35 ft and the
+   amber `2× Speed` band. Greater-difficult terrain E10→F10 reports 15 ft
+   (5 base + 10 terrain). A line through the wall on row 8 reports 40 ft and
+   `ЗАБЛОКИРОВАНО стеной` with the red blocked class.
+6. The 📏 button and template buttons are mutually exclusive; switching one on
+   turns the other off and restores the select cursor when both are off.
+7. A 20-ft Burst fixed at L10 highlights 51 cells and 3 targets (Merisiel,
+   Goblin, Ogre). Applying Lightning Bolt rolls Reflex DC 19: Goblin fails and
+   takes 7 electricity (5→0 HP, defeated), Ogre critically fails and takes 14
+   electricity (34→20 HP), Merisiel succeeds and takes 3 electricity
+   (16→13 HP). The log contains `[SPELL]`, `[SAVE]` and `[IWR]` summaries.
+8. Cone 15 ft aimed east produces 11 cells; Line 30 ft aimed north produces 6
+   cells. ✖ clears the fixed template and disables the Apply/Clear buttons.
+9. Console has no errors or warnings.
+
+## 7. Known limitations / deferred
+
+- Hotbar bindings are in-memory for the session; they are not part of Save
+  Combat and reset on reload.
+- Dragging a spell/weapon from a sheet to the hotbar is accepted only for the
+  currently active combatant.
+- There is no hotbar pagination, reordering, macro editor or drag-out removal;
+  right-click clears a manual binding.
+- The ruler measures straight segments with a deterministic diagonal-first
+  line. It does not reroute around walls; crossing a wall only marks the
+  segment blocked.
+- Diagonal alternation is global across the whole measurement (including
+  waypoint segments), matching a continuous move rather than restarting at each
+  waypoint.
+- Templates support save spells with damage. Attack spells, non-basic saves and
+  utility spells are outside the Apply path.
+- Applying a template is intentionally free: it does not spend actions, spell
+  slots or Focus Points, and it does not advance MAP.
+- Overlay canvases are synced on render/resize/scroll; there is no
+  ResizeObserver for transforms that change the canvas without firing resize.
+- Clearing a template does not revert damage or conditions already applied.
+
+---
+
 # UI Handoff — Phase 25: Compendium Drag & Drop and Inventory Management
 
 Status: **implemented and verified in the browser** (Core untouched; 492/492

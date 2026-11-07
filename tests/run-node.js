@@ -48,6 +48,14 @@ const suites = [
     register: require("./Rules/weapon-traits.test.js"),
   },
   {
+    name: "Core/Rules — Canonical Compliance Audit",
+    register: require("./Rules/canonical-compliance.test.js"),
+  },
+  {
+    name: "Core/Rules — Reach-10 Exception & Grabbed/Restrained",
+    register: require("./Rules/reach-and-restrictions.test.js"),
+  },
+  {
     name: "Core/Grid — Flanking Geometry",
     register: require("./Grid/flanking.test.js"),
   },

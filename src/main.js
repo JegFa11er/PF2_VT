@@ -69,6 +69,10 @@
   let compendiumBrowser = null;
   // Phase 24: scene presets, terrain brushes, and the clear-board dialog.
   let sceneEditor = null;
+  // Phase 26-28: macro hotbar, tactical ruler, and measured templates.
+  let hotbar = null;
+  let ruler = null;
+  let templateTool = null;
 
   const MAP_ROWS = [
     "...............",
@@ -2210,6 +2214,8 @@
     if (characterSheet) {
       characterSheet.refresh();
     }
+    refreshHotbar();
+    refreshTemplateTool();
   }
 
   function updateHoverStatus(info) {
@@ -3033,7 +3039,16 @@
       applyScenePreset(presetId);
     },
     onToolChange: function (tool) {
+      // Terrain brushes take precedence over the ruler/template overlays.
+      if (ruler) {
+        ruler.deactivate({ silent: true });
+      }
+      if (templateTool) {
+        templateTool.deactivate({ silent: true });
+      }
       battlefield.setPaintTool(tool);
+      syncOverlayTool();
+      syncRulerButton();
       updateHoverStatus(null);
       log.add(
         "Terrain brush: " + tool + (tool === "select" ? " (token/movement mode)" : "") + ".",
@@ -3045,11 +3060,121 @@
     },
   });
 
+  // Phase 27: the tactical ruler overlays the canvas with a transparent
+  // second canvas and owns only pointer measurement.
+  ruler = new View.Ruler({
+    canvas: canvas,
+    container: canvas.parentElement,
+    getGrid: function () {
+      return battlefield.grid;
+    },
+    getMap: function () {
+      return map;
+    },
+    getCombatant: function () {
+      return battlefield.getSelectedCombatant() || encounter.activeCombatant;
+    },
+    onMeasure: updateRulerStatus,
+    onActiveChange: function (active) {
+      if (active) {
+        if (templateTool) {
+          templateTool.deactivate({ silent: true });
+        }
+        if (sceneEditor) {
+          sceneEditor.setTool("select", { silent: true });
+        }
+        battlefield.setPaintTool(PAINT_TOOLS.SELECT);
+        syncOverlayTool();
+      } else {
+        syncOverlayTool();
+        if (!templateTool || !templateTool.isActive()) {
+          updateHoverStatus(null);
+        }
+      }
+      syncRulerButton();
+    },
+    onLog: function (message, kind) {
+      log.add(message, kind || "info");
+    },
+  });
+
+  // Phase 28: measured burst / cone / line templates and their Apply button.
+  templateTool = new View.TemplateTool({
+    canvas: canvas,
+    container: canvas.parentElement,
+    toolbar: document.querySelector("[data-template-toolbar]"),
+    getGrid: function () {
+      return battlefield.grid;
+    },
+    getMap: function () {
+      return map;
+    },
+    getCombatants: function () {
+      return COMBATANTS;
+    },
+    getTokenViews: function () {
+      return battlefield.tokenViews;
+    },
+    getSpellcasters: templateSpellcasters,
+    getSpells: templateSpellsFor,
+    onApply: applyMeasuredTemplate,
+    onActiveChange: function (active) {
+      if (active) {
+        if (ruler) {
+          ruler.deactivate({ silent: true });
+        }
+        if (sceneEditor) {
+          sceneEditor.setTool("select", { silent: true });
+        }
+        battlefield.setPaintTool(PAINT_TOOLS.SELECT);
+        syncOverlayTool();
+        syncRulerButton();
+      } else {
+        syncOverlayTool();
+        if (!ruler || !ruler.isActive()) {
+          updateHoverStatus(null);
+        }
+      }
+    },
+    onStateChange: updateTemplateStatus,
+    onLog: function (message, kind) {
+      log.add(message, kind || "info");
+    },
+  });
+
+  const rulerButton = document.querySelector("[data-ruler-toggle]");
+  if (rulerButton) {
+    rulerButton.addEventListener("click", function () {
+      const next = !ruler.isToolActive();
+      if (next) {
+        if (templateTool) {
+          templateTool.deactivate({ silent: true });
+        }
+        if (sceneEditor) {
+          sceneEditor.setTool("select", { silent: true });
+        }
+        battlefield.setPaintTool(PAINT_TOOLS.SELECT);
+        ruler.setToolActive(true);
+      } else {
+        ruler.deactivate();
+      }
+      syncRulerButton();
+    });
+  }
+
   function selectCursorMode() {
     if (sceneEditor) {
       sceneEditor.setTool("select", { silent: true });
     }
     battlefield.setPaintTool(PAINT_TOOLS.SELECT);
+    if (ruler) {
+      ruler.deactivate({ silent: true });
+    }
+    if (templateTool) {
+      templateTool.deactivate({ silent: true });
+    }
+    syncOverlayTool();
+    syncRulerButton();
   }
 
   function findNextLivingIndex(encounterInstance, startIndex) {
@@ -3109,6 +3234,12 @@
 
   function rebuildScenePresentation() {
     const active = encounter.activeCombatant;
+    if (ruler) {
+      ruler.deactivate({ silent: true });
+    }
+    if (templateTool) {
+      templateTool.deactivate({ silent: true });
+    }
     battlefield.setWorld(COMBATANTS, map);
     battlefield.setPaintTool(PAINT_TOOLS.SELECT);
     if (sceneEditor) {
@@ -3264,6 +3395,12 @@
       preferredIndex,
     );
 
+    if (ruler) {
+      ruler.deactivate({ silent: true });
+    }
+    if (templateTool) {
+      templateTool.deactivate({ silent: true });
+    }
     battlefield.setWorld(COMBATANTS, map);
     suppressSelectionLog = true;
     battlefield.setActiveCombatant(nextActive ? nextActive.id : null);
@@ -3701,6 +3838,447 @@
     );
   }
 
+  // ------------------------------------------------ Phase 26/27/28 UI glue
+
+  function hotbarContext(combatant) {
+    if (!combatant) {
+      return {
+        canAct: false,
+        hasActions: false,
+        shieldAvailable: false,
+        coverAvailable: false,
+        prone: false,
+      };
+    }
+    const canAct =
+      combatant.isDefeated !== true &&
+      (typeof combatant.canAct !== "function" || combatant.canAct().ok);
+    const hasActions =
+      typeof combatant.canSpendActions === "function"
+        ? combatant.canSpendActions(1)
+        : combatant.actionsRemaining >= 1;
+
+    let shieldAvailable = false;
+    const shield =
+      typeof combatant.getShield === "function"
+        ? combatant.getShield()
+        : combatant.shield || null;
+    if (shield) {
+      const state =
+        typeof combatant.getShieldState === "function"
+          ? combatant.getShieldState()
+          : null;
+      const intact =
+        !state || (state.broken !== true && state.destroyed !== true);
+      const held =
+        typeof combatant.isItemHeld !== "function" ||
+        combatant.isItemHeld(shield) === true;
+      shieldAvailable = intact && held;
+    }
+
+    let coverAvailable = false;
+    try {
+      coverAvailable = TakeCover.canTakeCover({
+        combatant: combatant,
+        map: map,
+        combatants: COMBATANTS,
+      }).ok === true;
+    } catch (error) {
+      coverAvailable = false;
+    }
+
+    const prone =
+      typeof combatant.hasCondition === "function" &&
+      combatant.hasCondition("prone");
+
+    return {
+      canAct: canAct,
+      hasActions: hasActions,
+      shieldAvailable: shieldAvailable,
+      coverAvailable: coverAvailable,
+      prone: prone,
+    };
+  }
+
+  function activateHotbarSlot(binding, combatant, index) {
+    if (!binding || !combatant) {
+      return;
+    }
+    if (!isActiveCombatant(combatant)) {
+      log.add(
+        combatant.name + " cannot act — it is not that combatant's turn.",
+        "warn",
+      );
+      return;
+    }
+    updateHoverStatus(null);
+
+    if (binding.kind === "spell") {
+      prepareSheetSpell(combatant, binding.entry);
+      return;
+    }
+    if (binding.kind === "weapon") {
+      sheetStrike(combatant);
+      return;
+    }
+
+    switch (binding.id) {
+      case "stride":
+      case "step":
+        selectCursorMode();
+        battlefield.setMode(binding.id === "step" ? MODES.STEP : MODES.STRIDE);
+        updateModeUi();
+        updateHoverStatus(null);
+        log.add(
+          "Hotbar " +
+            (index + 1) +
+            ": " +
+            (binding.id === "step" ? "Step" : "Stride") +
+            " mode armed.",
+          "muted",
+        );
+        return;
+      case "strike":
+        sheetStrike(combatant);
+        return;
+      case "trip":
+      case "shove":
+      case "grapple":
+      case "raise-shield":
+      case "take-cover":
+      case "stand":
+        sheetQuickAction(combatant, binding.id);
+        return;
+      default:
+        log.add("Неизвестное действие хотбара: " + binding.id, "warn");
+    }
+  }
+
+  function refreshHotbar() {
+    if (hotbar) {
+      hotbar.refresh();
+    }
+  }
+
+  // ------------------------------------------------------------ Phase 27
+
+  function syncOverlayTool() {
+    let active = null;
+    if (templateTool && templateTool.isActive()) {
+      active = templateTool;
+    } else if (ruler && ruler.isActive()) {
+      active = ruler;
+    }
+    battlefield.setExternalTool(active);
+  }
+
+  function syncRulerButton() {
+    const button = document.querySelector("[data-ruler-toggle]");
+    if (!button) {
+      return;
+    }
+    const active = Boolean(ruler && ruler.isToolActive());
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  }
+
+  function updateRulerStatus(state) {
+    if (!state) {
+      if (!templateTool || !templateTool.isActive()) {
+        updateHoverStatus(null);
+      }
+      return;
+    }
+    statusEl.className = "board-hint board-status ruler-status";
+    delete statusEl.dataset.state;
+    const parts = [];
+    parts.push(
+      "Ruler: " +
+        Grid.gridToLabel(state.start) +
+        " → " +
+        Grid.gridToLabel(state.current) +
+        " · " +
+        state.totalFeet +
+        " ft",
+    );
+    if (state.terrainFeet > 0) {
+      parts.push("difficult terrain +" + state.terrainFeet + " ft");
+    }
+    if (state.waypoints.length > 0) {
+      parts.push(state.waypoints.length + " waypoint(s)");
+    }
+    if (state.blocked) {
+      parts.push("ЗАБЛОКИРОВАНО стеной");
+      statusEl.classList.add("is-blocked");
+      statusEl.dataset.state = "blocked";
+    } else if (state.speedFeet !== null) {
+      if (state.reach === "within") {
+        parts.push("within Speed " + state.speedFeet + " ft");
+        statusEl.classList.add("is-valid");
+        statusEl.dataset.state = "valid";
+      } else if (state.reach === "extended") {
+        parts.push("2× Speed (up to " + state.speedFeet * 2 + " ft)");
+        statusEl.classList.add("is-warning");
+        statusEl.dataset.state = "warning";
+      } else {
+        parts.push("beyond 2× Speed");
+        statusEl.classList.add("is-invalid");
+        statusEl.dataset.state = "invalid";
+      }
+    } else {
+      parts.push("no selected combatant — pure distance");
+      statusEl.classList.add("is-valid");
+      statusEl.dataset.state = "valid";
+    }
+    statusEl.textContent = parts.join(" · ");
+  }
+
+  // ------------------------------------------------------------ Phase 28
+
+  function templateSpellcasters() {
+    return COMBATANTS.filter(function (combatant) {
+      return (
+        combatant.isDefeated !== true &&
+        isSpellcaster(combatant)
+      );
+    }).sort(function (left, right) {
+      // Prefer the active combatant, then the current selection, then players.
+      const active = encounter.activeCombatant;
+      const selected = battlefield.getSelectedCombatant();
+      const score = function (combatant) {
+        let value = 0;
+        if (active && active.id === combatant.id) {
+          value += 4;
+        }
+        if (selected && selected.id === combatant.id) {
+          value += 2;
+        }
+        if (allianceOf(combatant) === "player") {
+          value += 1;
+        }
+        return value;
+      };
+      return score(right) - score(left);
+    });
+  }
+
+  function templateSpellsFor(caster) {
+    const spells = caster && Array.isArray(caster.spells) ? caster.spells : [];
+    return spells.filter(function (spell) {
+      return (
+        spell &&
+        spell.type === "save" &&
+        spell.damage &&
+        typeof spell.damage.formula === "string"
+      );
+    });
+  }
+
+  function spellDCFor(caster) {
+    if (Number.isInteger(caster.spellDC)) {
+      return caster.spellDC;
+    }
+    if (Number.isInteger(caster.spellAttackBonus) && caster.spellAttackBonus > 0) {
+      return caster.spellAttackBonus + 8;
+    }
+    return 10 + Math.max(0, Number.isInteger(caster.attackBonus) ? caster.attackBonus : 0);
+  }
+
+  function updateTemplateStatus(state) {
+    if (!state || !state.active) {
+      if (!ruler || !ruler.isActive()) {
+        updateHoverStatus(null);
+      }
+      return;
+    }
+    statusEl.className = "board-hint board-status template-status";
+    delete statusEl.dataset.state;
+    const labels = {
+      burst: "Burst",
+      cone: "Cone",
+      line: "Line",
+    };
+    let text =
+      "Шаблон: " +
+      (labels[state.tool] || state.tool) +
+      " " +
+      state.sizeFeet +
+      " ft";
+    if (state.cells && state.cells.length > 0) {
+      text += " · " + state.cells.length + " клеток";
+    }
+    if (state.targets && state.targets.length > 0) {
+      text += " · " + state.targets.length + " целей подсвечено";
+    }
+    if (state.fixed) {
+      text += " — нажмите «Применить заклинание» или ✖";
+      statusEl.classList.add("is-invalid");
+      statusEl.dataset.state = "template-fixed";
+    } else {
+      text += " — клик по полю фиксирует шаблон";
+      statusEl.classList.add("is-valid");
+      statusEl.dataset.state = "template-preview";
+    }
+    statusEl.textContent = text;
+  }
+
+  function applyMeasuredTemplate(template, caster, spell, targets) {
+    if (!template || !caster || !spell) {
+      log.add("Шаблон не применён: нет кастера или заклинания.", "warn");
+      return;
+    }
+    const affected = Array.isArray(targets) ? targets : [];
+    if (affected.length === 0) {
+      log.add(
+        "Шаблон " +
+          (template.tool || "area") +
+          " " +
+          template.sizeFeet +
+          " ft не задел ни одного существа.",
+        "warn",
+      );
+      return;
+    }
+
+    const damageSpec = spell.damage || { formula: "1d6", type: "fire" };
+    let damageRoll;
+    try {
+      damageRoll = Damage.rollDamage({
+        formula: damageSpec.formula,
+        type: damageSpec.type || "untyped",
+        rollDie: rollDamageDie,
+      });
+    } catch (error) {
+      log.add("Шаблон не применён: " + error.message, "warn");
+      return;
+    }
+
+    const saveType = String(spell.saveType || "reflex").toLowerCase();
+    const saveDC = spellDCFor(caster);
+    const label = {
+      burst: "Burst",
+      cone: "Cone",
+      line: "Line",
+    }[template.tool] || "Area";
+
+    log.add(
+      "[SPELL] " +
+        caster.name +
+        " применяет " +
+        spell.name +
+        " · " +
+        label +
+        " " +
+        template.sizeFeet +
+        " ft · " +
+        affected.length +
+        " target(s) · " +
+        capitalize(saveType) +
+        " DC " +
+        saveDC +
+        " · " +
+        damageSpec.formula +
+        " " +
+        damageRoll.type +
+        ".",
+      "spell",
+    );
+    log.add(
+      "[SPELL] " +
+        spell.name +
+        " damage: " +
+        damageSpec.formula +
+        " " +
+        damageRoll.type +
+        " = " +
+        damageRoll.total +
+        (damageRoll.diceCount > 0
+          ? " [" +
+            damageRoll.rolls.join(" + ") +
+            (damageRoll.modifier === 0 ? "" : " " + signed(damageRoll.modifier)) +
+            "]"
+          : "") +
+        ".",
+      "info",
+    );
+
+    let defeated = 0;
+    for (const target of affected) {
+      if (!target || target.isDefeated === true) {
+        continue;
+      }
+      const saveModifier =
+        target.saves && Number.isInteger(target.saves[saveType])
+          ? target.saves[saveType]
+          : 0;
+      const d20 = rollD20();
+      const save = Spells.evaluateBasicSave({
+        saveRoll: d20,
+        saveModifier: saveModifier,
+        saveDC: saveDC,
+        rawDamage: damageRoll.total,
+      });
+      const before = target.currentHP;
+      const damageResult = target.takeDamage(save.damage, {
+        type: damageRoll.type || "untyped",
+        source: "measured-template",
+      });
+      const iwrText =
+        formatIWRDamage({ diceCount: 0 }, damageResult.iwr) ||
+        save.damage + " " + (damageRoll.type || "untyped") + " damage";
+      const hpLine =
+        "HP " +
+        before +
+        " -> " +
+        target.currentHP +
+        "/" +
+        target.maxHP +
+        (target.isDefeated === true ? " — DEFEATED" : "");
+      log.add(
+        "[SAVE] " +
+          target.name +
+          ": d20(" +
+          d20 +
+          ") " +
+          signed(saveModifier) +
+          " = " +
+          (d20 + saveModifier) +
+          " vs DC " +
+          saveDC +
+          " -> " +
+          degreeLabel(save.degree) +
+          " (" +
+          Math.round(save.damageMultiplier * 100) +
+          "% damage).",
+        "info",
+      );
+      log.add("[IWR] " + target.name + ": " + iwrText + "; " + hpLine + ".", "info");
+      if (target.isDefeated === true) {
+        defeated += 1;
+      }
+    }
+
+    if (defeated > 0) {
+      log.add(defeated + " target(s) defeated by " + spell.name + ".", "warn");
+    }
+    flushEventLog();
+    battlefield.refresh();
+    updateTokenCards();
+    renderSelection(
+      battlefield.getSelectedCombatant(),
+      battlefield.getReachableCells(),
+    );
+    if (templateTool) {
+      templateTool.refreshAll();
+    }
+  }
+
+  function refreshTemplateTool() {
+    if (templateTool && templateTool.isActive()) {
+      templateTool.refreshAll();
+    }
+  }
+
   function openCharacterSheet(combatantId) {
     if (!characterSheet) {
       return false;
@@ -3755,6 +4333,20 @@
     onClose: function () {
       // Keep the map highlight after the sheet closes so the inspected token
       // remains easy to find; a board click clears it.
+    },
+  });
+
+  // Phase 26: bottom macro hotbar. Slots are rebuilt on every active-turn
+  // change and manual spell/weapon bindings survive for each combatant.
+  hotbar = new View.Hotbar({
+    layer: document.getElementById("hotbar"),
+    getActiveCombatant: function () {
+      return encounter.activeCombatant;
+    },
+    getContext: hotbarContext,
+    onActivate: activateHotbarSlot,
+    onLog: function (message, kind) {
+      log.add(message, kind || "info");
     },
   });
 
@@ -4337,6 +4929,12 @@
     const selected = battlefield.getSelectedCombatant();
     const selectedId = selected ? selected.id : null;
 
+    if (ruler) {
+      ruler.deactivate({ silent: true });
+    }
+    if (templateTool) {
+      templateTool.deactivate({ silent: true });
+    }
     battlefield.setWorld(COMBATANTS, map);
     battlefield.setActiveCombatant(activeId);
     suppressSelectionLog = true;
@@ -5850,6 +6448,12 @@
         encounter.setEventBus(EVENT_BUS);
       }
 
+      if (ruler) {
+        ruler.deactivate({ silent: true });
+      }
+      if (templateTool) {
+        templateTool.deactivate({ silent: true });
+      }
       battlefield.setWorld(COMBATANTS, map);
       rebuildTokenCards();
       populateSpellPicker();
@@ -6274,6 +6878,12 @@
     characterSheet: characterSheet,
     compendiumBrowser: compendiumBrowser,
     sceneEditor: sceneEditor,
+    hotbar: hotbar,
+    ruler: ruler,
+    templateTool: templateTool,
+    applyMeasuredTemplate: applyMeasuredTemplate,
+    templateSpellcasters: templateSpellcasters,
+    templateSpellsFor: templateSpellsFor,
     applyScenePreset: applyScenePreset,
     clearBoard: clearBoard,
     deleteCombatant: deleteCombatant,

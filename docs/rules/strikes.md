@@ -296,7 +296,6 @@ supplied, the core falls back to `Math.random` so the prototype remains playable
 - Dying, Wounded, Unconscious, and recovery checks.
 - Persistent damage is covered by `docs/rules/persistent-damage.md`; precision
   damage as a separate IWR component is still deferred.
-- Seek/Hide/Sneak actions, creature size, elevation, and multi-cell reach.
 - Ranged Strikes, thrown weapons, and reload.
 - Other reactions (Detect/Disrupt, Shield Block), ranged Reactive Strikes, and
   reactive triggers other than leaving a threatened square.

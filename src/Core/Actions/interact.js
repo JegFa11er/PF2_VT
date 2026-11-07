@@ -53,6 +53,8 @@
     EMPTY_HAND: "empty-hand",
     NOT_HELD: "not-held",
     DISRUPTED: "disrupted",
+    RESTRAINED_ACTION_BLOCKED: "restrained-action-blocked",
+    GRABBED_MANIPULATE_FAILED: "grabbed-manipulate-failed",
   });
 
   const ACTION_COSTS = Object.freeze({
@@ -296,6 +298,53 @@
           reason: INTERACT_REASONS.ALREADY_EQUIPPED,
           actionType: actionType,
           item: targetItem,
+        };
+      }
+    }
+
+    // Restrained blocks manipulate actions outright; Grabbed forces a DC 5
+    // flat check. Both are resolved before the action is committed.
+    if (manipulate && typeof combatant.canAct === "function") {
+      const gate = combatant.canAct({
+        traits: ["manipulate"],
+        action: "interact",
+      });
+      if (!gate.ok) {
+        return {
+          ok: false,
+          reason:
+            gate.reason === "restrained-action-blocked"
+              ? INTERACT_REASONS.RESTRAINED_ACTION_BLOCKED
+              : gate.reason,
+          actionType: actionType,
+          canActReason: gate.reason,
+          actionsLeft: combatant.actionsRemaining,
+        };
+      }
+    }
+
+    if (
+      manipulate &&
+      typeof combatant.resolveGrabbedManipulate === "function"
+    ) {
+      const grabCheck = combatant.resolveGrabbedManipulate({
+        traits: ["manipulate"],
+        d20: opts.d20,
+        rollFlatCheck: opts.rollFlatCheck,
+        rollD20: opts.rollD20,
+        rollDie: opts.rollDie,
+      });
+      if (grabCheck.required && !grabCheck.passed) {
+        if (actionCost > 0) {
+          combatant.spendActions(actionCost);
+        }
+        return {
+          ok: false,
+          reason: INTERACT_REASONS.GRABBED_MANIPULATE_FAILED,
+          actionType: actionType,
+          actionCost: actionCost,
+          flatCheck: grabCheck.flatCheck,
+          actionsLeft: combatant.actionsRemaining,
         };
       }
     }

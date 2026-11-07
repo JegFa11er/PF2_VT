@@ -16,13 +16,13 @@
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory();
+    module.exports = factory(require("../Rules/size.js"));
   } else {
     root.PF2e = root.PF2e || {};
     root.PF2e.Core = root.PF2e.Core || {};
-    root.PF2e.Core.Grid = factory();
+    root.PF2e.Core.Grid = factory(root.PF2e.Core.Rules.Size);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Size) {
   "use strict";
 
   /** @typedef {{ x: number, y: number }} Cell */
@@ -128,8 +128,13 @@
    * @returns {number}
    */
   function footprintOf(unit) {
-    if (unit !== null && typeof unit === "object" && typeof unit.getFootprint === "function") {
-      return unit.getFootprint();
+    if (unit !== null && typeof unit === "object") {
+      if (typeof unit.getFootprint === "function") {
+        return unit.getFootprint();
+      }
+      if (unit.size !== undefined && Size) {
+        return Size.getFootprintForSize(unit.size);
+      }
     }
     return 1;
   }
@@ -174,6 +179,10 @@
       return unit.getOccupiedCells();
     }
     assertCell(unit, "unit");
+    const footprint = footprintOf(unit);
+    if (footprint > 1) {
+      return getFootprintCells(unit.x, unit.y, footprint);
+    }
     return [{ x: unit.x, y: unit.y }];
   }
 

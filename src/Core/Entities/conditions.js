@@ -97,6 +97,15 @@
   const GRAPPLE_CONDITIONS = Object.freeze(["grabbed", "restrained"]);
 
   /**
+   * Action trait slugs that the Grabbed/Restrained conditions care about.
+   * Restrained blocks both; Grabbed only gates manipulate actions.
+   */
+  const ACTION_TRAITS = Object.freeze({
+    ATTACK: "attack",
+    MANIPULATE: "manipulate",
+  });
+
+  /**
    * Conditions that prevent Stride, Step, and Stand. Grabbed and Restrained
    * both include Immobilized, but they are listed here as a defensive fallback
    * for authored or migrated saves that only carry the parent condition.
@@ -706,6 +715,46 @@
     );
   }
 
+  /** Visibility states ended by a hostile action. Concealment is not removed. */
+  const HOSTILE_VISIBILITY_CONDITIONS = Object.freeze(["hidden", "undetected"]);
+
+  /**
+   * A creature that takes a hostile action (Strike, an attack spell, or a
+   * save spell) is no longer Hidden or Undetected afterwards. Remove those
+   * stealth states; light-based Concealment is a separate sensory condition
+   * and survives.
+   *
+   * The caller decides when the action actually resolved. Rejected attempts
+   * (out of reach, invalid target, no actions) must not call this helper.
+   *
+   * @param {object} combatant
+   * @returns {{removed:object[],visibility:{condition:string|null,label:string|null,flatCheckDC:number|null,targetable:boolean,undetected:boolean}}}
+   */
+  function revealAfterHostileAction(combatant) {
+    const removed = [];
+    if (
+      combatant === null ||
+      typeof combatant !== "object" ||
+      typeof combatant.removeCondition !== "function"
+    ) {
+      return { removed: removed, visibility: getVisibility(combatant) };
+    }
+
+    for (const slug of HOSTILE_VISIBILITY_CONDITIONS) {
+      if (!hasCondition(combatant, slug)) {
+        continue;
+      }
+      const record =
+        typeof combatant.getCondition === "function"
+          ? combatant.getCondition(slug)
+          : null;
+      combatant.removeCondition(slug);
+      removed.push(record || { name: slug, slug: slug });
+    }
+
+    return { removed: removed, visibility: getVisibility(combatant) };
+  }
+
   /**
    * A creature is immobilized while it has the Immobilized condition or any
    * grapple condition that implies it. This is the single predicate used by
@@ -721,6 +770,94 @@
       }
     }
     return false;
+  }
+
+  /**
+   * Normalize an action's trait list into a case-insensitive Set. Accepts a
+   * single string or an array of strings; unknown entries are ignored.
+   *
+   * @param {string|string[]|undefined|null} traits
+   * @returns {Set<string>}
+   */
+  function normalizeActionTraits(traits) {
+    const set = new Set();
+    if (traits === undefined || traits === null) {
+      return set;
+    }
+    const list = Array.isArray(traits) ? traits : [traits];
+    for (const entry of list) {
+      if (typeof entry !== "string") {
+        continue;
+      }
+      const value = entry.trim().toLowerCase();
+      if (value !== "") {
+        set.add(value);
+      }
+    }
+    return set;
+  }
+
+  /**
+   * Whether the action described by `options` is the Escape action, which is
+   * the sole exception to the Restrained action block.
+   *
+   * @param {{action?:string,isEscape?:boolean}|undefined|null} options
+   * @returns {boolean}
+   */
+  function isEscapeAction(options) {
+    if (options === undefined || options === null) {
+      return false;
+    }
+    if (options.isEscape === true) {
+      return true;
+    }
+    return (
+      typeof options.action === "string" &&
+      options.action.trim().toLowerCase() === "escape"
+    );
+  }
+
+  /**
+   * Restrained: "you can't use actions with the attack or manipulate traits,
+   * except to Escape." This predicate is deterministic and never rolls dice.
+   *
+   * @param {object} combatant
+   * @param {{traits?:string|string[],action?:string,isEscape?:boolean}} [options]
+   * @returns {boolean}
+   */
+  function isRestrainedActionBlocked(combatant, options) {
+    if (!hasCondition(combatant, CONDITION_SLUGS.RESTRAINED)) {
+      return false;
+    }
+    if (isEscapeAction(options)) {
+      return false;
+    }
+    const traits = normalizeActionTraits(
+      options === undefined || options === null ? undefined : options.traits,
+    );
+    return (
+      traits.has(ACTION_TRAITS.ATTACK) ||
+      traits.has(ACTION_TRAITS.MANIPULATE)
+    );
+  }
+
+  /**
+   * Grabbed: "If you attempt a manipulate action while grabbed, you must
+   * succeed at a DC 5 flat check or it is lost." This predicate only reports
+   * whether the check is required; the caller resolves the die.
+   *
+   * @param {object} combatant
+   * @param {{traits?:string|string[]}} [options]
+   * @returns {boolean}
+   */
+  function isGrabbedManipulate(combatant, options) {
+    if (!hasCondition(combatant, CONDITION_SLUGS.GRABBED)) {
+      return false;
+    }
+    const traits = normalizeActionTraits(
+      options === undefined || options === null ? undefined : options.traits,
+    );
+    return traits.has(ACTION_TRAITS.MANIPULATE);
   }
 
   /**
@@ -785,7 +922,13 @@
     CONDITION_DEFINITIONS: DEFINITIONS,
     VISIBILITY_CONDITIONS: VISIBILITY_CONDITIONS,
     VISIBILITY_PRIORITY: VISIBILITY_PRIORITY,
+    HOSTILE_VISIBILITY_CONDITIONS: HOSTILE_VISIBILITY_CONDITIONS,
     GRAPPLE_CONDITIONS: GRAPPLE_CONDITIONS,
+    ACTION_TRAITS: ACTION_TRAITS,
+    normalizeActionTraits: normalizeActionTraits,
+    isEscapeAction: isEscapeAction,
+    isRestrainedActionBlocked: isRestrainedActionBlocked,
+    isGrabbedManipulate: isGrabbedManipulate,
     MOVEMENT_BLOCKING_CONDITIONS: MOVEMENT_BLOCKING_CONDITIONS,
     INCAPACITATING_CONDITIONS: INCAPACITATING_CONDITIONS,
     DURATION_ORIGINS: DURATION_ORIGINS,
@@ -794,6 +937,7 @@
     visibilityFlatCheckDC: visibilityFlatCheckDC,
     getVisibility: getVisibility,
     isHiddenAttacker: isHiddenAttacker,
+    revealAfterHostileAction: revealAfterHostileAction,
     isImmobilized: isImmobilized,
     getGrappleCondition: getGrappleCondition,
     releaseGrapplesBySource: releaseGrapplesBySource,
