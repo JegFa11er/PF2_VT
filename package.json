@@ -4,6 +4,7 @@
   "private": true,
   "description": "Headless Pathfinder 2E Remastered rules core with a vanilla JS tactical battlefield view.",
   "scripts": {
-    "test": "node tests/run-node.js"
+    "test": "node tests/run-node.js",
+    "build:data": "node scripts/build-compendiums.js"
   }
 }

@@ -49,6 +49,21 @@
       this.token = combatant;
       this.grid = grid;
       this.color = color || "#8a94a3";
+      // Sidebar Actors / character-sheet inspection highlight. This is a pure
+      // presentation flag and never changes the battlefield selection used by
+      // the rules-facing input handlers.
+      this.highlighted = false;
+    }
+
+    /**
+     * Toggle the read-only inspection ring used by the Actors list.
+     *
+     * @param {boolean} value
+     * @returns {TokenView}
+     */
+    setHighlighted(value) {
+      this.highlighted = value === true;
+      return this;
     }
 
     /** Grid squares covered by the creature (1 = Medium, 2 = Large, 3 = Huge). */
@@ -96,6 +111,9 @@
       const cx = center.x;
       const cy = center.y;
       const radius = this.radius;
+      // The inspection highlight reuses the amber selection ring without
+      // granting the highlighted token any battlefield input authority.
+      const ringed = selected === true || this.highlighted === true;
       const defeated = this.token.isDefeated === true;
       const bodyColor = defeated ? "#5c636d" : this.color;
       const obscured =
@@ -186,17 +204,17 @@
       // Rim.
       ctx.beginPath();
       ctx.arc(cx, cy, radius - 1.25, 0, Math.PI * 2);
-      ctx.strokeStyle = selected
+      ctx.strokeStyle = ringed
         ? "#f2c96b"
         : defeated
           ? "rgba(190, 196, 205, 0.5)"
           : immobilized
             ? "#e05d62"
             : "rgba(255, 255, 255, 0.82)";
-      ctx.lineWidth = selected ? 3 : 2;
+      ctx.lineWidth = ringed ? 3 : 2;
       ctx.stroke();
 
-      if (selected) {
+      if (ringed) {
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, radius + 5.5, 0, Math.PI * 2);

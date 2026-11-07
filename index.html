@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PF2e Remastered — Tactical Battlefield</title>
-    <link rel="stylesheet" href="css/main.css?v=20.9" />
+    <link rel="stylesheet" href="css/main.css?v=25.0" />
   </head>
   <body>
     <div class="app">
@@ -13,7 +13,7 @@
           <div class="brand-mark" aria-hidden="true">P2</div>
           <div>
             <h1>Tactical Battlefield</h1>
-            <p>Pathfinder 2E Remastered · Phase 20 — View &amp; Presentation Integration</p>
+            <p>Pathfinder 2E Remastered · Phase 25 — Compendium Drag &amp; Drop</p>
           </div>
         </div>
         <div class="topbar-meta">
@@ -26,22 +26,103 @@
           <span class="badge">Trip · Shove · Grapple · Escape</span>
           <span class="badge">Spells · Afflictions · Hazards</span>
           <span class="badge">Event Bus · Serialization</span>
-          <span class="badge badge-accent">Phase 20 · AoE · AI · Save/Load</span>
+          <span class="badge badge-accent">Phase 25 · Drag &amp; Drop</span>
         </div>
       </header>
 
       <main class="workspace">
-        <aside class="log-column" aria-label="Combat log sidebar">
-          <section class="panel log-panel">
-            <div class="log-panel-head">
-              <h2>Combat Log</h2>
-              <span class="log-live">Live</span>
-            </div>
-            <div id="combat-log" class="combat-log" role="log" aria-live="polite"></div>
-          </section>
-        </aside>
-
         <section class="board-panel" aria-label="Tactical grid">
+          <div
+            id="scene-toolbar"
+            class="scene-toolbar"
+            data-scene-editor
+            aria-label="Battlefield editor"
+          >
+            <div class="scene-toolbar-group scene-preset-group">
+              <label class="scene-toolbar-label" for="scene-preset">Сцена</label>
+              <select
+                id="scene-preset"
+                class="scene-preset-select"
+                data-scene-preset
+                aria-label="Пресет поля боя"
+              >
+                <option value="default">Default Encounter</option>
+                <option value="empty">Empty Arena</option>
+              </select>
+            </div>
+
+            <div
+              class="scene-toolbar-group scene-brush-group"
+              role="group"
+              aria-label="Кисти ландшафта"
+            >
+              <span class="scene-toolbar-label">Кисти</span>
+              <button
+                type="button"
+                class="brush-button is-active"
+                data-painter="select"
+                aria-pressed="true"
+                title="Выбор токенов, ходов (Stride/Step) и таргетинга"
+              >
+                🖱️ Select / Move
+              </button>
+              <button
+                type="button"
+                class="brush-button"
+                data-painter="wall"
+                aria-pressed="false"
+                title="Клик по клетке ставит или убирает стену"
+              >
+                🧱 Wall
+              </button>
+              <button
+                type="button"
+                class="brush-button"
+                data-painter="difficult"
+                aria-pressed="false"
+                title="Сложный ландшафт: +5 ft за вход в клетку"
+              >
+                🌿 Difficult
+              </button>
+              <button
+                type="button"
+                class="brush-button"
+                data-painter="greater-difficult"
+                aria-pressed="false"
+                title="Сильно затруднённый ландшафт: +10 ft за вход в клетку"
+              >
+                ⛰️ Greater Difficult
+              </button>
+              <button
+                type="button"
+                class="brush-button"
+                data-painter="hazardous"
+                aria-pressed="false"
+                title="Горящая местность: 1d6 fire при входе"
+              >
+                🔥 Hazardous
+              </button>
+              <button
+                type="button"
+                class="brush-button"
+                data-painter="illumination"
+                aria-pressed="false"
+                title="Циклически переключает свет клетки: bright → dim → darkness"
+              >
+                🌑 Illumination
+              </button>
+            </div>
+
+            <button
+              id="clear-board"
+              type="button"
+              class="clear-board-button"
+              data-clear-board
+              title="Удалить всех бойцов, стены, ландшафт и ловушки"
+            >
+              🧹 Очистить поле боя
+            </button>
+          </div>
           <div class="board-frame">
             <canvas
               id="battlefield"
@@ -51,234 +132,361 @@
             ></canvas>
           </div>
           <p id="board-status" class="board-hint board-status" aria-live="polite">
-            Hover a square to preview movement. Click to act. Esc clears selection.
+            Hover a square to preview movement. Click to act. Double-click a token to open its sheet. Esc clears selection.
           </p>
         </section>
 
-        <aside class="sidebar" aria-label="Battlefield control sidebar">
-          <section class="panel turn-panel">
-            <div class="turn-panel-head">
-              <h2>Initiative</h2>
-              <span id="round-indicator" class="round-badge">Round 1</span>
-            </div>
-            <div id="initiative-tracker" class="initiative-tracker" aria-live="polite"></div>
-            <div class="turn-actions">
-              <button
-                id="roll-initiative"
-                class="end-turn-button secondary-button"
-                type="button"
-                title="Roll d20 + Perception (or Stealth from cover) and rebuild the queue"
-              >
-                Roll Initiative ⟳
-              </button>
-              <button id="end-turn" class="end-turn-button" type="button">End Turn ▸</button>
-            </div>
-          </section>
-
-          <section class="panel">
-            <h2>Combatants</h2>
-            <div id="token-list" class="token-list"></div>
-          </section>
-
-          <section class="panel">
-            <h2>Actions</h2>
-            <div id="action-modes" class="action-modes" role="group" aria-label="Action mode">
-              <button type="button" class="mode-button is-active" data-mode="stride" aria-pressed="true">
-                Stride
-              </button>
-              <button type="button" class="mode-button" data-mode="step" aria-pressed="false">
-                Step
-              </button>
-              <button type="button" class="mode-button" data-mode="strike" aria-pressed="false">
-                Strike
-              </button>
-              <button
-                type="button"
-                class="mode-button"
-                data-mode="trip"
-                aria-pressed="false"
-                title="Athletics vs Reflex DC · 1 action · attack trait"
-              >
-                Trip
-              </button>
-              <button
-                type="button"
-                class="mode-button"
-                data-mode="shove"
-                aria-pressed="false"
-                title="Athletics vs Fortitude DC · push 5 ft / critical 10 ft · 1 action · attack trait"
-              >
-                Shove
-              </button>
-              <button
-                type="button"
-                class="mode-button"
-                data-mode="grapple"
-                aria-pressed="false"
-                title="Athletics vs Fortitude DC · Grabbed/Restrained · 1 action · attack trait"
-              >
-                Grapple
-              </button>
-              <button
-                type="button"
-                id="raise-shield"
-                class="mode-button action-button"
-                data-action="raise-shield"
-                title="+2 circumstance AC until the start of your next turn · 1 action"
-              >
-                Raise Shield
-              </button>
-              <button
-                type="button"
-                id="take-cover"
-                class="mode-button action-button"
-                data-action="take-cover"
-                title="Requires standard cover or better · +4 circumstance AC · 1 action"
-              >
-                Take Cover
-              </button>
-              <button
-                type="button"
-                id="stand"
-                class="mode-button action-button"
-                data-action="stand"
-                title="Requires Prone · removes Prone · provokes Reactive Strike · 1 action"
-                disabled
-              >
-                Stand
-              </button>
-              <button
-                type="button"
-                id="escape"
-                class="mode-button action-button"
-                data-action="escape"
-                title="Requires Grabbed/Restrained · best of Unarmed/Athletics/Acrobatics vs the grappler's Athletics DC · 1 action"
-                disabled
-              >
-                Escape
-              </button>
-              <button
-                type="button"
-                id="sneak"
-                class="mode-button"
-                data-mode="sneak"
-                aria-pressed="false"
-                title="Requires Hidden/Undetected · destination costs at most half Speed · 1 action · secret Stealth check"
-                disabled
-              >
-                Sneak
-              </button>
-            </div>
-            <p id="mode-hint" class="mode-hint">
-              Stride moves up to Speed for 1 action. Difficult terrain adds 5 ft per square. Leaving a threatened square can provoke a Reactive Strike; Step never does.
-            </p>
-          </section>
-
-          <section class="panel">
-            <h2>Magic &amp; Stealth</h2>
-            <div class="action-grid">
-              <select id="spell-select" class="spell-select" aria-label="Spell selection">
-                <option value="">Choose a spell…</option>
-              </select>
-              <button id="cast-spell" class="mode-button action-button" type="button" disabled>
-                Cast Spell
-              </button>
-              <button
-                id="sustain-spell"
-                class="mode-button action-button"
-                type="button"
-                title="Extend a sustained spell to the end of the next round · 1 action"
-                disabled
-              >
-                Sustain
-              </button>
-              <button
-                id="seek"
-                class="mode-button action-button"
-                type="button"
-                title="Perception vs hidden/undetected Stealth DCs in a 30-ft burst · 1 action · secret"
-                disabled
-              >
-                Seek
-              </button>
-              <button
-                id="hide"
-                class="mode-button action-button"
-                type="button"
-                title="Stealth vs the highest observer Perception DC · needs cover or concealment · 1 action"
-                disabled
-              >
-                Hide
-              </button>
-            </div>
-            <p id="spell-hint" class="mode-hint">
-              Pick a spell, then hover the board to preview its burst, cone, line, or emanation template.
-            </p>
-          </section>
-
-          <section class="panel">
-            <h2>Hazards</h2>
-            <div id="hazard-status" class="hazard-status">No hazards on this battlefield.</div>
+        <aside id="sidebar" class="sidebar" aria-label="Foundry-style sidebar" data-sidebar-root>
+          <div class="sidebar-tabs" role="tablist" aria-label="Sidebar sections">
             <button
-              id="disable-hazard"
-              class="mode-button action-button"
               type="button"
-              title="Disable a Device · 2 actions · manipulate · Thievery vs the hazard's Disable DC"
-              disabled
+              class="sidebar-tab is-active"
+              data-sidebar-tab="chat"
+              role="tab"
+              aria-selected="true"
+              aria-controls="sidebar-panel-chat"
+              title="Чат · Combat Log"
             >
-              Disable Hazard
+              <span class="sidebar-tab-icon" aria-hidden="true">💬</span>
+              <span class="sidebar-tab-label">Чат</span>
             </button>
-          </section>
+            <button
+              type="button"
+              class="sidebar-tab"
+              data-sidebar-tab="combat"
+              role="tab"
+              aria-selected="false"
+              aria-controls="sidebar-panel-combat"
+              title="Инициатива · Combat Tracker"
+              tabindex="-1"
+            >
+              <span class="sidebar-tab-icon" aria-hidden="true">⚔️</span>
+              <span class="sidebar-tab-label">Инициатива</span>
+            </button>
+            <button
+              type="button"
+              class="sidebar-tab"
+              data-sidebar-tab="actors"
+              role="tab"
+              aria-selected="false"
+              aria-controls="sidebar-panel-actors"
+              title="Сущности · Actors"
+              tabindex="-1"
+            >
+              <span class="sidebar-tab-icon" aria-hidden="true">👥</span>
+              <span class="sidebar-tab-label">Сущности</span>
+            </button>
+            <button
+              type="button"
+              class="sidebar-tab"
+              data-sidebar-tab="compendium"
+              role="tab"
+              aria-selected="false"
+              aria-controls="sidebar-panel-compendium"
+              title="Библиотека · Compendium"
+              tabindex="-1"
+            >
+              <span class="sidebar-tab-icon" aria-hidden="true">📚</span>
+              <span class="sidebar-tab-label">Библиотека</span>
+            </button>
+          </div>
 
-          <section class="panel">
-            <h2>Tactical AI &amp; State</h2>
-            <div class="action-grid">
-              <button
-                id="ai-step"
-                class="mode-button action-button"
-                type="button"
-                title="Let TacticalAI execute exactly one action for the active combatant"
-              >
-                AI Step
-              </button>
-              <button
-                id="ai-turn"
-                class="mode-button action-button"
-                type="button"
-                title="Let TacticalAI execute the active combatant's whole turn"
-              >
-                AI Turn
-              </button>
-              <button
-                id="save-combat"
-                class="mode-button action-button"
-                type="button"
-                title="Serialize the encounter, map, combatants, and hazards to localStorage"
-              >
-                Save Combat
-              </button>
-              <button
-                id="load-combat"
-                class="mode-button action-button"
-                type="button"
-                title="Restore the saved combat state and rebuild the board and initiative"
-              >
-                Load Combat
-              </button>
-            </div>
-          </section>
+          <div class="sidebar-panels">
+            <section
+              id="sidebar-panel-chat"
+              class="sidebar-panel sidebar-panel-chat is-active"
+              data-sidebar-panel="chat"
+              role="tabpanel"
+              aria-label="Combat chat log"
+            >
+              <section class="panel log-panel">
+                <div class="log-panel-head">
+                  <h2>Combat Log</h2>
+                  <span class="log-live">Live</span>
+                </div>
+                <div
+                  id="combat-log"
+                  class="combat-log"
+                  data-sidebar-chat
+                  role="log"
+                  aria-live="polite"
+                ></div>
+              </section>
+            </section>
 
-          <section class="panel">
-            <h2>Selection</h2>
-            <div id="selection-panel" class="selection-panel">
-              <p class="selection-empty">
-                No token selected. The active combatant is selected at the start of its turn.
-              </p>
-            </div>
-          </section>
+            <section
+              id="sidebar-panel-combat"
+              class="sidebar-panel sidebar-panel-combat"
+              data-sidebar-panel="combat"
+              role="tabpanel"
+              aria-label="Combat tracker"
+              hidden
+            >
+              <section class="panel turn-panel">
+                <div class="turn-panel-head">
+                  <h2>Initiative</h2>
+                  <span id="round-indicator" class="round-badge">Round 1</span>
+                </div>
+                <div id="initiative-tracker" class="initiative-tracker" aria-live="polite"></div>
+                <div class="turn-actions">
+                  <button
+                    id="roll-initiative"
+                    class="end-turn-button secondary-button"
+                    type="button"
+                    title="Roll d20 + Perception (or Stealth from cover) and rebuild the queue"
+                  >
+                    Roll Initiative ⟳
+                  </button>
+                  <button id="end-turn" class="end-turn-button" type="button">End Turn ▸</button>
+                </div>
+              </section>
+
+              <details class="sidebar-details" open>
+                <summary>Actions</summary>
+                <div id="action-modes" class="action-modes" role="group" aria-label="Action mode">
+                  <button type="button" class="mode-button is-active" data-mode="stride" aria-pressed="true">
+                    Stride
+                  </button>
+                  <button type="button" class="mode-button" data-mode="step" aria-pressed="false">
+                    Step
+                  </button>
+                  <button type="button" class="mode-button" data-mode="strike" aria-pressed="false">
+                    Strike
+                  </button>
+                  <button
+                    type="button"
+                    class="mode-button"
+                    data-mode="trip"
+                    aria-pressed="false"
+                    title="Athletics vs Reflex DC · 1 action · attack trait"
+                  >
+                    Trip
+                  </button>
+                  <button
+                    type="button"
+                    class="mode-button"
+                    data-mode="shove"
+                    aria-pressed="false"
+                    title="Athletics vs Fortitude DC · push 5 ft / critical 10 ft · 1 action · attack trait"
+                  >
+                    Shove
+                  </button>
+                  <button
+                    type="button"
+                    class="mode-button"
+                    data-mode="grapple"
+                    aria-pressed="false"
+                    title="Athletics vs Fortitude DC · Grabbed/Restrained · 1 action · attack trait"
+                  >
+                    Grapple
+                  </button>
+                  <button
+                    type="button"
+                    id="raise-shield"
+                    class="mode-button action-button"
+                    data-action="raise-shield"
+                    title="+2 circumstance AC until the start of your next turn · 1 action"
+                  >
+                    Raise Shield
+                  </button>
+                  <button
+                    type="button"
+                    id="take-cover"
+                    class="mode-button action-button"
+                    data-action="take-cover"
+                    title="Requires standard cover or better · +4 circumstance AC · 1 action"
+                  >
+                    Take Cover
+                  </button>
+                  <button
+                    type="button"
+                    id="stand"
+                    class="mode-button action-button"
+                    data-action="stand"
+                    title="Requires Prone · removes Prone · provokes Reactive Strike · 1 action"
+                    disabled
+                  >
+                    Stand
+                  </button>
+                  <button
+                    type="button"
+                    id="escape"
+                    class="mode-button action-button"
+                    data-action="escape"
+                    title="Requires Grabbed/Restrained · best of Unarmed/Athletics/Acrobatics vs the grappler's Athletics DC · 1 action"
+                    disabled
+                  >
+                    Escape
+                  </button>
+                  <button
+                    type="button"
+                    id="sneak"
+                    class="mode-button"
+                    data-mode="sneak"
+                    aria-pressed="false"
+                    title="Requires Hidden/Undetected · destination costs at most half Speed · 1 action · secret Stealth check"
+                    disabled
+                  >
+                    Sneak
+                  </button>
+                </div>
+                <p id="mode-hint" class="mode-hint">
+                  Stride moves up to Speed for 1 action. Difficult terrain adds 5 ft per square. Leaving a threatened square can provoke a Reactive Strike; Step never does.
+                </p>
+              </details>
+
+              <details class="sidebar-details">
+                <summary>Magic &amp; Stealth</summary>
+                <div class="action-grid">
+                  <select id="spell-select" class="spell-select" aria-label="Spell selection">
+                    <option value="">Choose a spell…</option>
+                  </select>
+                  <button id="cast-spell" class="mode-button action-button" type="button" disabled>
+                    Cast Spell
+                  </button>
+                  <button
+                    id="sustain-spell"
+                    class="mode-button action-button"
+                    type="button"
+                    title="Extend a sustained spell to the end of the next round · 1 action"
+                    disabled
+                  >
+                    Sustain
+                  </button>
+                  <button
+                    id="seek"
+                    class="mode-button action-button"
+                    type="button"
+                    title="Perception vs hidden/undetected Stealth DCs in a 30-ft burst · 1 action · secret"
+                    disabled
+                  >
+                    Seek
+                  </button>
+                  <button
+                    id="hide"
+                    class="mode-button action-button"
+                    type="button"
+                    title="Stealth vs the highest observer Perception DC · needs cover or concealment · 1 action"
+                    disabled
+                  >
+                    Hide
+                  </button>
+                </div>
+                <p id="spell-hint" class="mode-hint">
+                  Pick a spell, then hover the board to preview its burst, cone, line, or emanation template.
+                </p>
+              </details>
+
+              <details class="sidebar-details">
+                <summary>Hazards</summary>
+                <div id="hazard-status" class="hazard-status">No hazards on this battlefield.</div>
+                <button
+                  id="disable-hazard"
+                  class="mode-button action-button"
+                  type="button"
+                  title="Disable a Device · 2 actions · manipulate · Thievery vs the hazard's Disable DC"
+                  disabled
+                >
+                  Disable Hazard
+                </button>
+              </details>
+
+              <details class="sidebar-details">
+                <summary>Tactical AI &amp; State</summary>
+                <div class="action-grid">
+                  <button
+                    id="ai-step"
+                    class="mode-button action-button"
+                    type="button"
+                    title="Let TacticalAI execute exactly one action for the active combatant"
+                  >
+                    AI Step
+                  </button>
+                  <button
+                    id="ai-turn"
+                    class="mode-button action-button"
+                    type="button"
+                    title="Let TacticalAI execute the active combatant's whole turn"
+                  >
+                    AI Turn
+                  </button>
+                  <button
+                    id="save-combat"
+                    class="mode-button action-button"
+                    type="button"
+                    title="Serialize the encounter, map, combatants, and hazards to localStorage"
+                  >
+                    Save Combat
+                  </button>
+                  <button
+                    id="load-combat"
+                    class="mode-button action-button"
+                    type="button"
+                    title="Restore the saved combat state and rebuild the board and initiative"
+                  >
+                    Load Combat
+                  </button>
+                </div>
+              </details>
+
+              <details class="sidebar-details">
+                <summary>Selection</summary>
+                <div id="selection-panel" class="selection-panel">
+                  <p class="selection-empty">
+                    No token selected. The active combatant is selected at the start of its turn.
+                  </p>
+                </div>
+              </details>
+            </section>
+
+            <section
+              id="sidebar-panel-actors"
+              class="sidebar-panel sidebar-panel-actors"
+              data-sidebar-panel="actors"
+              role="tabpanel"
+              aria-label="Actors on the battlefield"
+              hidden
+            >
+              <section class="panel actors-panel">
+                <div class="log-panel-head">
+                  <h2>Actors</h2>
+                  <span class="log-live">Click · Double-click</span>
+                </div>
+                <p class="sidebar-note">
+                  Click a row to highlight the token on the map. Double-click to open its floating character sheet.
+                </p>
+                <div id="token-list" class="token-list"></div>
+              </section>
+            </section>
+
+            <section
+              id="sidebar-panel-compendium"
+              class="sidebar-panel sidebar-panel-compendium"
+              data-sidebar-panel="compendium"
+              role="tabpanel"
+              aria-label="Compendium"
+              hidden
+            >
+              <section
+                class="panel compendium-panel compendium-browser"
+                data-compendium-root
+                aria-label="Compendium browser"
+              >
+                <div class="compendium-head">
+                  <div class="compendium-title">
+                    <h2 class="compendium-heading">Библиотека</h2>
+                    <span class="compendium-status">Загрузка библиотеки…</span>
+                  </div>
+                </div>
+                <p class="compendium-empty">Откройте вкладку, чтобы загрузить каталоги.</p>
+              </section>
+            </section>
+          </div>
         </aside>
       </main>
     </div>
+
+    <div id="character-sheet-layer" class="character-sheet-layer" aria-live="off"></div>
 
     <!-- Classic scripts keep the prototype runnable from file:// by double-click.
          Order matters: geometry → rules → entities → encounter/state → actions
@@ -338,10 +546,16 @@
     <script src="src/Core/AI/tactical-ai.js?v=20.9"></script>
 
     <script src="src/View/Grid/grid-view.js?v=20.9"></script>
-    <script src="src/View/Tokens/token-view.js?v=20.9"></script>
+    <script src="src/View/Tokens/token-view.js?v=22.0"></script>
+    <script src="src/View/Tokens/token-hud.js?v=21.0"></script>
     <script src="src/View/UI/combat-log.js?v=20.9"></script>
     <script src="src/View/UI/event-log.js?v=20.9"></script>
-    <script src="src/View/battlefield-view.js?v=20.9"></script>
-    <script src="src/main.js?v=20.9"></script>
+    <script src="src/View/UI/sidebar.js?v=22.0"></script>
+    <script src="src/View/UI/confirm-dialog.js?v=24.0"></script>
+    <script src="src/View/UI/scene-editor.js?v=24.0"></script>
+    <script src="src/View/UI/character-sheet.js?v=25.0"></script>
+    <script src="src/View/UI/compendium-browser.js?v=25.0"></script>
+    <script src="src/View/battlefield-view.js?v=25.0"></script>
+    <script src="src/main.js?v=25.0"></script>
   </body>
 </html>

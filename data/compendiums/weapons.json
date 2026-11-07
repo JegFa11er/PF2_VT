@@ -1,0 +1,3771 @@
+[
+  {
+    "id": "8V4mgecGASsQ7fjl",
+    "name": "Adze",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "slashing"
+    },
+    "traits": [
+      "forceful",
+      "sweep",
+      "tripkee"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "A common cutting tool, an adze resembles an axe—but the cutting edge is horizontal, rather than vertical. The adze's shape makes it popular among woodworkers, and tripkee builders often use them to construct their treetop homes. The tool also serves as an effective weapon, due in part to the immense strength required to swing it."
+  },
+  {
+    "id": "SzUynRs4HVtnpnel",
+    "name": "Air Repeater",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "repeating"
+    ],
+    "rangeIncrement": 30,
+    "reload": 0,
+    "price": "4 gp",
+    "description": "A thin-barreled firearm that uses a container of pressurized air instead of black powder to propel small metal bullets from an attached cartridge, the air repeater has fallen out of common use in Arcadia due to its poor stopping power, though it's still used occasionally for casual hunting and sport shooting. The air repeater and its longer-ranged, two-handed variant are still valued by some for their ability to allow a shooter to fire multiple rounds without needing to stop to reload or crank to a new chamber. A…"
+  },
+  {
+    "id": "K3qNqWRvBhnlwE3Q",
+    "name": "Arbalest",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "piercing"
+    },
+    "traits": [
+      "backstabber"
+    ],
+    "rangeIncrement": 110,
+    "reload": 1,
+    "price": "8 gp",
+    "description": "This large and well-made crossbow requires some training to use effectively, but it's assembled with a cutting-edge firing mechanism that maximizes its speed, power, and accuracy."
+  },
+  {
+    "id": "ChTaE7jhvCjcS6jI",
+    "name": "Arquebus",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "fatal-d12",
+      "kickback"
+    ],
+    "rangeIncrement": 150,
+    "reload": 1,
+    "price": "8 gp",
+    "description": "This is a long gun that offers more range than the average firearm, though the long barrel and ferocious kickback make the weapon particularly unsteady unless a tripod or other stand is used to stabilize it. The arquebus is one of the most commonly used long guns among the soldiers of Dongun Hold and Alkenstar."
+  },
+  {
+    "id": "Ka49l6JYNi41tgVi",
+    "name": "Atlatl",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "propulsive"
+    ],
+    "rangeIncrement": 60,
+    "reload": 1,
+    "price": "2 sp",
+    "description": "Atlatls are long, narrow pieces of shaped wood or antler used as levers to hurl darts faster and farther than would otherwise be possible. An atlatl uses darts as ammunition."
+  },
+  {
+    "id": "6KWYmeRMxsQfWhhJ",
+    "name": "Bastard Sword",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "two-hand-d12"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "This broad-bladed sword, sometimes called the hand-and-a-half sword, has a longer grip so it can be held in one hand or used with two hands to provide extra slashing power."
+  },
+  {
+    "id": "War0uyLBx1jA0Ge7",
+    "name": "Battle Axe",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "These axes are designed explicitly as weapons, rather than tools. They typically weigh less, with a shaft reinforced with metal bands or bolts, and have a sharper blade, making them ideal for chopping limbs rather than wood."
+  },
+  {
+    "id": "79krBL334Kp1RMNB",
+    "name": "Battle Lute",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "shove",
+      "two-hand-d8"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "7 gp",
+    "description": "This reinforced lute is suitable both for use as a handheld musical instrument and for bashing heads should a crowd turn sour. Its strings are finely braided wires that run along its sturdy metal neck. A battle lute adds its item bonus from weapon potency runes (if any) as an item bonus on Performance checks made while using it as an instrument."
+  },
+  {
+    "id": "7mXZyzL5v3K6Buu2",
+    "name": "Battle Saddle",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "parry",
+      "sweep",
+      "vehicular"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "6 gp",
+    "description": "The battle saddle is a special saddle for a mount that has two large, winglike blades. These blades normally lie flat alongside the saddle, providing additional protection for the rider, but they can be deployed with a tug on the reins to slash at enemies adjacent to the mount. When using a battle saddle to parry, you can decide whether the circumstance bonus to AC applies to you or to your mount."
+  },
+  {
+    "id": "jm5gQnfvVeUiVfdW",
+    "name": "Bayonet",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "attached-to-crossbow-or-firearm",
+      "finesse"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "This blade or spike can be attached to a crossbow or firearm but, unlike other attached weapons, can be wielded in one hand as its own weapon. When used as a separate weapon, it can't benefit from any runes or abilities that function only for attached weapons."
+  },
+  {
+    "id": "VTFTlP8xmPKKV4S6",
+    "name": "Bec de Corbin",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "razing",
+      "reach",
+      "shove",
+      "versatile-b"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "A bec de corbin is a spiked polearm that uses a hammer head to help balance the spike. The hammer portion can be used as a secondary striking surface, while the spike or fluke is specially designed to punch through armor and shields."
+  },
+  {
+    "id": "8eGV6fXbmt2v74uB",
+    "name": "Black Powder Knuckle Dusters",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "combination",
+      "concussive",
+      "fatal-d8",
+      "monk"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "8 gp",
+    "description": "This pair of knuckle dusters is fitted with an explosive charge of black powder within the hollowed spikes of the weapon and a firing mechanism you hold in your hand while in use."
+  },
+  {
+    "id": "PJboj72eI9JXjtbn",
+    "name": "Bladed Gauntlet",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "free-hand",
+      "modular"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 gp",
+    "description": "A dagger attached to a retractable mechanism is integrated in this gauntlet's dorsum, so a combatant can quickly arm themself with a blade to exploit the weak points in an enemy's armor. Switching configurations on the gauntlet reveals or retracts the contained dagger as appropriate. The dagger isn't removable, and thus can't be wielded or etched with runes separately from the gauntlet."
+  },
+  {
+    "id": "iCdvNfzvsTZ0s5vg",
+    "name": "Bladed Scarf",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "disarm",
+      "finesse",
+      "reach",
+      "sweep",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "The thin metal plates interwoven throughout this long scarf turn a fashion accessory into a deadly weapon."
+  },
+  {
+    "id": "geSDZ68zolr0dNrD",
+    "name": "Bladesweeper",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "slashing"
+    },
+    "traits": [
+      "disarm",
+      "jotunborn",
+      "sweep",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "Little more than three swords attached to a single hilt, a bladesweeper is a devastating weapon in the hands of a jotunborn warrior."
+  },
+  {
+    "id": "FPwsiGqMCNPLHmjX",
+    "name": "Blowgun",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "nonlethal"
+    ],
+    "rangeIncrement": 20,
+    "reload": 1,
+    "price": "1 sp",
+    "description": "This long, narrow tube is used for shooting blowgun darts, using only the power of a forcefully exhaled breath."
+  },
+  {
+    "id": "csXSDzgZASX4RWr4",
+    "name": "Blunderbuss",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "scatter-10"
+    ],
+    "rangeIncrement": 40,
+    "reload": 1,
+    "price": "6 gp",
+    "description": "This weapon fires pellets from a trumpet-shaped barrel, making it an excellent choice for hunting brush fowl or dealing damage within a short, broad area. Adventuring gunslingers often carry a blunderbuss to deal with swarms of vermin and similar threats."
+  },
+  {
+    "id": "hMYdSFmMWzidzHih",
+    "name": "Bo Staff",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "monk",
+      "parry",
+      "reach",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "This strong but slender staff is tapered at the ends and well balanced. It's designed to be an offensive and defensive weapon."
+  },
+  {
+    "id": "YUzPv0i8d8p2J9yx",
+    "name": "Bola",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "nonlethal",
+      "ranged-trip",
+      "thrown"
+    ],
+    "rangeIncrement": 20,
+    "reload": null,
+    "price": "5 sp",
+    "description": "This throwing weapon consists of weights tied to the end of long cords, which can be used to entangle foes."
+  },
+  {
+    "id": "y5bkwzClxfs6gpDn",
+    "name": "Boomerang",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "recovery",
+      "thrown"
+    ],
+    "rangeIncrement": 60,
+    "reload": null,
+    "price": "2 sp",
+    "description": "The boomerang is a carved piece of wood designed to curve as it flies through the air, returning to the wielder after a successful throw."
+  },
+  {
+    "id": "K9ndlHU5JRHj0ivP",
+    "name": "Bow Staff",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "combination",
+      "deadly-d8",
+      "monk"
+    ],
+    "rangeIncrement": 80,
+    "reload": 0,
+    "price": "8 gp",
+    "description": "The bow staff is a whipstaff with a retracting spool of wire inside a metal cap on one end and a hooked protrusion on the other. A wielder trained in the weapon's use can quickly spool and attach or detach the wire to transition the weapon between bow and staff functionality."
+  },
+  {
+    "id": "ymyPCjfyXCNyDcnn",
+    "name": "Breaching Pike",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "hobgoblin",
+      "razing",
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "8 gp",
+    "description": "Forged with a heavy metal wedge as a spearhead, breaching pikes are often used by hobgoblin infantry alongside a tower shield. Breaching pikes are particularly effective at damaging enemy shields, leaving large, triangular puncture holes behind."
+  },
+  {
+    "id": "JuR0cug2xq4sWxHR",
+    "name": "Butterfly Sword",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "disarm",
+      "finesse",
+      "monk",
+      "parry",
+      "twin"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This short, single-edged sword typically features a cross guard that helps catch oncoming attacks. It's the preferred weapon of Butterfly Blades—highly skilled Gokan assassins. These swords are typically crafted and sold in pairs."
+  },
+  {
+    "id": "UnTUQ9w8yswupr9m",
+    "name": "Cane Pistol",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "combination",
+      "concealable",
+      "concussive",
+      "fatal-d8"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "8 gp",
+    "description": "This fashionable cane's handle hides a dueling pistol fired through the thin, painted cap at the bottom of the cane."
+  },
+  {
+    "id": "IBxtmyiVjWVqFawh",
+    "name": "Capturing Spetum",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "piercing"
+    },
+    "traits": [
+      "hampering",
+      "hobgoblin",
+      "reach",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "9 gp",
+    "description": "Hobgoblins use these polearms both as standard issue for aggressive military units and on an individual basis for hunting fugitives."
+  },
+  {
+    "id": "JlakyeGJjNbryq6v",
+    "name": "Chain Sword",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "finesse",
+      "reach",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "6 gp",
+    "description": "This weapon has a hilt like a longsword attached to several bladed segments connected by chain links. A highly technical weapon, the chain sword is valued by duelists and experienced soldiers alike in the nations of Nirmathas and Molthune."
+  },
+  {
+    "id": "rhHGULVS5tumszGP",
+    "name": "Chakri",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "recovery",
+      "thrown"
+    ],
+    "rangeIncrement": 40,
+    "reload": null,
+    "price": "2 sp",
+    "description": "Similar to a chakram, chakri are too light to be wielded in melee but allow the user significantly more control over their throws. A chakri is small and light enough that up to two can be worn on each wrist; a chakri worn on the wrist is reload 0 instead of reload—."
+  },
+  {
+    "id": "kJJvKm80KwWXPukV",
+    "name": "Clan Dagger",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "dwarf",
+      "parry",
+      "versatile-b"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This broad dagger is carried by dwarves as a weapon, tool, and designation of clan. Losing or having to surrender a clan dagger is considered a mark of embarrassment to most dwarves."
+  },
+  {
+    "id": "BtncTx8EfxTsHqQI",
+    "name": "Clan Pistol",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "dwarf",
+      "fatal-d10"
+    ],
+    "rangeIncrement": 80,
+    "reload": 1,
+    "price": "5 gp",
+    "description": "The tradition of dwarves displaying their clan affiliations with special clan daggers goes back millennia, but many of the dwarf clans of Dongun Hold have their own take on the tradition, with promising young gunsmiths claiming their adulthood by crafting a specialized personal firearm using the clan's unique smithing traditions. Losing or being forced to surrender their clan pistol is a terrible embarrassment for the dwarves that carry them."
+  },
+  {
+    "id": "fvvfZxfGV9i3urkd",
+    "name": "Claw Blade",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "catfolk",
+      "deadly-d8",
+      "disarm",
+      "finesse",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This handheld weapon's three parallel blades extend between the fingers to resemble the natural claws of the amurruns who created them, providing a way for those catfolk without suitable natural claws to share the fighting customs of their kin."
+  },
+  {
+    "id": "c58wczIzH2gzeXQL",
+    "name": "Club",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "thrown-10"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "0 gp",
+    "description": "This is a piece of stout wood shaped or repurposed to bludgeon an enemy. Clubs can be intricately carved pieces of martial art or as simple as a tree branch or piece of wood."
+  },
+  {
+    "id": "LLYD2GEhzhdxoCAx",
+    "name": "Coat Pistol",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "concealable",
+      "concussive",
+      "fatal-d8"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "5 gp",
+    "description": "This small pistol is easily concealed inside a jacket or some other article of clothing. Rarely kept as a primary weapon, coat pistols are equally favored by clever assassins and traveling Alkenstar aristocrats."
+  },
+  {
+    "id": "d11vAXNTniXKWXIx",
+    "name": "Combat Fishing Pole",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "ranged-trip",
+      "tethered",
+      "thrown-20",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 sp",
+    "description": "The combat fishing pole is a sturdy and flexible pole that can be used as a weapon in melee. When a lure is attached to a combat fishing pole, it can be used to make thrown weapon attacks with a range increment of 20 feet, though the lure must then be reeled back in with an Interact action before the weapon can be used at range again (see the tethered trait). The ranged trip, tethered, thrown, and versatile P traits of the combat fishing pole only apply to thrown attacks made with a lure; throwing the pole itself…"
+  },
+  {
+    "id": "5qW06ylMkJ0wToDd",
+    "name": "Combat Lure",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "finesse",
+      "tethered",
+      "thrown-20",
+      "training"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "A combat lure is a weighted leather sack at the end of a length of toughened cord and can be used both to bludgeon opponents and signal directions to a trained avian or other animal."
+  },
+  {
+    "id": "dUC8Fsa6FZtVikS3",
+    "name": "Composite Longbow",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d10",
+      "propulsive",
+      "volley-30"
+    ],
+    "rangeIncrement": 100,
+    "reload": 0,
+    "price": "20 gp",
+    "description": "This projectile weapon is made from horn, wood, and sinew laminated together to increase the power of its pull and the force of its projectile. Like all longbows, its great size also increases the bow's range and power. You must use two hands to fire it, and it cannot be used while mounted. Any time an ability is specifically restricted to a longbow, such as Erastil's favored weapon, it also applies to composite longbows unless otherwise stated."
+  },
+  {
+    "id": "e4NwsnPnpQKbDZ9F",
+    "name": "Composite Shortbow",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d10",
+      "propulsive"
+    ],
+    "rangeIncrement": 60,
+    "reload": 0,
+    "price": "14 gp",
+    "description": "This shortbow is made from horn, wood, and sinew laminated together to increase the power of its pull and the force of its projectile. Its compact size and power make it a favorite of mounted archers. Any time an ability is specifically restricted to a shortbow, it also applies to composite shortbows unless otherwise stated."
+  },
+  {
+    "id": "mSOYAQb8iq1N1S1I",
+    "name": "Corset Knife",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "concealable",
+      "finesse",
+      "thrown-10"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 sp",
+    "description": "A favored self-defense weapon among bar and tavern workers, the corset knife has a weighted hilt and a cylindrical, needlelike blade designed to be easily hidden in clothing, but quickly retrieved in a pinch."
+  },
+  {
+    "id": "KaYvuSNXZaOammij",
+    "name": "Crescent Cross",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "capacity-3",
+      "combination",
+      "parry"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "4 gp",
+    "description": "A crescent cross combines a small scizore with an arm-mounted crossbow apparatus that can hold up to three bolts at a time."
+  },
+  {
+    "id": "62nnVQvGhoVLLl2K",
+    "name": "Crossbow",
+    "category": "simple",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [],
+    "rangeIncrement": 120,
+    "reload": 1,
+    "price": "3 gp",
+    "description": "This ranged weapon has a bow-like assembly mounted on a handled frame called a tiller. The tiller has a mechanism to lock the bowstring in place, attached to a trigger mechanism that releases the tension and launches a bolt."
+  },
+  {
+    "id": "v8C4hkqMNeUk60Db",
+    "name": "Cruuk",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "shove",
+      "thrown-30",
+      "tripkee"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 sp",
+    "description": "This specialized club is designed for throwing and useful in both combat and hunting. Tripkees use them to take down creatures that hide high in treetops."
+  },
+  {
+    "id": "rQWaJhI5Bko5x14Z",
+    "name": "Dagger",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "thrown-10",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "This small, bladed weapon is held in one hand and used to stab a creature in close combat. It can also be thrown."
+  },
+  {
+    "id": "BPQRgrJwr5GuT00g",
+    "name": "Dagger Pistol",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "combination",
+      "concussive",
+      "fatal-d8"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "8 gp",
+    "description": "This weapon, favored by rangers and other wilderness wanderers, takes the form of a stoutly built pistol with a dagger blade attached beneath the barrel and extending out past the muzzle."
+  },
+  {
+    "id": "RN3m5Hb5LPbdZGoO",
+    "name": "Daikyu",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "forceful",
+      "propulsive"
+    ],
+    "rangeIncrement": 80,
+    "reload": 0,
+    "price": "8 gp",
+    "description": "This asymmetrical bow, made of laminated bamboo, wood, and leather, stands 6 feet or more in height. It's most often used while mounted."
+  },
+  {
+    "id": "fX63Af9Bf2XVarJu",
+    "name": "Dancer's Spear",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "backswing",
+      "finesse",
+      "reach",
+      "sweep",
+      "versatile-b"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "Traditionally a favored weapon in Molthune for settling disputes between military leaders, the dancer's spear has seen a recent resurgence in popularity in the neighboring kingdom of Nirmathas, largely due to its effectiveness at striking down attacking skeletons and other undead from a relatively safe distance. A dancer's spear has a 7-foot-long wooden haft capped with a triangular metal blade at one end, counterbalanced on the other end with a reinforced metal sleeve that, in a pinch, can be used as an effective…"
+  },
+  {
+    "id": "Tt4Qw64fwrxhr5gT",
+    "name": "Dart",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "thrown"
+    ],
+    "rangeIncrement": 20,
+    "reload": null,
+    "price": "1 cp",
+    "description": "This thrown weapon is larger than an arrow but shorter than a javelin. It typically has a short shaft of wood ending in a metal tip and is sometimes stabilized by feathers or fur."
+  },
+  {
+    "id": "wpvfykcSSbg27DgU",
+    "name": "Dart Umbrella",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "concealable",
+      "nonlethal"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "1 gp",
+    "description": "This umbrella fires tiny blowgun darts from its ferrule with a twist of the handle. The darts are loaded into the shaft, and though the damage they deal is minimal, the dart umbrella is an inconspicuous weapon easy to slip past inspections."
+  },
+  {
+    "id": "qRqGIxcadjjxcij3",
+    "name": "Dawnsilver Tree",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "elf",
+      "fatal-d10",
+      "parry"
+    ],
+    "rangeIncrement": 150,
+    "reload": 1,
+    "price": "7 gp",
+    "description": "Neither dawnsilver nor a tree, this long gun takes its name from the legends of the elves of Jinin and is most commonly found within the nation. An elegant weapon, a mithral tree does somewhat resemble a tree; its fanned stock and long, sweeping barrel reinforced with metal rings enable a wielder to parry melee attacks while moving back into safe firing range."
+  },
+  {
+    "id": "olwngGXM3hpgoLEP",
+    "name": "Dogslicer",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "backstabber",
+      "finesse",
+      "goblin"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 sp",
+    "description": "This short, curved, and crude makeshift blade often has holes drilled into it to reduce its weight. It's a favored weapon of goblins."
+  },
+  {
+    "id": "MvzR9nTnvKTeNjvQ",
+    "name": "Double-Barreled Pistol",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "double-barrel",
+      "fatal-d8"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "6 gp",
+    "description": "This flintlock pistol has two side-by-side barrels. Though less accurate than a standard pistol, a double-barreled pistol is a useful and versatile weapon. It's generally banned in areas where duels with pistols are relatively common, in much the same way that arriving at an aristocratic duel with a scattergun would be considered crass, at best."
+  },
+  {
+    "id": "4gWvfeDGTSAf9LAQ",
+    "name": "Dragon Mouth Pistol",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "scatter-5"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "7 gp",
+    "description": "Similar to the blunderbuss, a dragon-mouth pistol fires pellets from a flared barrel. Though less powerful than a blunderbuss, the dragon-mouth pistol is appreciated for its portability and one-handed design. Though the name was coined because of the destructive belch of this handheld scatter weapon, many gunsmiths craft dragon-mouth pistols with elaborate embellishments that resemble a stylized dragon's maw framing the barrel."
+  },
+  {
+    "id": "aYzWoFt5uYY31zEQ",
+    "name": "Dwarven Dorn-Dergar",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "dwarf",
+      "razing",
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "8 gp",
+    "description": "A heavy, weighted cube of metal at the end of a long chain, the dorn-dergar is used by dwarven berserkers and sappers who specialize in breaking through lines of shielded opponents or disabling enemy siege weapons."
+  },
+  {
+    "id": "MYnh7w7EL3AcQT41",
+    "name": "Dwarven War Axe",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "dwarf",
+      "sweep",
+      "two-hand-d12"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "This favored weapon of the dwarves has a large, ornate head mounted on a thick handle. This powerful axe can be wielded with one hand or two."
+  },
+  {
+    "id": "fcWvG7jAZDLMRBWn",
+    "name": "Earthbreaker",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "razing",
+      "shove",
+      "two-hand-d10",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "This massive hammer's metal head is shaped or molded with heavy metal wedges along its primary striking surface, enabling it to tear through shields and armor with ease."
+  },
+  {
+    "id": "mgrabKkyLmvxgLBK",
+    "name": "Elven Curve Blade",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "elf",
+      "finesse",
+      "forceful"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "Essentially a longer version of the scimitar, this traditional elven weapon has a thinner blade than its cousin."
+  },
+  {
+    "id": "xHdbwPOUgLPUtqLj",
+    "name": "Falcata",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "fatal-d12"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "The falcata is a heavy, one-handed sword with a single cutting edge, usually flaring to be wider toward the point of the weapon and narrower toward the hilt."
+  },
+  {
+    "id": "XGtIUZ4ZNKuFx1uL",
+    "name": "Falchion",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "slashing"
+    },
+    "traits": [
+      "forceful",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "This weapon is a heavier, two-handed version of the curved-bladed scimitar. It is weighted toward the blade's end, making it a powerful slashing weapon."
+  },
+  {
+    "id": "wYruARP1YLfTQBsc",
+    "name": "Fangwire",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "backstabber",
+      "deadly-d8",
+      "finesse",
+      "grapple",
+      "kobold"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "This kobold wire is thin and hard to see, making it perfect for an ambush. The wielder flicks one handle around a vulnerable spot so that it serves as a catch for the wire, then yanks the other handle back, pulling the wire tight and inflicting painful lacerations. The function and name come from a wire-based trap called a \"slow fang.\""
+  },
+  {
+    "id": "FuS6F91Rhd4m3T6d",
+    "name": "Fauchard",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "reach",
+      "sweep",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "14 sp",
+    "description": "A fauchard is similar to a glaive, save that its cutting edge is along the concave side."
+  },
+  {
+    "id": "yUgOLSyb4pGGxfCR",
+    "name": "Feng Huo Lun",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "disarm",
+      "finesse",
+      "monk",
+      "parry",
+      "twin",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "Also known as wind and fire wheels, these large, flat steel rings feature several protruding blades typically stylized to resemble flames."
+  },
+  {
+    "id": "76AqNZB5xuFWxgJI",
+    "name": "Fighting Fan",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "backstabber",
+      "deadly-d6",
+      "finesse",
+      "monk"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "11 sp",
+    "description": "This fan is useful for elegant dances as well as for slicing unsuspecting foes with the blades along its outer edge. If used in performances, it might be disguised as a frilly accessory, or it might be an obvious, though elegant, weapon."
+  },
+  {
+    "id": "edlvRl3zCceS7MSo",
+    "name": "Fighting Oar",
+    "category": "simple",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "sweep",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 sp",
+    "description": "A fighting oar is a sturdy boat oar, typically made of wood, whose haft and blades are reinforced for use in combat. A fighting oar adds its item bonus from weapon potency runes (if any) as an item bonus on Piloting Lore and Sailing Lore checks made to pilot a rowed vehicle."
+  },
+  {
+    "id": "CVTgOpNuRE7hsnc1",
+    "name": "Filcher's Fork",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "backstabber",
+      "deadly-d6",
+      "finesse",
+      "halfling",
+      "thrown-20"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This halfling weapon looks like a long, two-pronged fork and is used as both a weapon and a cooking implement."
+  },
+  {
+    "id": "WUA40bb01pSWv88I",
+    "name": "Fire Lance",
+    "category": "simple",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "fatal-d10"
+    ],
+    "rangeIncrement": 10,
+    "reload": 2,
+    "price": "3 gp",
+    "description": "This amazingly simple projectile weapon is nothing more than a metal tube packed with black powder and a stopper, attached to the sharpened head of a javelin. A loaded fire lance can be wielded as a normal spear, though it requires an Interact action to regrip the weapon and hold it properly when switching from one use to another. Fire lances are most commonly found in Tian Xia, though occasionally one makes its way all the way to Avistan, typically in the hands of a Tien mercenary or caravan guard."
+  },
+  {
+    "id": "t5FbyZtRL4qV0V7k",
+    "name": "Flail",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "disarm",
+      "sweep",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "8 sp",
+    "description": "This weapon consists of a wooden handle attached to a spiked ball or cylinder by a chain, rope, or strap of leather."
+  },
+  {
+    "id": "EPhsyiO4jYl0jWoC",
+    "name": "Flingflenser",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "backstabber",
+      "fatal-d10",
+      "goblin",
+      "scatter-5"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "5 gp",
+    "description": "A flingflenser is a goblin-designed weapon ending in an ovoid tube with a hatch and handle on the narrow end. A cluster of circular blades held together and attached to a black powder packet with a thin leather strap serves as ammunition and is loaded through the hatch before being fired with a flintlock or other external ignition mechanism. The flingflenser's sturdy design also places it among the more reliable goblin weapons."
+  },
+  {
+    "id": "hqMtsTwmOShdAdQW",
+    "name": "Flintlock Musket",
+    "category": "simple",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "fatal-d10"
+    ],
+    "rangeIncrement": 70,
+    "reload": 1,
+    "price": "5 gp",
+    "description": "The most commonly available of firearms in Alkenstar, the flintlock musket includes an external firing mechanism and an efficient and relatively compact frame. Though lacking the range and firing power of the arquebus preferred by Alkenstar and Dongun Hold's military members, the flintlock musket is popular among civilians for its ease of use."
+  },
+  {
+    "id": "N3nNqO5Nw2DIFhrv",
+    "name": "Flintlock Pistol",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "fatal-d8"
+    ],
+    "rangeIncrement": 40,
+    "reload": 1,
+    "price": "4 gp",
+    "description": "Though less accurate and powerful than a flintlock musket, the flintlock pistol is a preferred weapon of privateers thanks to its more compact size and affordability. Pirate captains often wear a brace of such pistols in a bandolier so they can draw and fire without stopping to reload."
+  },
+  {
+    "id": "kbKAFqsEDWy5mN1y",
+    "name": "Flyssa",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This single-edged blade has a guardless hilt. Often decorated with elaborate etchings, a flyssa is longer than most daggers but shorter than average for most swords, making it useful in close and pitched combat."
+  },
+  {
+    "id": "PlXEjK5nqIxEYXQa",
+    "name": "Forked Bipod",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "deadly-d6",
+      "finesse"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 sp",
+    "description": "Developed by Alkenstar scouts who often don't have time to break down a when beset by the chaotic mutant monsters of the Mana Wastes, this two-pronged stabbing weapon can be used as a bipod to stabilize a gun with potent kickback. A forked bipod can be deployed or retrieved for use as a melee weapon as an Interact action. As with a Tripod, you can change your grip on the weapon as part of this action."
+  },
+  {
+    "id": "ssDxSpQTYORoeCFA",
+    "name": "Frying Pan",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "fatal-d8",
+      "halfling"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 sp",
+    "description": "The cast-iron frying pan is an essential tool for adventuring halflings, gold panners, and remote tavern owners. Characters with the ancestry feat are trained in the frying pan."
+  },
+  {
+    "id": "NApB2Fl7i8wzp7RX",
+    "name": "Gaff",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "trip",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "These hooked staffs are popular among fishers and warriors alike."
+  },
+  {
+    "id": "0E9ADJkQUVsz7A4G",
+    "name": "Gakgung",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d8",
+      "monk",
+      "propulsive"
+    ],
+    "rangeIncrement": 100,
+    "reload": 0,
+    "price": "2 gp",
+    "description": "A gakgung is a type of composite reflex bow that combines speed and power in equal amounts for effective precision shooting."
+  },
+  {
+    "id": "Ix2vicchE79d6Cl3",
+    "name": "Gauntlet",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "agile",
+      "free-hand"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "A pair of these metal gloves comes with full plate, half plate, and splint armor; they can also be purchased separately and worn with other types of armor. They not only protect your hands but also transform your hands into lethal weapons."
+  },
+  {
+    "id": "LcIfvbMPnOGYXVge",
+    "name": "Gauntlet Bow",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "capacity-4",
+      "free-hand",
+      "parry"
+    ],
+    "rangeIncrement": 60,
+    "reload": 1,
+    "price": "9 gp",
+    "description": "The gauntlet bow is a heavy metal glove with a built-in crossbow and rotating chamber mechanism for easy reloading. A gauntlet bow can be used to make melee attacks like a standard gauntlet, and it retains any valid runes when used as such. You can't reload a gauntlet bow with the hand wielding it."
+  },
+  {
+    "id": "wGT3VAQ8NXleUsx3",
+    "name": "Gladius",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d10",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "Similar to a shortsword, a gladius is designed to inflict deadly stabbing wounds while still being useful as a slashing weapon."
+  },
+  {
+    "id": "vlnzTSsRmWeSkt9O",
+    "name": "Glaive",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "forceful",
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This polearm consists of a long, single-edged blade on the end of a 7-foot pole. It is extremely effective at delivering lethal cuts at a distance."
+  },
+  {
+    "id": "oSQET5hKn9q4xlrl",
+    "name": "Gnome Flickmace",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "gnome",
+      "reach",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "More a flail than a mace, this weapon has a short handle attached to a length of chain with a ball at the end. The ball is propelled to its reach with the flick of the wrist, the momentum of which brings the ball back to the wielder after the strike."
+  },
+  {
+    "id": "1U7Laa7Yt7i3G77L",
+    "name": "Gnome Hooked Hammer",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "gnome",
+      "trip",
+      "two-hand-d10",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This gnome tool and weapon features a hammer at one end and a curved pick on the other. It's such a strange and awkward weapon that others think the gnomes are slightly erratic for using it."
+  },
+  {
+    "id": "8COlYvHe6hKCXY8x",
+    "name": "Greataxe",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d12",
+      "type": "slashing"
+    },
+    "traits": [
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This large battle axe is too heavy to wield with only one hand. Many greataxes incorporate two blades, and they are often \"bearded,\" having a hook at the bottom to increase the strength of their chopping power."
+  },
+  {
+    "id": "kdGqnqbrwPzQfTsm",
+    "name": "Greatclub",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "backswing",
+      "shove"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "While many greatclubs are intricately carved, others are little more than a sturdy tree branch. These massive clubs are too heavy to wield with only one hand."
+  },
+  {
+    "id": "3Zv5hSXXtlaDatUv",
+    "name": "Greatpick",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "piercing"
+    },
+    "traits": [
+      "fatal-d12"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This pick has a longer handle and broader head than a regular pick. It is too heavy to wield in one hand."
+  },
+  {
+    "id": "UX71GkWBL9g41VwM",
+    "name": "Greatsword",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d12",
+      "type": "slashing"
+    },
+    "traits": [
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This immense two-handed sword is nearly as tall as its wielder. Its lower blade is often somewhat dulled to allow it to be gripped for extra leverage in close-quarter fights."
+  },
+  {
+    "id": "TT0pJz9odKApfq6D",
+    "name": "Guisarme",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "slashing"
+    },
+    "traits": [
+      "reach",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This polearm bears a long, often one-sided, curved blade with a hook protruding from the blunt side of the blade, which can allow its wielder to trip opponents at a distance. Its shaft is usually 8 feet long."
+  },
+  {
+    "id": "dgWxsYm0DWHb27h6",
+    "name": "Halberd",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "piercing"
+    },
+    "traits": [
+      "reach",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This polearm has a relatively short, 5-foot shaft. The business end is a long spike with an axe blade attached."
+  },
+  {
+    "id": "DV4qelKHrviM0O5i",
+    "name": "Halfling Sling Staff",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "halfling",
+      "propulsive"
+    ],
+    "rangeIncrement": 80,
+    "reload": 1,
+    "price": "5 gp",
+    "description": "This staff ends in a Y-shaped split that cradles a sling. The length of the staff provides excellent leverage when used two-handed to fling rocks or bullets from the sling."
+  },
+  {
+    "id": "MccX4AlmqYDjAN2J",
+    "name": "Hand Adze",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "sweep",
+      "thrown-10",
+      "tripkee"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 sp",
+    "description": "The adze's smaller version is useful for delicate woodworking in cramped spaces. Tripkees use hand adzes for crafting and as close quarters weapons."
+  },
+  {
+    "id": "4LJEpZ2HkCu9BvHI",
+    "name": "Hand Cannon",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "modular"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "3 gp",
+    "description": "Popular among privateers and mercenaries in Goka, hand cannons are little more than a hardened tube with a handle and external ignition attached. A hand cannon can be used to fire almost anything that can be packed into its barrel. The wielder of a hand cannon can change the damage type granted by its modular trait as part of the same Interact action used to reload."
+  },
+  {
+    "id": "XyA6PKV46aNlLXOd",
+    "name": "Hand Crossbow",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [],
+    "rangeIncrement": 60,
+    "reload": 1,
+    "price": "3 gp",
+    "description": "Sometimes referred to as an alley bow by rogues or ruffians, this small crossbow fires small bolts that are sometimes used to deliver poison to the target. It's small enough to be shot one-handed, but it still requires two hands to load."
+  },
+  {
+    "id": "NhKIUGMcxVusTJ6y",
+    "name": "Harmona Gun",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "kickback"
+    ],
+    "rangeIncrement": 150,
+    "reload": 1,
+    "price": "8 gp",
+    "description": "A favored weapon of monster hunters in Arcadia, the harmona gun is a large-bore long gun that fires a heavy, slow-moving round. The gun got its name due to the eerie similarity between the buzzing sound its oversized projectiles make flying through the air and the flight of a fey bird called a harmona."
+  },
+  {
+    "id": "oTQKyZ8Vd2RPzaWK",
+    "name": "Harpoon",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "tethered",
+      "thrown"
+    ],
+    "rangeIncrement": 30,
+    "reload": null,
+    "price": "1 gp",
+    "description": "Often used for hunting exceptionally large aquatic creatures, the harpoon is similar to a javelin but features a barbed head and rope tether so it (or the corpse it's attached to) can be easily retrieved."
+  },
+  {
+    "id": "LGgvev6AV0So8tP9",
+    "name": "Hatchet",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "sweep",
+      "thrown-10"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 sp",
+    "description": "This small axe can be used in close combat or thrown."
+  },
+  {
+    "id": "giO4LwIKGzJZoaxa",
+    "name": "Heavy Crossbow",
+    "category": "simple",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "piercing"
+    },
+    "traits": [],
+    "rangeIncrement": 120,
+    "reload": 2,
+    "price": "4 gp",
+    "description": "This large crossbow is harder to load and more substantial than a regular crossbow, but it packs a greater punch."
+  },
+  {
+    "id": "O3XAH3VkOx9a0FyD",
+    "name": "Hook Sword",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "disarm",
+      "monk",
+      "parry",
+      "trip",
+      "twin"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "This long sword has a hook near the tip, making it easy to snag an opponent or their weapons."
+  },
+  {
+    "id": "YnwEttFE1bJacLDh",
+    "name": "Horsechopper",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "goblin",
+      "reach",
+      "trip",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "9 sp",
+    "description": "Created by goblins to battle horses, this weapon is essentially a long shaft ending in a blade with a large hook."
+  },
+  {
+    "id": "UCK8zXKb0Gi6uyum",
+    "name": "Injection Spear",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "injection",
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "A hollow receptacle inside this spear's head can store a single dose of poison. A sliding trigger along the spear's shaft can inject the loaded poison into a damaged target."
+  },
+  {
+    "id": "JNt7GmLCCVz5BiEI",
+    "name": "Javelin",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "thrown"
+    ],
+    "rangeIncrement": 30,
+    "reload": null,
+    "price": "1 sp",
+    "description": "This thin spear is well balanced for throwing but is not designed for melee use."
+  },
+  {
+    "id": "WxczDmQ5qOaD5IxB",
+    "name": "Jiu Huan Dao",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "9 sp",
+    "description": "This sword has a broad blade, along which are threaded nine heavy metal rings, leading some to call it the nine-ring sword. The rings add weight to the weapon for broad swings and clash together to make noise."
+  },
+  {
+    "id": "zSAoyzcf3nSeZCiF",
+    "name": "Kama",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "monk",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "Similar to a sickle and used in some regions to reap grain, a kama has a short, slightly curved blade and a wooden handle."
+  },
+  {
+    "id": "8XwE8hsWBFoIdoDC",
+    "name": "Karambit",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "fatal-d8",
+      "finesse",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This small, curved blade resembles a tiger's claw and is capable of delivering deep wounds."
+  },
+  {
+    "id": "Y1dkRsRd1Z7Jf2y6",
+    "name": "Katana",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "two-hand-d10",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "A katana is a curved, single-edged sword known for its wickedly sharped blade."
+  },
+  {
+    "id": "Fg3GkCDkszj5WtgQ",
+    "name": "Katar",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "deadly-d6",
+      "monk"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 sp",
+    "description": "Also known as punching daggers, katars are characterized by their H-shaped hand grip that allows the blade to jut out from the knuckles."
+  },
+  {
+    "id": "OrzHZJzDpTCgGT4i",
+    "name": "Kestros",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "concussive",
+      "propulsive"
+    ],
+    "rangeIncrement": 40,
+    "reload": 1,
+    "price": "2 gp",
+    "description": "The kestros is a type of sling that fires special ammunition with wing-shaped fins and a pointed end. The thongs of the sling are of uneven length, one shorter and one several inches longer, around an open loop to cradle the ammunition as the sling is spun."
+  },
+  {
+    "id": "KgKSX95uVSg8iBBA",
+    "name": "Khakkhara",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "shove",
+      "two-hand-d10",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This staff is topped by a pointed metal circle from which hang several smaller rings that jingle and clang noisily as the staff is moved, allowing you to announce your presence and scare off wild animals as you walk."
+  },
+  {
+    "id": "YLb6XnT7OxAVGL5m",
+    "name": "Khopesh",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This curved sickle sword has a pointed tip, allowing it to be swung in wide arcs or thrust vertically around enemy defenses. The tip of a khopesh is hooked and can be used to trip an opponent."
+  },
+  {
+    "id": "dgXjUcaoQDAY6ZpO",
+    "name": "Knuckle Duster",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "agile",
+      "free-hand",
+      "monk"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 sp",
+    "description": "This bit of hardened metal, favored by street toughs, is typically made of brass and features four finger holes so that it can sit atop the knuckles, adding extra power to a punch."
+  },
+  {
+    "id": "TDrO7Xdyn7juFy3c",
+    "name": "Kukri",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "6 sp",
+    "description": "The blade of this foot-long knife curves inward and lacks a cross guard at the hilt."
+  },
+  {
+    "id": "D6E4VaKVG05G26Rm",
+    "name": "Kusarigama",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "disarm",
+      "monk",
+      "reach",
+      "trip",
+      "versatile-b"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This impressive but demanding weapon consists of a weight attached to a kama via a length of chain, which aids with disarming an opponent or attacking from a distance."
+  },
+  {
+    "id": "OPMzQdM9rZznMGhW",
+    "name": "Lance",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d8",
+      "jousting-d6",
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This spear-like weapon is used by a mounted creature to deal a great deal of damage."
+  },
+  {
+    "id": "cSGWhw4Wn6Z98tVK",
+    "name": "Lancer",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "capacity-2",
+      "combination"
+    ],
+    "rangeIncrement": 60,
+    "reload": 2,
+    "price": "8 gp",
+    "description": "This lance has a heavy grip with two parallel crossbow fixtures built into it, making it a useful weapon for combats who prefer to keep their distance at all times."
+  },
+  {
+    "id": "27CO2NIr5yMgA6sa",
+    "name": "Leiomano",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "fatal-d10",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This thick club is inset with sharp teeth, typically from a shark, that easily tear flesh. It's the preferred weapon of many Minatan warriors."
+  },
+  {
+    "id": "FibwLZ12EIEwLGhw",
+    "name": "Light Hammer",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "agile",
+      "thrown-20"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 sp",
+    "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw."
+  },
+  {
+    "id": "x1TOpwH755Ami5bC",
+    "name": "Light Mace",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "shove"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 sp",
+    "description": "A light mace has a short wooden or metal shaft ending with a dense metal head. Used much like a club, it delivers heavy bludgeoning blows, but with extra power derived from the head's metal ridges or spikes."
+  },
+  {
+    "id": "RbM4HvPyrZ4YJxRc",
+    "name": "Light Pick",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "fatal-d8"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 sp",
+    "description": "A light pick is a modified mining implement with a wooden shaft ending in a pick head crafted more to pierce armor and flesh than chip rocks."
+  },
+  {
+    "id": "Ak3oHoPDJoMR14yg",
+    "name": "Lion Scythe",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "A lion scythe resembles a common sickle but is specially weighted to allow for greater power when attacking."
+  },
+  {
+    "id": "kFZpTT1jI6UMfV9I",
+    "name": "Liuyedao",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "deadly-d4",
+      "finesse",
+      "sweep",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "The liuyedao, or willow-leaf saber, is a common, one-handed military saber with a moderately curved blade designed for slashing and chopping attacks."
+  },
+  {
+    "id": "Hc4qCwyO9i0Avlzt",
+    "name": "Long Air Repeater",
+    "category": "simple",
+    "hands": 2,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "kickback",
+      "repeating"
+    ],
+    "rangeIncrement": 60,
+    "reload": 0,
+    "price": "6 gp",
+    "description": "Like the one-handed air repeater, this thin-barreled firearm uses a container of pressurized air instead of black powder to propel small metal pellets from an attached cartridge. The long air repeater has better range and ammo capacity than the one-handed variant, though it still lacks significant stopping power. A typical long air repeater magazine holds 8 pellets."
+  },
+  {
+    "id": "mXBOqphNfUCK7L8c",
+    "name": "Long Hammer",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "brace",
+      "dwarf",
+      "reach",
+      "trip",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 gp",
+    "description": "The long hammer features a pronged hammer head designed for damaging knees and ankles, counterbalanced by a stout spike and affixed to a reinforced shaft between 5 and 7 feet long."
+  },
+  {
+    "id": "MVAWttmT0QDa7LsV",
+    "name": "Longbow",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d10",
+      "volley-30"
+    ],
+    "rangeIncrement": 100,
+    "reload": 0,
+    "price": "6 gp",
+    "description": "This 5-foot-tall bow, usually made of a single piece of elm, hickory, or yew, has a powerful draw and is excellent at propelling arrows with great force and at an extreme distance. You must use two hands to fire a longbow, and it can't be used while mounted."
+  },
+  {
+    "id": "aXuJh4i8HqSu6NYV",
+    "name": "Longspear",
+    "category": "simple",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 sp",
+    "description": "This very long spear, sometimes called a pike, is purely for thrusting rather than throwing. Used by many soldiers and city watch for crowd control and defense against charging enemies, it must be wielded with two hands."
+  },
+  {
+    "id": "LJdbVTOZog39EEbi",
+    "name": "Longsword",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "Longswords, also known as arming swords, can be one-edged or two-edged swords. Their blades are heavy and they're between 3 and 4 feet in length."
+  },
+  {
+    "id": "9iDqOLNFKxiTcFKE",
+    "name": "Mace",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "shove"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "With a stout haft and a heavy metal head, a mace is sturdy and allows its wielder to deliver powerful blows and dent armor."
+  },
+  {
+    "id": "m3QMdlNxFyDFrkQX",
+    "name": "Mace Multipistol",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "capacity-3",
+      "combination",
+      "concussive",
+      "fatal-d8"
+    ],
+    "rangeIncrement": 20,
+    "reload": 1,
+    "price": "13 gp",
+    "description": "At first glance this weapon looks like nothing more than an iron-bound club. But the top of the weapon features a latch that opens to reveal three rotating pistol muzzles concealed in the mace's head that can be fired and rotated using triggers built into the weapon's haft."
+  },
+  {
+    "id": "O7IZBvVoe7W2XnBa",
+    "name": "Machete",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "7 sp",
+    "description": "This medium-length sword has a wide, gently curved blade and long grip. Though it's typically used to hack through heavy foliage, the machete can also be used as a deadly weapon."
+  },
+  {
+    "id": "BjSx9EkQNnuHZbvg",
+    "name": "Macuahuitl",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "backswing",
+      "tearing",
+      "versatile-b"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "This wooden club is embedded with razor-sharp blades, typically made of obsidian. The blades are inserted vertically around two sides of the weapon, leaving a central bludgeoning surface available for bashing."
+  },
+  {
+    "id": "iWcw1sFLAzByVLBP",
+    "name": "Main-Gauche",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "disarm",
+      "finesse",
+      "parry",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 sp",
+    "description": "This parrying dagger features a robust guard to protect the wielder's hand."
+  },
+  {
+    "id": "MeA0g9xvWCbGxf2g",
+    "name": "Mambele",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "disarm",
+      "thrown-20"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "6 sp",
+    "description": "Also known as a hunga munga or danisco, this knife-axe hybrid consists of a hilt and a blade that curves backward toward the wielder. The curve of the blade is such that after a victim has been struck by a mambele, more damage is dealt as the weapon is extracted from the victim's body."
+  },
+  {
+    "id": "mlrmkpOlwpnGkw4I",
+    "name": "Maul",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d12",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "shove"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "Mauls are massive warhammers that must be swung with two hands."
+  },
+  {
+    "id": "MiiaZeNMGGSefjVH",
+    "name": "Maul-spade",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "deadly-d10",
+      "jotunborn",
+      "shove"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "6 gp",
+    "description": "This heavy, club-like weapon can clobber foes, but it also functions as a shovel. A maul-spade adds its item bonus from weapon potency runes (if any) as an item bonus on checks made with Athletics and appropriate Lore skills (such as Labor Lore) when using it as a shovel to dig."
+  },
+  {
+    "id": "xu3azdMCIa53Oe1f",
+    "name": "Meteor Hammer",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "backswing",
+      "disarm",
+      "reach",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "This weapon consists of a long chain connected to a heavy weight at each end. When a wielder swings the weights by the chain, they build momentum and can serve as deadly bludgeons with incredible reach."
+  },
+  {
+    "id": "oW9neeVcpHjEvjcN",
+    "name": "Mikazuki",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "combination",
+      "monk",
+      "propulsive"
+    ],
+    "rangeIncrement": 70,
+    "reload": 0,
+    "price": "8 gp",
+    "description": "The mikazuki combines a sansetsukon with a thin length of metal string and several locking mechanisms built into the joints, allowing it to be quickly locked into configuration as a bow."
+  },
+  {
+    "id": "5fu6dCtqhdBnHNqh",
+    "name": "Morningstar",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This weapon has a short shaft ending in a metal ball studded with spikes."
+  },
+  {
+    "id": "NufKswitJjxDCX8f",
+    "name": "Naginata",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "reach",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "This 6-foot staff has a 2-foot-long, slightly curved, swordlike blade attached at one end. The long pole helps keep the wielder out of reach of swords and shorter weapons."
+  },
+  {
+    "id": "KtarUneAx0hibGtW",
+    "name": "Nodachi",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "brace",
+      "deadly-d12",
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "6 gp",
+    "description": "Also known as a zhanmadao, the exceptionally long blade of the nodachi is designed to neutralize enemy mounts and counter the advantages of cavalry units. Its shape and size make it somewhat impractical for close combat but highly effective against charging opponents."
+  },
+  {
+    "id": "LA8wwpQBi6tylE6z",
+    "name": "Nunchaku",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "backswing",
+      "disarm",
+      "finesse",
+      "monk"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "The nunchaku is constructed of two wooden or metal bars connected by a short length of rope or chain."
+  },
+  {
+    "id": "Oiq3QgLrM4i3W5Hg",
+    "name": "Ogre Hook",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d10",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "Ogres are known for using immense, curved picks called ogre hooks."
+  },
+  {
+    "id": "sAjzLXgA2LnIwpBM",
+    "name": "Orc Knuckle Dagger",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "disarm",
+      "orc"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "7 sp",
+    "description": "This stout, metal blade of orc design has a horizontal basket hilt with blades jutting from each end, or sometimes one blade like that of a katar."
+  },
+  {
+    "id": "J6H5UbLVsSXShoTs",
+    "name": "Orc Necksplitter",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "forceful",
+      "orc",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This single-bladed bearded axe has a jagged blade that's perfect for separating bone from tendon and cartilage."
+  },
+  {
+    "id": "IbHZE47vul6Mohz6",
+    "name": "Orc Skewermaul",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "brace",
+      "orc",
+      "two-hand-d10",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "As dwarves poured out of the Darklands following their Quest for Sky, the orcs driven before them adapted to their tactics—including dwarves' heavily armored infantry charges. Surviving orcs developed a response: a weapon that combines a spear and maul to crush heavy armor and skewer charging foes. Although rarely seen today, the weapon is remarkably effective in the right situation."
+  },
+  {
+    "id": "G58Tx1lQqa8n6m5c",
+    "name": "Palstave",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 sp",
+    "description": "This simple axe is created by inserting a weighted metal wedge into a curved wooden handle with a Y-shaped groove at the top, and then binding the splitting wedge in place with leather thongs."
+  },
+  {
+    "id": "DFtbWoL6yBnDbtB3",
+    "name": "Panabas",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "forceful",
+      "sweep",
+      "two-hand-d10"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This weapon has practical uses in both farming and butchering, thanks to the efficiency and brutality of its forward-curving blade. It can be wielded in one or two hands."
+  },
+  {
+    "id": "ONHFPXNNw9BkNAKm",
+    "name": "Pantograph Gauntlet",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "deadly-d6",
+      "monk",
+      "reach",
+      "shove"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "A pantograph gauntlet is a heavy, fist-like weight, mounted on an extendable frame and attached to your outer arm with a series of leather straps. The frame's set of mechanical linkages connected at various hinges allow movements to propagate across the frame based on reshaping parallelograms, further controlled by a crossbar grasped in your hand. A pantograph gauntlet is driven by your own motion and mirrors your arm's movements-a punch thrown with your fist moves the pantograph, extending the weight out at a rap…"
+  },
+  {
+    "id": "tk4cfktEnMrp4K6m",
+    "name": "Pepperbox",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "capacity-3",
+      "concussive",
+      "fatal-d8"
+    ],
+    "rangeIncrement": 60,
+    "reload": 1,
+    "price": "9 gp",
+    "description": "This weapon is a specialty of the smiths of Alkenstar. The pepperbox has three barrels that each hold a single shot, and the shooter can manually rotate the whole barrel assembly to align a loaded barrel with the firing mechanism."
+  },
+  {
+    "id": "6I4YJAQUbTAqbpsI",
+    "name": "Pick",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "fatal-d10"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "7 sp",
+    "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows."
+  },
+  {
+    "id": "4lO2uNA70HqTuSAD",
+    "name": "Piercing Wind",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "combination",
+      "concussive",
+      "fatal-aim-d10"
+    ],
+    "rangeIncrement": 40,
+    "reload": 1,
+    "price": "15 gp",
+    "description": "Favored by caravan guards who traverse the Mana Wastes, a piercing wind is similar to a , in that you can carry it in one hand as long as the other hand's free, by holding it under one arm. Additionally, it's fitted with an underslung curved blade."
+  },
+  {
+    "id": "UfurZQK6H6SgOjqe",
+    "name": "Ranseur",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "piercing"
+    },
+    "traits": [
+      "disarm",
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This polearm is a long trident with a central prong that's longer than the other two."
+  },
+  {
+    "id": "tH5GirEy7YB3ZgCk",
+    "name": "Rapier",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d8",
+      "disarm",
+      "finesse"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "The rapier is a long and thin piercing blade with a basket hilt. It is prized among many as a dueling weapon."
+  },
+  {
+    "id": "LDHGjtQHRM8bA8ZZ",
+    "name": "Rapier Pistol",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "backstabber",
+      "combination",
+      "concussive",
+      "fatal-d8"
+    ],
+    "rangeIncrement": 30,
+    "reload": 1,
+    "price": "10 gp",
+    "description": "This elegant weapon is shaped similarly to a rapier with a pistol down the length of the blade."
+  },
+  {
+    "id": "tHIb3ynOHj7dGiCH",
+    "name": "Reinforced Stock",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "attached-to-crossbow-or-firearm",
+      "finesse",
+      "two-hand-d8"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "A reinforced stock is a weighted crossbow, firearm haft, or grip customized for striking in melee."
+  },
+  {
+    "id": "k8V3wTG1gMU5ksUr",
+    "name": "Rhoka Sword",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "two-hand-d10"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "The rhoka sword is the preferred weapon among urdefhans, and all of their kind know how to wield these instruments of war."
+  },
+  {
+    "id": "djSCel13i1p8JeXv",
+    "name": "Rope Dart",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "disarm",
+      "finesse",
+      "sweep",
+      "tethered",
+      "thrown-20",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "A deceptively simple weapon made from a length of cord attached to a weighted, conical metal spike. A rope dart can be whirled and manipulated at great speeds to attack in unexpected ways and from unexpected angles."
+  },
+  {
+    "id": "T5ojw0tuXiAajhZx",
+    "name": "Rotary Bow",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "capacity-4"
+    ],
+    "rangeIncrement": 80,
+    "reload": 1,
+    "price": "8 gp",
+    "description": "This one-handed crossbow has four arms instead of two, and four rotating chambers that can be pre-loaded with bolts for more efficient firing. The chamber can be swapped and the arms redrawn with a simple crank device built into the crossbow."
+  },
+  {
+    "id": "u2u6dkr01AB34tyA",
+    "name": "Sai",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "disarm",
+      "finesse",
+      "monk",
+      "versatile-b"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "6 sp",
+    "description": "This piercing dagger is a metal spike flanked by a pair of prongs that can be used to trap an enemy's weapon."
+  },
+  {
+    "id": "jbSgs5Tq0bkmHUab",
+    "name": "Sansetsukon",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "backswing",
+      "disarm",
+      "monk",
+      "parry"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "The sansetsukon, also known as a sanjiegun or three-section staff, is made up of three wooden staff segments, each about 14 inches in length. The staff sections are connected by short lengths of cord or chain, similar to nunchaku."
+  },
+  {
+    "id": "TLQErnOpM9Luy7rL",
+    "name": "Sap",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "agile",
+      "nonlethal"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 sp",
+    "description": "A sap has a soft wrapping around a dense core, typically a leather sheath around a lead rod. Its head is wider than its grip to disperse the force of a blow, as the weapon's purpose is to knock out its victim rather than to draw blood."
+  },
+  {
+    "id": "wkzxLpSe7LN6c5Ld",
+    "name": "Sawtooth Saber",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "twin"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 gp",
+    "description": "The signature weapon of the Red Mantis assassins, this curved blade is serrated like a saw, hence the name."
+  },
+  {
+    "id": "grmaV4GdoGD7sKbn",
+    "name": "Scimitar",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "forceful",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This one-handed curved blade is sharp on one side."
+  },
+  {
+    "id": "yIY0voZkwMoff5b3",
+    "name": "Scizore",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "disarm",
+      "parry"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "9 sp",
+    "description": "A scizore is a gauntlet or protective leather tube worn over the forearm and featuring a half-moon blade mounted to the end of the cap on a short pole."
+  },
+  {
+    "id": "I5DJUbAFGMwa6qCz",
+    "name": "Scourge",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "disarm",
+      "finesse",
+      "nonlethal",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 sp",
+    "description": "A scourge—also known as a cat-o'-nine-tails—is a set of several knotted cords made from cotton or leather and attached to a handle. While most scourges are more suitable for torture than combat, when fashioned into a weapon, a scourge can have metal barbs woven into the cords to pierce clothing and armor."
+  },
+  {
+    "id": "H74vYwHJ8XT4qOPI",
+    "name": "Scythe",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d10",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "Derived from a farming tool used to mow down long grains and cereals, this weapon has a long wooden shaft with protruding handles, capped with a curved blade set at a right angle."
+  },
+  {
+    "id": "IF6qUrR3i030v0dH",
+    "name": "Shears",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "finesse",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 sp",
+    "description": ""
+  },
+  {
+    "id": "dfum7DpOEkwxwTsT",
+    "name": "Shield Boss",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "attached-to-shield"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 sp",
+    "description": "Typically a round, convex, or conical piece of thick metal attached to the center of a shield, a shield boss increases the bludgeoning damage of a shield bash."
+  },
+  {
+    "id": "fz8XDaJ7n0zeOH1f",
+    "name": "Shield Bow",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d8",
+      "parry"
+    ],
+    "rangeIncrement": 50,
+    "reload": 0,
+    "price": "5 gp",
+    "description": "As the name implies, a shield bow is a bow with an integrated shielding surface. While versatile and effective, a shield bow's architecture limits its flexibility somewhat, decreasing its total draw strength and penetrating power."
+  },
+  {
+    "id": "nSO0Z662LkkLfa2u",
+    "name": "Shield Spikes",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "attached-to-shield"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 sp",
+    "description": "These metal spikes are strategically placed on the defensive side of the shield to deal piercing damage with a shield bash."
+  },
+  {
+    "id": "hIgqLgH3YcLZBeoT",
+    "name": "Shortbow",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d10"
+    ],
+    "rangeIncrement": 60,
+    "reload": 0,
+    "price": "3 gp",
+    "description": "This smaller bow is made of a single piece of wood and favored by skirmishers and cavalry."
+  },
+  {
+    "id": "7tKkkF8eZ4iCLJtp",
+    "name": "Shortsword",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "9 sp",
+    "description": "These blades come in a variety of shapes and styles, but they are typically 2 feet long."
+  },
+  {
+    "id": "0yiz254UI7DUFXWN",
+    "name": "Shuan Ji",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "backswing",
+      "forceful",
+      "reach",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "The shuan ji is a polearm featuring a long spear point on one end and two crescent-shaped blades that allow the wielder to strike with either side of the weapon."
+  },
+  {
+    "id": "fjkwYZ0hRmBztwBG",
+    "name": "Shuriken",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "monk",
+      "thrown"
+    ],
+    "rangeIncrement": 20,
+    "reload": 0,
+    "price": "1 cp",
+    "description": "This \"throwing star\" is a small piece of flat metal with sharp edges, designed to be flung with a flick of the wrist."
+  },
+  {
+    "id": "ynnBwzkzsR6B73iO",
+    "name": "Sickle",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "Originally a farming tool used for reaping grain, this one-handed weapon has a short wooden handle ending in a curved blade, sometimes sharpened on both sides."
+  },
+  {
+    "id": "UCH4myuFnokGv0vF",
+    "name": "Sling",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "propulsive"
+    ],
+    "rangeIncrement": 50,
+    "reload": 1,
+    "price": "0 gp",
+    "description": "Little more than a leather cup attached to a pair of straps, a sling can be used to fling smooth stones or sling bullets at a range."
+  },
+  {
+    "id": "tOhoGvmCMw4JpWcS",
+    "name": "Spear",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "monk",
+      "thrown-20"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 sp",
+    "description": "A long metal shaft ending with a metal spike, a spear can be used one-handed as a melee weapon and can be thrown."
+  },
+  {
+    "id": "zi9ovfoRp2fMhfpO",
+    "name": "Spiked Chain",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "disarm",
+      "finesse",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "This 4-foot-long length of chain is covered with barbs and has spikes on one or both ends. Some feature metal hoops used as handgrips."
+  },
+  {
+    "id": "YFfG2fMyaIAXkmtr",
+    "name": "Spiked Gauntlet",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "free-hand"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 sp",
+    "description": "Providing the same defensive function as a standard gauntlet, this version has a group of spikes protruding from the knuckles."
+  },
+  {
+    "id": "0z3x5UzMlZLcDOUv",
+    "name": "Spirit Thresher",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d12",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "kholo",
+      "sweep",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "Bones, some solid and others splintered, are affixed to metal chains at the end of a long stick to form a powerful flail. Many kholo warriors insist the vicious crack the weapon makes as it strikes loosens fragments of the soul like husks struck from grains."
+  },
+  {
+    "id": "XguFCTUBh1yqJXd1",
+    "name": "Spraysling",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "halfling",
+      "propulsive",
+      "scatter-5"
+    ],
+    "rangeIncrement": 20,
+    "reload": 1,
+    "price": "1 gp",
+    "description": "A spraysling is similar to a standard sling but with a wider cup fitted with a thin blade affixed to the cup's edges. When used to make an attack with a specially prepared packet of spray pellets, the razor slices open the packet and the weapon launches a cluster of stinging pellets."
+  },
+  {
+    "id": "FVjTuBCIefAgloUU",
+    "name": "Staff",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "monk",
+      "two-hand-d8"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "0 gp",
+    "description": "This long piece of wood can aid in walking and deliver a mighty blow."
+  },
+  {
+    "id": "Mv2I6M70bagbaBPn",
+    "name": "Starknife",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "deadly-d6",
+      "finesse",
+      "thrown-20",
+      "versatile-s"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "From a central metal ring, four tapering metal blades extend like points on a compass rose. When gripping a starknife from the center, the wielder can use it as a melee weapon. It can also be thrown short distances."
+  },
+  {
+    "id": "VitLIpdIAmKlGb7i",
+    "name": "Sword Cane",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "concealable",
+      "finesse"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 gp",
+    "description": "This slender, rapier-like sword is concealed within a wooden or metal cane that serves as a sheath, making it an inconspicuous weapon easy to slip past inspections or into high-society events. A sword cane is typically 4 feet long when sheathed, and its hilt is usually capped with a wooden or metal decoration."
+  },
+  {
+    "id": "wbJPWXKzQBKYZ74s",
+    "name": "Taw Launcher",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "conrasu",
+      "deadly-d10",
+      "modular"
+    ],
+    "rangeIncrement": 100,
+    "reload": 1,
+    "price": "10 gp",
+    "description": "This complex device is a crossbow and fires small wooden bullets known as taws. A system of blades within the launcher can rapidly reshape a taw as it's loaded, allowing the launcher to fire taws of different shapes, such as fléchettes."
+  },
+  {
+    "id": "vsJ0zvYZzduP7rtD",
+    "name": "Tekko-Kagi",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "disarm",
+      "finesse",
+      "free-hand",
+      "monk",
+      "parry"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "Four curved blades attached to a sturdy handlebar give the wielder of this close-combat weapon the illusion of having claws that extend from their fist. Adherents of favor the tekko-kagi for catching their foes off guard."
+  },
+  {
+    "id": "NIsxR5zXtVa3PuyU",
+    "name": "Temple Sword",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "monk",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This heavy blade is favored by guardians of religious sites. It has a distinctive, crescent-shaped blade that seems to be a mix of a sickle and sword. It often has holes drilled into the blade or the pommel so that bells or other holy trinkets can be affixed to the weapon."
+  },
+  {
+    "id": "6qJkA6fnHHiF4CEV",
+    "name": "Tengu Gale Blade",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "disarm",
+      "finesse",
+      "tengu"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "This fan-shaped sword designed by tengu smiths has five broad blades that join at its hilt. Tengu sailors use them as makeshift weather vanes, for the sword spins in the wind's direction when loosely held aloft."
+  },
+  {
+    "id": "FjeKuljhpaIiDTI7",
+    "name": "Tetsubo",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "razing",
+      "shove",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "The tetsubo is a war club constructed out of heavy wood shod with iron studs, designed for smashing through armor and defenses. A tetsubo made entirely out of metal might also be referred to as a kanabo."
+  },
+  {
+    "id": "Brs4linGy3GAod5y",
+    "name": "Three-Section Naginata",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d8",
+      "forceful",
+      "sweep",
+      "versatile-b"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "12 gp",
+    "description": "A fusion of a naginata and sansetsukon, this three-section weapon has a sweeping, curved blade along each of the outer sections. Though difficult for anyone but an expert weapon master to use effectively, the three-section naginata can be wielded at devastating speed to slice or smash apart a foe."
+  },
+  {
+    "id": "pnA6uENYDDduWmAn",
+    "name": "Thunder Sling",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "agile",
+      "propulsive",
+      "tengu"
+    ],
+    "rangeIncrement": 50,
+    "reload": 1,
+    "price": "5 gp",
+    "description": "Tengu use these specialized slings to fire darts further and with greater force than when thrown by hand. A thunder sling uses darts as ammunition. It can also hurl blowgun darts as ammunition but deals ] damage instead of 1d6 when used this way."
+  },
+  {
+    "id": "WuzK2R5ra5SZdbij",
+    "name": "Tri-bladed Katar",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "disarm",
+      "fatal-d8",
+      "monk"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 sp",
+    "description": "This punching dagger resembles the standard katar, save that a pair of blades can be folded out from the center blade, transforming the weapon into a starburst shape well suited to catching foes' weapons."
+  },
+  {
+    "id": "zO6Fvq7ghEXpJgJR",
+    "name": "Tricky Pick",
+    "category": "advanced",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "backstabber",
+      "fatal-d10",
+      "kobold",
+      "modular"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "10 gp",
+    "description": "This ingenious kobold pick conceals several hidden traps that the wielder can activate to trick and befuddle foes with a variety of damaging blades and bludgeoning surfaces."
+  },
+  {
+    "id": "FJrsDoaIXksVjld9",
+    "name": "Trident",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "thrown-20"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This three-pronged, spear-like weapon typically has a 4-foot shaft. Like a spear, it can be wielded with one hand or thrown."
+  },
+  {
+    "id": "qQJguPUWpYY8z6BD",
+    "name": "Umbrella Injector",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "traits": [
+      "concealable",
+      "finesse",
+      "injection",
+      "parry"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "This umbrella's ferrule is a hollow-tipped blade three to four inches in length and often overlooked as decorative. A receptacle inside the umbrella's shaft can be loaded with a single dose of injury poison and injected into a damaged target with the pull of a sliding trigger. Reinforced ribs enable you to parry and deflect blows with the umbrella's tear-resistant canopy."
+  },
+  {
+    "id": "Sarxo8kSrJs2qJEw",
+    "name": "Urumi",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "deadly-d10",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "A bouquet of whiplike blades extends from the hilt of this sword, enabling deadly, sweeping attacks."
+  },
+  {
+    "id": "YOpopjoWgU7bkmwh",
+    "name": "Wakizashi",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "deadly-d8",
+      "finesse",
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This short-bladed, single-edged sword is typically carried as part of a pair alongside a ."
+  },
+  {
+    "id": "mVxA9E2ernBL6fM6",
+    "name": "War Flail",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d10",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "disarm",
+      "sweep",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 gp",
+    "description": "This large flail has a long shaft connected to a shorter piece of stout wood or metal that's sometimes inlaid with spikes."
+  },
+  {
+    "id": "vpdZp46v9PoUt8z2",
+    "name": "War Gavel",
+    "category": "simple",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "versatile-p"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "2 sp",
+    "description": "A war gavel is similar in construction to a palstave axe, but instead of inserting a metal wedge, it uses a heavier wooden head that is either carved into several points or inset with pointed objects like the teeth of large mammals."
+  },
+  {
+    "id": "DhaxHGxXL4Om7bqp",
+    "name": "War Javelin",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d6",
+      "type": "piercing"
+    },
+    "traits": [
+      "tethered",
+      "thrown-30"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "A war javelin is similar to a standard javelin, but made of sturdier woods with additional leather grips to make it suitable as a melee weapon and a leather thong to retrieve it after it's thrown."
+  },
+  {
+    "id": "zXbZn5HJf81tquPm",
+    "name": "War Lance",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d8",
+      "type": "piercing"
+    },
+    "traits": [
+      "deadly-d8",
+      "jousting-d6",
+      "parry",
+      "shove"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "4 gp",
+    "description": "This lance appears shorter and stockier in comparison to other weapons of its type. The war lance notably features shielding integrated into its vamplate, exchanging its reach for a sturdier base when defending against attacks or attempting to overpower an opponent."
+  },
+  {
+    "id": "nOFcCidD5AwVZWTv",
+    "name": "War Razor",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "agile",
+      "backstabber",
+      "deadly-d8",
+      "finesse"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 sp",
+    "description": "A war razor is an exaggerated version of the barbers' tool. It's a brittle but extremely sharp weapon that is very easy to slip into a pocket or sleeve."
+  },
+  {
+    "id": "rXt4629QSg7KDTgJ",
+    "name": "Warhammer",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d8",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "shove"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 gp",
+    "description": "This weapon has a wooden shaft ending in a large, heavy metal head. The head of the hammer might be single-sided or double-sided, but it's always capable of delivering powerful bludgeoning blows."
+  },
+  {
+    "id": "f1gwoTkf3Nn0v3PN",
+    "name": "Whip",
+    "category": "martial",
+    "hands": 1,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "traits": [
+      "disarm",
+      "finesse",
+      "nonlethal",
+      "reach",
+      "trip"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "1 sp",
+    "description": "This long strand of thick leather, often braided, delivers a painful but nonlethal slash at a distance, usually accompanied by a distinctive cracking sound."
+  },
+  {
+    "id": "QAEVaSQ3SCT8AuBX",
+    "name": "Whip Claw",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "slashing"
+    },
+    "traits": [
+      "catfolk",
+      "finesse",
+      "hampering",
+      "reach"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "5 gp",
+    "description": "The whip claw is a long tether affixed to claw-like daggers, allowing the wielder to fling and retract them with deadly precision. Catfolk first developed this weapon to provide extended reach when hunting dangerous animals, and they wield them with unmatched expertise."
+  },
+  {
+    "id": "vnT33Z3V101FOUuV",
+    "name": "Whipstaff",
+    "category": "martial",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "agile",
+      "finesse",
+      "monk",
+      "parry",
+      "sweep"
+    ],
+    "rangeIncrement": null,
+    "reload": null,
+    "price": "3 gp",
+    "description": "The whipstaff is a 5-foot-long staff carved from alchemically treated wood. Exceptionally light and well-balanced, whipstaffs are favored by travelers and martial artists who prioritize speed over power."
+  },
+  {
+    "id": "fZxI5GkBFfAUUf1z",
+    "name": "Wrecker",
+    "category": "advanced",
+    "hands": 2,
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "traits": [
+      "combination",
+      "dwarf",
+      "ranged-trip",
+      "razing"
+    ],
+    "rangeIncrement": 20,
+    "reload": 1,
+    "price": "8 gp",
+    "description": "The wrecker combines a dwarven dorn-dergar with a heavy, gear-reinforced arm cover that allows it to be fired like an oversized sling, then retrieved and reloaded by manually activating a clockwork spool. A wrecker must be loaded to be switched from its ranged configuration to its melee configuration."
+  }
+]

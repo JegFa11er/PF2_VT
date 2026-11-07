@@ -1,6 +1,70 @@
 # Handoff
 
-## Current milestone — Phase 20 (complete): View & Presentation Integration
+## Current milestone — Phase 24 (complete): Battlefield Editor, Scene Presets & Token Management
+
+Status: **implemented and verified in the browser**; Core business logic is
+unchanged (492/492 tests pass, 35 suites).
+
+- `index.html` adds a scene toolbar above the canvas: the **Default Encounter /
+  Empty Arena** preset select, six terrain brushes (Select, Wall, Difficult,
+  Greater Difficult, Hazardous, Illumination), and **Очистить поле боя**.
+- `src/View/UI/confirm-dialog.js` is a reusable Foundry-style confirmation modal.
+  Escape, the backdrop, and **Нет** cancel; **Да** clears the board.
+- `src/View/UI/scene-editor.js` owns preset/brush/clear presentation and forwards
+  intents to the host.
+- `src/View/battlefield-view.js` adds `PF2e.View.PAINT_TOOLS` and a paint cursor
+  mode. While a brush is active, canvas clicks call `onPaintRequest` instead of
+  resolving an action; the component refreshes reachability and re-renders after
+  every edit.
+- `src/main.js` extracts `createDefaultMap()` / `createDefaultCombatants()` /
+  `createDefaultHazards()`, adds the empty-roster `NullEncounter` adapter,
+  applies presets, paints `GridMap` primitives, and rebuilds the Encounter after
+  token deletion. `window.PF2e.App` exposes `sceneEditor`, `applyScenePreset`,
+  `clearBoard`, `deleteCombatant`, and `paintTerrainCell`.
+- `src/View/Tokens/token-hud.js` adds a 🗑️ **Удалить токен** button. Delete and
+  Backspace remove the selected token with a `<name> удален со сцены` log line.
+- `docs/HANDOFF_UI.md` documents the Phase 24 readiness block, accepted browser
+  checks, and deferred editor limitations.
+
+## Previous milestone — Phase 23 (complete): Data Ingestion & Compendium Browser
+
+Status: **implemented and verified in the browser**; Core business logic is
+unchanged (492/492 tests pass, 35 suites).
+
+- `scripts/build-compendiums.js` reads `../pf2e-reference/packs/pf2e` and emits
+  four combat-focused catalogs in `data/compendiums/`: 200 spells, 200 weapons,
+  125 shields, and 200 monsters. `npm run build:data` regenerates them.
+- `src/View/UI/compendium-browser.js` replaces the Library placeholder with
+  category tabs, name search, rank/level and spell-save filters, recipient
+  selection, expandable stat cards, and equip/add-spell/spawn actions.
+- `src/main.js` maps catalogs into Combatant inventory/spells, equips items
+  through `combatant.equipItem`, and spawns bestiary monsters as real Combatants
+  registered in a rebuilt Encounter while preserving round and active turn.
+- `index.html`, `css/main.css`, and `package.json` carry the panel markup, Phase
+  23 styling, script include, and build command.
+- Full UI notes, accepted browser checks, and deferred limitations live in
+  `docs/HANDOFF_UI.md`.
+
+## Previous milestone — Phase 21 (complete): Token HUD & Condition Palette
+
+Status: **implemented and verified in the browser**; Core business logic is
+unchanged (492/492 tests pass, 35 suites).
+
+- `src/View/Tokens/token-hud.js` adds a Foundry-style right-click HUD anchored
+  above the token. It exposes a settings-gear placeholder, direct HP editing
+  (`takeDamage` / `applyHealing`, clamped to max HP and sent through the
+  CombatEventBus), and a 5-column palette for all 16 core conditions.
+- Valued conditions step by one: left click adds/increments, right click
+  decrements/removes. Unvalued conditions toggle on left click.
+- Canvas left click still only selects; left/right click on empty space or a
+  different token closes the HUD. Escape also closes it.
+- `css/main.css` carries the dark translucent HUD/palette theme, active-cell
+  glow, invalid-input shake, and CSS tooltips. `index.html` loads the module
+  and describes Phase 21. `src/main.js` wires the HUD and exposes
+  `window.PF2e.App.tokenHud`.
+- Full UI notes and acceptance checks live in `docs/HANDOFF_UI.md`.
+
+## Previous milestone — Phase 20 (complete): View & Presentation Integration
 
 Status: **implemented and verified in Node and the browser**.
 

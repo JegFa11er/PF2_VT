@@ -31,7 +31,62 @@
     SNEAK: "sneak",
   });
 
+  const PAINT_TOOLS = Object.freeze({
+    SELECT: "select",
+    WALL: "wall",
+    DIFFICULT: "difficult",
+    GREATER_DIFFICULT: "greater-difficult",
+    HAZARDOUS: "hazardous",
+    ILLUMINATION: "illumination",
+  });
+
+  const PAINT_TOOL_VALUES = Object.freeze([
+    PAINT_TOOLS.SELECT,
+    PAINT_TOOLS.WALL,
+    PAINT_TOOLS.DIFFICULT,
+    PAINT_TOOLS.GREATER_DIFFICULT,
+    PAINT_TOOLS.HAZARDOUS,
+    PAINT_TOOLS.ILLUMINATION,
+  ]);
+
   const SPELL_AREA_TYPES = Object.freeze(["burst", "cone", "line", "emanation"]);
+
+  function hasCompendiumDrag(dataTransfer) {
+    if (!dataTransfer || !dataTransfer.types) {
+      return false;
+    }
+    const types = Array.from(dataTransfer.types);
+    return (
+      types.indexOf("application/json") !== -1 ||
+      types.indexOf("text/plain") !== -1
+    );
+  }
+
+  function readCompendiumDrag(dataTransfer) {
+    if (!dataTransfer) {
+      return null;
+    }
+    let raw = "";
+    try {
+      raw =
+        dataTransfer.getData("application/json") ||
+        dataTransfer.getData("text/plain");
+    } catch (error) {
+      return null;
+    }
+    if (!raw) {
+      return null;
+    }
+    try {
+      const payload = JSON.parse(raw);
+      if (!payload || payload.type !== "compendium-item" || !payload.entry) {
+        return null;
+      }
+      return payload;
+    } catch (error) {
+      return null;
+    }
+  }
 
   function allianceOf(combatant) {
     return combatant.alliance === undefined ? "player" : combatant.alliance;
@@ -133,6 +188,9 @@
 
       this.cornerPolicy = opts.diagonalCornerPolicy || POLICY.BLOCK_ANY;
       this.mode = MODES.STRIDE;
+      // Phase 24: the terrain brush is a cursor mode layered on top of the
+      // action mode. "select" is the normal token/movement cursor.
+      this.paintTool = PAINT_TOOLS.SELECT;
       this.activeCombatantId = opts.activeCombatantId || null;
       this.selectedCombatant = null;
       this.reachable = [];
@@ -167,19 +225,31 @@
         typeof opts.onCastRequest === "function" ? opts.onCastRequest : function () {};
       this.onSneakRequest =
         typeof opts.onSneakRequest === "function" ? opts.onSneakRequest : function () {};
+      this.onPaintRequest =
+        typeof opts.onPaintRequest === "function" ? opts.onPaintRequest : function () {};
       this.onHoverChange =
         typeof opts.onHoverChange === "function" ? opts.onHoverChange : function () {};
       this.onInactiveToken =
         typeof opts.onInactiveToken === "function" ? opts.onInactiveToken : function () {};
+      this.onDropCompendium =
+        typeof opts.onDropCompendium === "function"
+          ? opts.onDropCompendium
+          : function () {};
 
       this.handleClick = this.handleClick.bind(this);
       this.handleMouseMove = this.handleMouseMove.bind(this);
       this.handleMouseLeave = this.handleMouseLeave.bind(this);
       this.handleKeyDown = this.handleKeyDown.bind(this);
+      this.handleDragOver = this.handleDragOver.bind(this);
+      this.handleDragLeave = this.handleDragLeave.bind(this);
+      this.handleDrop = this.handleDrop.bind(this);
 
       this.canvas.addEventListener("click", this.handleClick);
       this.canvas.addEventListener("mousemove", this.handleMouseMove);
       this.canvas.addEventListener("mouseleave", this.handleMouseLeave);
+      this.canvas.addEventListener("dragover", this.handleDragOver);
+      this.canvas.addEventListener("dragleave", this.handleDragLeave);
+      this.canvas.addEventListener("drop", this.handleDrop);
       root.addEventListener("keydown", this.handleKeyDown);
 
       this.resize();
@@ -220,6 +290,30 @@
 
     getMode() {
       return this.mode;
+    }
+
+    getPaintTool() {
+      return this.paintTool;
+    }
+
+    setPaintTool(tool) {
+      const value = tool === undefined || tool === null ? PAINT_TOOLS.SELECT : String(tool);
+      if (PAINT_TOOL_VALUES.indexOf(value) === -1) {
+        throw new RangeError("Unknown terrain brush: " + value + ".");
+      }
+      if (this.paintTool === value) {
+        return;
+      }
+      this.paintTool = value;
+      this.aoeCells = [];
+      this.aoeTargets = [];
+      this.resetHover();
+      this.refreshReachable();
+      this.render();
+    }
+
+    isPainting() {
+      return this.paintTool !== PAINT_TOOLS.SELECT;
     }
 
     getSpell() {
@@ -696,6 +790,21 @@
       };
     }
 
+    /**
+     * Exact grid cell under a mouse/drag event. Used by the Phase 25 drop
+     * target so a bestiary card spawns on the square the cursor is over.
+     *
+     * @param {MouseEvent|DragEvent} event
+     * @returns {{x:number,y:number}|null}
+     */
+    cellFromEvent(event) {
+      const point = this.eventPoint(event);
+      if (!point) {
+        return null;
+      }
+      return this.grid.cellAtPoint(point.x, point.y);
+    }
+
     findTokenAt(px, py) {
       for (let i = this.tokenViews.length - 1; i >= 0; i -= 1) {
         if (this.tokenViews[i].hitTest(px, py)) {
@@ -716,6 +825,16 @@
       }
 
       const token = this.findTokenAt(point.x, point.y);
+
+      // Phase 24 terrain/wall painter: while a brush is active every board
+      // click edits the map instead of resolving an action.
+      if (this.paintTool !== PAINT_TOOLS.SELECT) {
+        this.onPaintRequest(cell, this.paintTool);
+        this.resetHover();
+        this.refreshReachable();
+        this.render();
+        return;
+      }
 
       if (this.mode === MODES.CAST) {
         if (!this.selectedCombatant || !this.spell) {
@@ -817,6 +936,52 @@
       this.setHover(null);
     }
 
+    handleDragOver(event) {
+      if (!hasCompendiumDrag(event.dataTransfer)) {
+        return;
+      }
+      event.preventDefault();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+      }
+      this.canvas.classList.add("drag-over");
+    }
+
+    handleDragLeave(event) {
+      if (
+        event.relatedTarget &&
+        typeof this.canvas.contains === "function" &&
+        this.canvas.contains(event.relatedTarget)
+      ) {
+        return;
+      }
+      this.canvas.classList.remove("drag-over");
+    }
+
+    handleDrop(event) {
+      this.canvas.classList.remove("drag-over");
+      const payload = readCompendiumDrag(event.dataTransfer);
+      if (!payload) {
+        return;
+      }
+      event.preventDefault();
+      const point = this.eventPoint(event);
+      const cell = point ? this.grid.cellAtPoint(point.x, point.y) : null;
+      if (!cell) {
+        this.resetHover();
+        return;
+      }
+      const token = point ? this.findTokenAt(point.x, point.y) : null;
+      this.onDropCompendium(
+        payload,
+        { x: cell.x, y: cell.y },
+        token || this.findCombatantAtCell(cell),
+      );
+      this.resetHover();
+      this.refreshReachable();
+      this.render();
+    }
+
     handleKeyDown(event) {
       if (event.key === "Escape" && this.selectedCombatant) {
         this.clearSelection();
@@ -846,6 +1011,18 @@
       }
 
       const label = Grid.gridToLabel(cell);
+
+      if (this.paintTool !== PAINT_TOOLS.SELECT) {
+        this.hoverInfo = {
+          status: "paint",
+          cell: cell,
+          label: label,
+          tool: this.paintTool,
+        };
+        this.onHoverChange(this.hoverInfo);
+        this.render();
+        return;
+      }
 
       if (!this.selectedCombatant) {
         this.hoverInfo = { status: "no-selection", cell: cell, label: label };
@@ -1452,8 +1629,9 @@
 
     render() {
       const ctx = this.ctx;
-      this.canvas.style.cursor =
-        this.hoverInfo &&
+      this.canvas.style.cursor = this.isPainting()
+        ? "crosshair"
+        : this.hoverInfo &&
         (this.hoverInfo.status === "strike" ||
           this.hoverInfo.status === "trip" ||
           this.hoverInfo.status === "shove" ||
@@ -1551,10 +1729,14 @@
       this.canvas.removeEventListener("click", this.handleClick);
       this.canvas.removeEventListener("mousemove", this.handleMouseMove);
       this.canvas.removeEventListener("mouseleave", this.handleMouseLeave);
+      this.canvas.removeEventListener("dragover", this.handleDragOver);
+      this.canvas.removeEventListener("dragleave", this.handleDragLeave);
+      this.canvas.removeEventListener("drop", this.handleDrop);
       root.removeEventListener("keydown", this.handleKeyDown);
     }
   }
 
   NS.View.BattlefieldView = BattlefieldView;
   NS.View.ACTION_MODES = MODES;
+  NS.View.PAINT_TOOLS = PAINT_TOOLS;
 })(typeof globalThis !== "undefined" ? globalThis : this);

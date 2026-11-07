@@ -49,11 +49,26 @@
   const WeaponTraits = window.PF2e.Core.Rules.WeaponTraits;
   const View = window.PF2e.View;
   const MODES = View.ACTION_MODES;
+  const PAINT_TOOLS = View.PAINT_TOOLS;
 
   const COLS = 15;
   const ROWS = 15;
   const CELL_SIZE = 48;
   const CORNER_POLICY = Pathfinding.DIAGONAL_CORNER_POLICIES.BLOCK_ANY;
+
+  // Phase 21: the token HUD is created after the BattlefieldView so it can
+  // read the live token views. The variable is declared early because the
+  // shared UI refresh helpers may run before the HUD is constructed.
+  let tokenHud = null;
+  // Phase 22: Foundry-style right sidebar and the floating character sheet.
+  // Both are created after the BattlefieldView; the declarations live here so
+  // shared refresh helpers can guard on them.
+  let sidebar = null;
+  let characterSheet = null;
+  // Phase 23: generated compendium catalogs inside the Library tab.
+  let compendiumBrowser = null;
+  // Phase 24: scene presets, terrain brushes, and the clear-board dialog.
+  let sceneEditor = null;
 
   const MAP_ROWS = [
     "...............",
@@ -73,25 +88,33 @@
     "...............",
   ];
 
-  let map = GridMap.fromAscii(MAP_ROWS, "#", { difficultChars: "~" });
+  // The authored default encounter is built by a factory so the Phase 24
+  // "Default Encounter" preset can restore exactly the same battlefield after
+  // the user clears it or switches to Empty Arena.
+  function createDefaultMap() {
+    const nextMap = GridMap.fromAscii(MAP_ROWS, "#", { difficultChars: "~" });
 
-  // Demo battlefield decoration for the Phase 20 presentation slice:
-  // greater-difficult rubble, hazardous fire vents, and two light pockets.
-  map.setTerrain(5, 9, "greater-difficult");
-  map.setTerrain(6, 9, "greater-difficult");
-  map.setTerrain(5, 10, "greater-difficult");
-  map.setHazardous(9, 9, { damage: "1d6", type: "fire" });
-  map.setHazardous(10, 9, { damage: "1d6", type: "fire" });
-  for (let y = 0; y <= 2; y += 1) {
-    for (let x = 0; x <= 2; x += 1) {
-      map.setIllumination(x, y, "dim");
+    // Demo battlefield decoration: greater-difficult rubble, hazardous fire
+    // vents, and two light pockets.
+    nextMap.setTerrain(5, 9, "greater-difficult");
+    nextMap.setTerrain(6, 9, "greater-difficult");
+    nextMap.setTerrain(5, 10, "greater-difficult");
+    nextMap.setHazardous(9, 9, { damage: "1d6", type: "fire" });
+    nextMap.setHazardous(10, 9, { damage: "1d6", type: "fire" });
+    for (let y = 0; y <= 2; y += 1) {
+      for (let x = 0; x <= 2; x += 1) {
+        nextMap.setIllumination(x, y, "dim");
+      }
     }
-  }
-  for (let y = 12; y <= 14; y += 1) {
-    for (let x = 0; x <= 2; x += 1) {
-      map.setIllumination(x, y, "darkness");
+    for (let y = 12; y <= 14; y += 1) {
+      for (let x = 0; x <= 2; x += 1) {
+        nextMap.setIllumination(x, y, "darkness");
+      }
     }
+    return nextMap;
   }
+
+  let map = createDefaultMap();
 
   const COLORS = {
     valeros: "#c8553d",
@@ -101,7 +124,8 @@
     giant: "#7d6aa8",
   };
 
-  let COMBATANTS = [
+  function createDefaultCombatants() {
+    const roster = [
     new Combatant({
       id: "valeros",
       name: "Valeros",
@@ -121,6 +145,37 @@
       // targets and adds a deadly d8 die on a critical hit.
       traits: ["reach", "backstabber", "deadly-d8"],
       agile: false,
+      // Phase 22 demo equipment: a drawn longsword, a stowed steel shield,
+      // and a potion. The shield stays stowed so the existing Trip/Shove/
+      // Grapple free-hand demos keep working until it is drawn from the sheet.
+      inventory: [
+        {
+          id: "longsword",
+          name: "Longsword",
+          type: "weapon",
+          damage: "1d8",
+          damageType: "slashing",
+          traits: ["versatile-p"],
+          hands: 1,
+        },
+        {
+          id: "steel-shield",
+          name: "Steel Shield",
+          type: "shield",
+          hardness: 5,
+          hp: 20,
+          maxHP: 20,
+          acBonus: 2,
+          hands: 1,
+        },
+        {
+          id: "healing-potion",
+          name: "Healing Potion",
+          type: "gear",
+          hands: 1,
+        },
+      ],
+      hands: { mainHand: "longsword" },
     }),
     new Combatant({
       id: "merisiel",
@@ -138,6 +193,27 @@
       saves: { fortitude: 5, reflex: 9, will: 6 },
       skills: { athletics: 4, acrobatics: 9, stealth: 10, perception: 8 },
       agile: true,
+      // Phase 22 demo equipment: a drawn dagger and stowed thieves' tools so
+      // the Inventory tab can demonstrate Draw/Stow/Drop alongside the spell
+      // slot and Focus Point pools below.
+      inventory: [
+        {
+          id: "dagger",
+          name: "Dagger",
+          type: "weapon",
+          damage: "1d6",
+          damageType: "piercing",
+          traits: ["agile", "finesse"],
+          hands: 1,
+        },
+        {
+          id: "thieves-tools",
+          name: "Thieves' Tools",
+          type: "gear",
+          hands: 1,
+        },
+      ],
+      hands: { mainHand: "dagger" },
       // Phase 20 demo spellbook: attack cantrips plus burst/cone/line/
       // emanation save spells and one sustained spell.
       spellAttackBonus: 9,
@@ -290,59 +366,160 @@
       traits: ["reach"],
       agile: false,
     }),
-  ];
+    ];
 
-  // Authored demo conditions: the goblin starts shaken and half-hidden by
-  // smoke, and Merisiel starts in the shadows. This makes the condition
-  // badges, flat checks, Hidden-attacker Off-Guard, and token opacity visible
-  // immediately without adding Seek/Hide actions in this slice.
-  const demoGoblin = COMBATANTS.find(function (combatant) {
-    return combatant.id === "goblin";
-  });
-  if (demoGoblin) {
-    demoGoblin.addCondition("frightened", 1);
-    demoGoblin.addCondition("concealed");
+    // Authored demo conditions: the goblin starts shaken and half-hidden by
+    // smoke, and Merisiel starts in the shadows. This makes the condition
+    // badges, flat checks, Hidden-attacker Off-Guard, and token opacity visible
+    // immediately without adding Seek/Hide actions in this slice.
+    const demoGoblin = roster.find(function (combatant) {
+      return combatant.id === "goblin";
+    });
+    if (demoGoblin) {
+      demoGoblin.addCondition("frightened", 1);
+      demoGoblin.addCondition("concealed");
+    }
+    const demoMerisiel = roster.find(function (combatant) {
+      return combatant.id === "merisiel";
+    });
+    if (demoMerisiel) {
+      demoMerisiel.addCondition("hidden");
+    }
+    return roster;
   }
-  const demoMerisiel = COMBATANTS.find(function (combatant) {
-    return combatant.id === "merisiel";
-  });
-  if (demoMerisiel) {
-    demoMerisiel.addCondition("hidden");
-  }
+
+  let COMBATANTS = createDefaultCombatants();
 
   // One event bus feeds the combat log, the round badge, and the active-row
   // highlight. The Encounter propagates it to every combatant and hazard.
   const EVENT_BUS = new CombatEventBus({ recordHistory: true });
 
-  let HAZARDS = [
-    new Hazard({
-      id: "spike-trap",
-      name: "Spike Trap",
-      stealthDC: 18,
-      disableDC: 16,
-      disableSkill: "thievery",
-      maxHP: 12,
-      hardness: 4,
-      triggerArea: [{ x: 6, y: 3 }, { x: 6, y: 4 }],
-      reaction: {
-        trigger: "enter",
-        formula: "2d6",
-        type: "piercing",
-        saveType: "reflex",
-        saveDC: 17,
-      },
-    }),
-  ];
-  for (const hazard of HAZARDS) {
-    if (typeof hazard.setEventBus === "function") {
-      hazard.setEventBus(EVENT_BUS);
+  function createDefaultHazards(bus) {
+    const hazards = [
+      new Hazard({
+        id: "spike-trap",
+        name: "Spike Trap",
+        stealthDC: 18,
+        disableDC: 16,
+        disableSkill: "thievery",
+        maxHP: 12,
+        hardness: 4,
+        triggerArea: [{ x: 6, y: 3 }, { x: 6, y: 4 }],
+        reaction: {
+          trigger: "enter",
+          formula: "2d6",
+          type: "piercing",
+          saveType: "reflex",
+          saveDC: 17,
+        },
+      }),
+    ];
+    for (const hazard of hazards) {
+      if (typeof hazard.setEventBus === "function") {
+        hazard.setEventBus(bus);
+      }
     }
+    return hazards;
   }
+
+  let HAZARDS = createDefaultHazards(EVENT_BUS);
 
   let encounter = new Encounter({
     combatants: COMBATANTS,
     eventBus: EVENT_BUS,
   });
+
+  /**
+   * Phase 24: the headless Encounter intentionally requires at least one
+   * combatant. Empty Arena therefore uses a tiny view-side adapter that keeps
+   * the same read/write surface the UI already consumes, while owning no
+   * initiative or rules state.
+   */
+  class NullEncounter {
+    constructor() {
+      this.combatants = [];
+      this.round = 1;
+      this.started = false;
+      this.over = true;
+      this.activeCombatantIndex = -1;
+      this.eventBus = null;
+    }
+
+    get activeCombatant() {
+      return null;
+    }
+
+    get isStarted() {
+      return this.started;
+    }
+
+    get isOver() {
+      return true;
+    }
+
+    get livingCombatants() {
+      return [];
+    }
+
+    isActive() {
+      return false;
+    }
+
+    getOrder() {
+      return [];
+    }
+
+    indexOf() {
+      return -1;
+    }
+
+    _syncRound() {
+      return this;
+    }
+
+    _findLivingFrom() {
+      return -1;
+    }
+
+    setEventBus(bus) {
+      this.eventBus = bus || null;
+      return this;
+    }
+
+    startEncounter() {
+      this.started = true;
+      this.round = Math.max(1, this.round || 1);
+      return null;
+    }
+
+    rollInitiative() {
+      this.started = true;
+      this.round = Math.max(1, this.round || 1);
+      return {
+        active: null,
+        round: this.round,
+        order: [],
+        entries: [],
+        rolls: {},
+      };
+    }
+
+    nextTurn() {
+      return {
+        active: null,
+        previous: null,
+        round: this.round,
+        wrapped: false,
+        index: -1,
+        conditionTick: null,
+        persistentTick: null,
+        durationExpiry: [],
+        afflictionTick: null,
+        releasedGrapples: [],
+        expiredSustainedSpells: [],
+      };
+    }
+  }
 
   const canvas = document.getElementById("battlefield");
   const tokenListEl = document.getElementById("token-list");
@@ -1339,9 +1516,12 @@
 
   function defaultStatus() {
     const active = encounter.activeCombatant;
+    if (COMBATANTS.length === 0) {
+      return "The battlefield is empty — choose a preset, paint terrain, or spawn a monster from the Compendium.";
+    }
     if (!active) {
       return encounter.isStarted
-        ? "All combatants are defeated — the encounter is over."
+        ? "All combatants are defeated - the encounter is over."
         : "Start the encounter to begin the turn cycle.";
     }
     const mode = battlefield.getMode();
@@ -2024,6 +2204,12 @@
     updateEscapeButton();
     updateSpellUi();
     updateHazardUi();
+    if (tokenHud) {
+      tokenHud.refresh();
+    }
+    if (characterSheet) {
+      characterSheet.refresh();
+    }
   }
 
   function updateHoverStatus(info) {
@@ -2036,7 +2222,26 @@
     }
 
     if (info.status === "origin") {
-      statusEl.textContent = info.label + " — selected token's square.";
+      statusEl.textContent = info.label + " - selected token's square.";
+      return;
+    }
+
+    if (info.status === "paint") {
+      const labels = {
+        wall: "Wall",
+        difficult: "Difficult Terrain (+5 ft)",
+        "greater-difficult": "Greater Difficult Terrain (+10 ft)",
+        hazardous: "Hazardous Fire (1d6 fire)",
+        illumination: "Illumination (bright → dim → darkness)",
+      };
+      statusEl.textContent =
+        "Brush: " +
+        (labels[info.tool] || info.tool) +
+        " — click " +
+        info.label +
+        " to apply.";
+      statusEl.classList.add("is-valid");
+      statusEl.dataset.state = "paint";
       return;
     }
 
@@ -2430,6 +2635,67 @@
     }
   }
 
+  /**
+   * Phase 24: one click of the active terrain brush. The map object is the
+   * same instance the pathfinder, cover rays, and hazards already read, so a
+   * painted square is immediately authoritative for rules queries.
+   */
+  function paintTerrainCell(cell, tool) {
+    if (!cell || !map.isInBounds(cell.x, cell.y)) {
+      return;
+    }
+    const label = Grid.gridToLabel(cell);
+    let message = null;
+
+    if (tool === PAINT_TOOLS.WALL) {
+      const blocked = !map.hasObstacle(cell.x, cell.y);
+      map.setBlocked(cell.x, cell.y, blocked);
+      message = (blocked ? "Wall placed" : "Wall removed") + " at " + label + ".";
+    } else if (tool === PAINT_TOOLS.DIFFICULT) {
+      const normal = map.getTerrain(cell.x, cell.y) === "difficult";
+      map.setTerrain(cell.x, cell.y, normal ? "normal" : "difficult");
+      message =
+        (normal ? "Difficult terrain removed" : "Difficult terrain placed") +
+        " at " +
+        label +
+        (normal ? "." : " (+5 ft).");
+    } else if (tool === PAINT_TOOLS.GREATER_DIFFICULT) {
+      const normal =
+        map.getTerrain(cell.x, cell.y) === "greater-difficult";
+      map.setTerrain(cell.x, cell.y, normal ? "normal" : "greater-difficult");
+      message =
+        (normal
+          ? "Greater difficult terrain removed"
+          : "Greater difficult terrain placed") +
+        " at " +
+        label +
+        (normal ? "." : " (+10 ft).");
+    } else if (tool === PAINT_TOOLS.HAZARDOUS) {
+      const burning = !map.hasHazardous(cell.x, cell.y);
+      map.setHazardous(
+        cell.x,
+        cell.y,
+        burning ? { damage: "1d6", type: "fire" } : null,
+      );
+      message =
+        (burning ? "Hazardous fire placed" : "Hazardous fire removed") +
+        " at " +
+        label +
+        (burning ? " (1d6 fire)." : ".");
+    } else if (tool === PAINT_TOOLS.ILLUMINATION) {
+      const levels = GridMap.ILLUMINATION_VALUES;
+      const current = map.getIllumination(cell.x, cell.y);
+      const index = Math.max(0, levels.indexOf(current));
+      const next = levels[(index + 1) % levels.length];
+      map.setIllumination(cell.x, cell.y, next);
+      message = "Illumination at " + label + " set to " + next + ".";
+    }
+
+    if (message) {
+      log.add("[EDIT] " + message, "system");
+    }
+  }
+
   const battlefield = new View.BattlefieldView({
     canvas: canvas,
     combatants: COMBATANTS,
@@ -2438,7 +2704,12 @@
     diagonalCornerPolicy: CORNER_POLICY,
     getColor: colorOf,
     getOccupancy: getOccupancy,
+    onDropCompendium: function (metadata, cell, token) {
+      handleBattlefieldDrop(metadata, cell, token);
+    },
     onSelectionChange: function (combatant, cells) {
+      // A real battlefield selection supersedes the read-only Actors highlight.
+      clearTokenHighlight();
       setSelectedCard(combatant ? combatant.id : null);
       renderSelection(combatant, cells);
       updateTokenCards();
@@ -2701,6 +2972,7 @@
     onSneakRequest: function (combatant, cell) {
       useSneak(combatant, cell);
     },
+    onPaintRequest: paintTerrainCell,
     onHoverChange: updateHoverStatus,
     onInactiveToken: function (combatant) {
       if (combatant.isDefeated === true) {
@@ -2719,7 +2991,1528 @@
     },
   });
 
+  // Right-click token HUD: settings gear, direct HP editing, and the condition
+  // palette. All rules mutations go through Combatant's public API; the HUD
+  // only refreshes presentation and flushes the shared event log.
+  tokenHud = new View.TokenHud({
+    battlefield: battlefield,
+    canvas: canvas,
+    container: canvas.parentElement,
+    eventBus: EVENT_BUS,
+    onStateChange: function (combatant, change) {
+      flushEventLog();
+      battlefield.refresh();
+      updateTokenCards();
+      renderSelection(
+        battlefield.getSelectedCombatant(),
+        battlefield.getReachableCells(),
+      );
+    },
+    onLog: function (message, kind) {
+      log.add(message, kind || "info");
+    },
+    onSettings: function (combatant) {
+      log.add(
+        "Token settings for " + combatant.name + " are not implemented yet.",
+        "muted",
+      );
+    },
+    onDelete: function (combatant) {
+      deleteCombatant(combatant, { source: "token-hud" });
+    },
+  });
+
+  // Phase 24: scene presets, the terrain/wall painter, and the clear-board
+  // confirmation dialog. The editor forwards intents; main.js owns the live
+  // map/encounter replacement.
+  const confirmDialog = new View.ConfirmDialog({});
+  sceneEditor = new View.SceneEditor({
+    root: document.getElementById("scene-toolbar"),
+    dialog: confirmDialog,
+    onPresetChange: function (presetId) {
+      applyScenePreset(presetId);
+    },
+    onToolChange: function (tool) {
+      battlefield.setPaintTool(tool);
+      updateHoverStatus(null);
+      log.add(
+        "Terrain brush: " + tool + (tool === "select" ? " (token/movement mode)" : "") + ".",
+        "muted",
+      );
+    },
+    onClearBoard: function () {
+      clearBoard();
+    },
+  });
+
+  function selectCursorMode() {
+    if (sceneEditor) {
+      sceneEditor.setTool("select", { silent: true });
+    }
+    battlefield.setPaintTool(PAINT_TOOLS.SELECT);
+  }
+
+  function findNextLivingIndex(encounterInstance, startIndex) {
+    const count = encounterInstance.combatants.length;
+    if (count === 0) {
+      return -1;
+    }
+    const start =
+      Number.isInteger(startIndex) && startIndex >= 0 ? startIndex : 0;
+    for (let step = 0; step < count; step += 1) {
+      const index = (start + step) % count;
+      const combatant = encounterInstance.combatants[index];
+      if (combatant.isDefeated !== true && combatant.currentHP !== 0) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Rebuild the Encounter after a token leaves the roster. The round and
+   * started flag survive; the active turn stays on the same creature unless
+   * that creature was the one removed, in which case the next living
+   * combatant in the old order takes over.
+   */
+  function rebuildEncounterForRoster(activeId, preferredIndex) {
+    const previousRound =
+      Number.isInteger(encounter.round) && encounter.round > 0
+        ? encounter.round
+        : 1;
+    const wasStarted = encounter.started === true;
+
+    if (COMBATANTS.length === 0) {
+      const empty = new NullEncounter();
+      empty.round = previousRound;
+      empty.started = wasStarted;
+      empty.setEventBus(EVENT_BUS);
+      encounter = empty;
+      return null;
+    }
+
+    const next = new Encounter({ combatants: COMBATANTS, eventBus: EVENT_BUS });
+    next.round = previousRound;
+    next.started = wasStarted;
+    let index = activeId ? next.indexOf(activeId) : -1;
+    if (index === -1 && wasStarted) {
+      index = findNextLivingIndex(next, preferredIndex);
+    }
+    next.activeCombatantIndex = index;
+    next.over = index === -1;
+    if (typeof next._syncRound === "function") {
+      next._syncRound();
+    }
+    encounter = next;
+    return index === -1 ? null : next.activeCombatant;
+  }
+
+  function rebuildScenePresentation() {
+    const active = encounter.activeCombatant;
+    battlefield.setWorld(COMBATANTS, map);
+    battlefield.setPaintTool(PAINT_TOOLS.SELECT);
+    if (sceneEditor) {
+      sceneEditor.setTool("select", { silent: true });
+    }
+    suppressSelectionLog = true;
+    battlefield.setActiveCombatant(active ? active.id : null);
+    rebuildTokenCards();
+    populateSpellPicker();
+    updateModeUi();
+    renderInitiative();
+    updateTokenCards();
+    if (active) {
+      battlefield.selectCombatant(active.id);
+    } else {
+      battlefield.clearSelection();
+    }
+    suppressSelectionLog = false;
+    updateHoverStatus(null);
+    updateHazardUi();
+  }
+
+  function createEmptyMap() {
+    return new GridMap({ cols: COLS, rows: ROWS });
+  }
+
+  function applyScenePreset(presetId) {
+    const id = String(presetId || "").trim().toLowerCase();
+
+    if (tokenHud) {
+      tokenHud.close();
+    }
+    if (characterSheet) {
+      characterSheet.close();
+    }
+    clearTokenHighlight();
+
+    if (id === "empty") {
+      map = createEmptyMap();
+      COMBATANTS = [];
+      HAZARDS = [];
+      encounter = new NullEncounter();
+      encounter.setEventBus(EVENT_BUS);
+      if (sceneEditor) {
+        sceneEditor.setPreset("empty");
+      }
+      rebuildScenePresentation();
+      log.add(
+        "[SCENE] Empty Arena loaded — 15 × 15 grid, bright light, no combatants, walls, terrain, hazards, or traps.",
+        "system",
+      );
+      return true;
+    }
+
+    if (id !== "default") {
+      log.add("[SCENE] Unknown scene preset: " + id + ".", "warn");
+      return false;
+    }
+
+    map = createDefaultMap();
+    COMBATANTS = createDefaultCombatants();
+    HAZARDS = createDefaultHazards(EVENT_BUS);
+    encounter = new Encounter({
+      combatants: COMBATANTS,
+      eventBus: EVENT_BUS,
+    });
+    encounter.startEncounter();
+    if (sceneEditor) {
+      sceneEditor.setPreset("default");
+    }
+    rebuildScenePresentation();
+    log.add(
+      "[SCENE] Default Encounter restored — " +
+        COMBATANTS.length +
+        " combatants, central wall, difficult terrain, lava vents, and the Spike Trap.",
+      "system",
+    );
+    return true;
+  }
+
+  function clearBoard() {
+    if (tokenHud) {
+      tokenHud.close();
+    }
+    if (characterSheet) {
+      characterSheet.close();
+    }
+    clearTokenHighlight();
+
+    map = createEmptyMap();
+    COMBATANTS = [];
+    HAZARDS = [];
+    encounter = new NullEncounter();
+    encounter.setEventBus(EVENT_BUS);
+    encounter.round = 1;
+    encounter.started = false;
+
+    if (sceneEditor) {
+      sceneEditor.setPreset("empty");
+    }
+    rebuildScenePresentation();
+    log.add(
+      "[SCENE] Поле боя очищено: все бойцы, стены, зоны ландшафта, опасные клетки и ловушки удалены.",
+      "system",
+    );
+  }
+
+  function deleteCombatant(combatant, options) {
+    const opts = options || {};
+    if (!combatant) {
+      return false;
+    }
+    const index = COMBATANTS.findIndex(function (candidate) {
+      return candidate.id === combatant.id;
+    });
+    if (index === -1) {
+      log.add(combatant.name + " is no longer on the battlefield.", "warn");
+      return false;
+    }
+
+    if (tokenHud) {
+      tokenHud.close();
+    }
+    if (
+      characterSheet &&
+      typeof characterSheet.getCombatantId === "function" &&
+      characterSheet.getCombatantId() === combatant.id
+    ) {
+      characterSheet.close();
+    }
+    if (
+      battlefield.getSelectedCombatant() &&
+      battlefield.getSelectedCombatant().id === combatant.id
+    ) {
+      battlefield.clearSelection();
+    }
+
+    const previousActive = encounter.activeCombatant;
+    const wasActive =
+      Boolean(previousActive) && previousActive.id === combatant.id;
+    const activeId = previousActive ? previousActive.id : null;
+    const preferredIndex = wasActive
+      ? encounter.indexOf(previousActive)
+      : -1;
+
+    COMBATANTS.splice(index, 1);
+    const released = Conditions.releaseGrapplesBySource(
+      COMBATANTS,
+      combatant.id,
+    );
+    const nextActive = rebuildEncounterForRoster(
+      wasActive ? null : activeId,
+      preferredIndex,
+    );
+
+    battlefield.setWorld(COMBATANTS, map);
+    suppressSelectionLog = true;
+    battlefield.setActiveCombatant(nextActive ? nextActive.id : null);
+    rebuildTokenCards();
+    populateSpellPicker();
+    updateModeUi();
+    renderInitiative();
+    updateTokenCards();
+    if (nextActive && !battlefield.isPainting()) {
+      battlefield.selectCombatant(nextActive.id);
+    } else if (!nextActive) {
+      battlefield.clearSelection();
+    }
+    suppressSelectionLog = false;
+    updateHoverStatus(null);
+    updateHazardUi();
+
+    logReleasedGrapples(
+      combatant.name,
+      released,
+      "the token was removed",
+    );
+    log.add(
+      combatant.name +
+        " удален со сцены" +
+        (opts.source === "hotkey" ? " (Delete)." : "."),
+      "system",
+    );
+    return true;
+  }
+
+  // Phase 22: the Foundry-style right sidebar owns tab presentation only. The
+  // existing combat controls and the CombatLog live inside its panels, so the
+  // old left log column is no longer needed.
+  sidebar = new View.Sidebar({
+    root: document.getElementById("sidebar"),
+    initialTab: "chat",
+    chatElement: document.getElementById("combat-log"),
+    onActivate: function (tabId) {
+      if (tabId === "actors") {
+        updateTokenCards();
+      } else if (tabId === "compendium" && compendiumBrowser) {
+        compendiumBrowser.activate();
+      }
+    },
+  });
+
+  // ------------------------------------------------- Phase 22 sheet helpers
+
+  function isActiveCombatant(combatant) {
+    const active = encounter.activeCombatant;
+    return Boolean(active && combatant && active.id === combatant.id);
+  }
+
+  function highlightTokenOnMap(combatantId) {
+    if (!battlefield || !Array.isArray(battlefield.tokenViews)) {
+      return;
+    }
+    for (const view of battlefield.tokenViews) {
+      if (typeof view.setHighlighted === "function") {
+        view.setHighlighted(
+          combatantId !== null &&
+            combatantId !== undefined &&
+            view.token.id === combatantId,
+        );
+      }
+    }
+    battlefield.render();
+  }
+
+  function clearTokenHighlight() {
+    highlightTokenOnMap(null);
+  }
+
+  function findNearestStrikeTarget(combatant) {
+    let best = null;
+    for (const candidate of COMBATANTS) {
+      if (candidate.id === combatant.id || candidate.isDefeated === true) {
+        continue;
+      }
+      const evaluation = Strike.evaluateStrike({
+        attacker: combatant,
+        target: candidate,
+        map: map,
+        allies: COMBATANTS,
+      });
+      if (!evaluation.ok) {
+        continue;
+      }
+      if (!best || evaluation.distanceFeet < best.distanceFeet) {
+        best = { target: candidate, distanceFeet: evaluation.distanceFeet };
+      }
+    }
+    return best ? best.target : null;
+  }
+
+  function evaluateManeuverTarget(action, combatant, target) {
+    const options = {
+      attacker: combatant,
+      target: target,
+      map: map,
+      allies: COMBATANTS,
+      combatants: COMBATANTS,
+    };
+    if (action === "trip") {
+      return Trip.evaluateTrip(options);
+    }
+    if (action === "shove") {
+      return Shove.evaluateShove(options);
+    }
+    return Grapple.evaluateGrapple(options);
+  }
+
+  function findNearestManeuverTarget(action, combatant) {
+    let best = null;
+    for (const candidate of COMBATANTS) {
+      if (candidate.id === combatant.id || candidate.isDefeated === true) {
+        continue;
+      }
+      const evaluation = evaluateManeuverTarget(action, combatant, candidate);
+      if (!evaluation.ok) {
+        continue;
+      }
+      const distance = Number.isFinite(evaluation.distanceFeet)
+        ? evaluation.distanceFeet
+        : Grid.getCombatantDistance(combatant, candidate);
+      if (!best || distance < best.distanceFeet) {
+        best = { target: candidate, distanceFeet: distance };
+      }
+    }
+    return best ? best.target : null;
+  }
+
+  /**
+   * Strike from the character sheet. The nearest hostile in reach is used so
+   * the sheet button can actually resolve a Core Strike; when no target is in
+   * reach the board arms Strike mode and asks the user to pick one.
+   */
+  function sheetStrike(combatant) {
+    if (!isActiveCombatant(combatant)) {
+      log.add(
+        combatant.name + " cannot Strike — it is not that combatant's turn.",
+        "warn",
+      );
+      return;
+    }
+    if (typeof combatant.canSpendActions === "function" &&
+        !combatant.canSpendActions(1)) {
+      log.add(combatant.name + " has no actions left to Strike.", "warn");
+      return;
+    }
+
+    const target = findNearestStrikeTarget(combatant);
+    if (!target) {
+      battlefield.setMode(MODES.STRIKE);
+      updateModeUi();
+      log.add(
+        "No hostile is in reach — Strike mode armed. Click a target on the board.",
+        "muted",
+      );
+      return;
+    }
+    battlefield.onStrikeRequest(combatant, target);
+  }
+
+  function sheetQuickAction(combatant, action) {
+    if (!isActiveCombatant(combatant)) {
+      log.add(
+        combatant.name + " cannot act — it is not that combatant's turn.",
+        "warn",
+      );
+      return;
+    }
+    if (typeof combatant.canSpendActions === "function" &&
+        !combatant.canSpendActions(1)) {
+      log.add(combatant.name + " has no actions left.", "warn");
+      return;
+    }
+
+    if (action === "stand") {
+      if (!combatant.hasCondition("prone")) {
+        log.add(combatant.name + " is not Prone.", "muted");
+        return;
+      }
+      useStand();
+      return;
+    }
+
+    if (action === "raise-shield") {
+      const shield = combatant.getShield ? combatant.getShield() : null;
+      if (!shield) {
+        log.add(combatant.name + " has no shield to raise.", "warn");
+        return;
+      }
+      if (
+        typeof combatant.isItemHeld === "function" &&
+        !combatant.isItemHeld(shield)
+      ) {
+        log.add(
+          combatant.name + " must draw the shield before raising it.",
+          "warn",
+        );
+        return;
+      }
+      useRaiseShield();
+      return;
+    }
+
+    if (action === "take-cover") {
+      useTakeCover();
+      return;
+    }
+
+    if (action !== "trip" && action !== "shove" && action !== "grapple") {
+      return;
+    }
+
+    const target = findNearestManeuverTarget(action, combatant);
+    if (target) {
+      if (action === "trip") {
+        useTrip(combatant, target);
+      } else if (action === "shove") {
+        useShove(combatant, target);
+      } else {
+        useGrapple(combatant, target);
+      }
+      return;
+    }
+
+    const modes = {
+      trip: MODES.TRIP,
+      shove: MODES.SHOVE,
+      grapple: MODES.GRAPPLE,
+    };
+    battlefield.setMode(modes[action]);
+    updateModeUi();
+    log.add(
+      "No hostile is in reach — " +
+        capitalize(action) +
+        " mode armed. Click a target on the board.",
+      "muted",
+    );
+  }
+
+  function interactReasonText(reason) {
+    switch (reason) {
+      case "no-actions":
+        return "no actions left";
+      case "invalid-action":
+        return "invalid Interact action";
+      case "missing-item":
+        return "the item was not found";
+      case "no-free-hand":
+        return "no free hand";
+      case "slot-occupied":
+        return "the hand slot is occupied";
+      case "already-equipped":
+        return "the item is already in hand";
+      case "empty-hand":
+        return "the hand is empty";
+      case "not-held":
+        return "the item is not held";
+      case "disrupted":
+        return "disrupted by a Reactive Strike";
+      case "shield-not-held":
+        return "the shield is not held";
+      case "shield-not-raised":
+        return "the shield is not raised";
+      case "shield-broken":
+        return "the shield is broken";
+      case "shield-destroyed":
+        return "the shield is destroyed";
+      case "no-reaction":
+        return "no reaction remains";
+      case "no-damage":
+        return "no damage to block";
+      case "non-physical-damage":
+        return "only physical damage can be blocked";
+      default:
+        return reason || "not possible";
+    }
+  }
+
+  function useInteract(combatant, actionType, payload) {
+    if (!isActiveCombatant(combatant)) {
+      log.add(
+        combatant.name + " cannot Interact — it is not that combatant's turn.",
+        "warn",
+      );
+      return;
+    }
+    const opts = payload || {};
+    const result = Interact.performInteract({
+      combatant: combatant,
+      actionType: actionType,
+      item: opts.item,
+      slot: opts.slot,
+      combatants: COMBATANTS,
+      map: map,
+      allies: COMBATANTS,
+      rollD20: rollD20,
+      rollDamageDie: rollDamageDie,
+      rollDie: rollDie,
+    });
+
+    if (!result.ok) {
+      log.add(
+        "Interact canceled — " + interactReasonText(result.reason) + ".",
+        "warn",
+      );
+      flushEventLog();
+      handleSheetMutation();
+      return;
+    }
+
+    const itemName = result.item ? result.item.name : "the item";
+    const verb =
+      actionType === "draw"
+        ? "draws"
+        : actionType === "stow"
+          ? "stows"
+          : actionType === "drop"
+            ? "drops"
+            : "swaps to";
+    log.add(
+      combatant.name +
+        " " +
+        verb +
+        " " +
+        itemName +
+        (result.actionCost > 0
+          ? " (" + result.actionCost + " action). Actions left: " +
+            result.actionsLeft + "."
+          : " (free action)."),
+      "info",
+    );
+    // A manipulate Interact may provoke; the bus already logs the reaction.
+    if (result.reactionStrikes && result.reactionStrikes.length > 0) {
+      flushEventLog();
+    }
+    handleSheetMutation();
+  }
+
+  function useSheetShieldBlock(combatant, payload) {
+    const opts = payload || {};
+    const result = ShieldBlock.performShieldBlock({
+      combatant: combatant,
+      damage: opts.damage,
+      damageType: opts.damageType || "bludgeoning",
+    });
+    if (!result.ok) {
+      log.add(
+        "Shield Block unavailable — " + interactReasonText(result.reason) + ".",
+        "warn",
+      );
+      return;
+    }
+    flushEventLog();
+    handleSheetMutation();
+  }
+
+  function prepareSheetSpell(combatant, spell) {
+    if (!isActiveCombatant(combatant)) {
+      log.add(
+        combatant.name + " cannot Cast — it is not that combatant's turn.",
+        "warn",
+      );
+      return;
+    }
+    if (!spell) {
+      return;
+    }
+    if (spellSelectEl) {
+      spellSelectEl.value = spell.id;
+    }
+    battlefield.setSpell(spell);
+    updateModeUi();
+    updateSpellUi();
+    updateHoverStatus(null);
+    log.add(
+      "Spell prepared: " +
+        spell.name +
+        ". Hover the board to place its template or choose a target.",
+      "muted",
+    );
+  }
+
+  function useSustainSpellById(combatant, activeSpellId) {
+    if (!isActiveCombatant(combatant)) {
+      log.add(
+        combatant.name + " cannot Sustain — it is not that combatant's turn.",
+        "warn",
+      );
+      return;
+    }
+    const sustained = activeSustainedSpells(combatant).find(function (entry) {
+      return entry.id === activeSpellId;
+    });
+    if (!sustained) {
+      log.add("Sustain canceled — the spell is no longer active.", "warn");
+      return;
+    }
+    const result = SustainSpell.performSustainSpell({
+      caster: combatant,
+      activeSpellId: activeSpellId,
+      encounter: encounter,
+    });
+    if (!result.ok) {
+      log.add("Sustain canceled — " + (result.reason || "not possible") + ".", "warn");
+      return;
+    }
+    log.add(
+      "[SPELL] " +
+        combatant.name +
+        " sustains " +
+        (sustained.spell ? sustained.spell.name : "the spell") +
+        " until the end of round " +
+        result.expiresAtRound +
+        ". Actions left: " +
+        result.actionsLeft +
+        ".",
+      "spell",
+    );
+    handleSheetMutation();
+    updateSpellUi();
+  }
+
+  function handleSheetMutation() {
+    flushEventLog();
+    battlefield.refresh();
+    updateTokenCards();
+    renderSelection(
+      battlefield.getSelectedCombatant(),
+      battlefield.getReachableCells(),
+    );
+  }
+
+  function openCharacterSheet(combatantId) {
+    if (!characterSheet) {
+      return false;
+    }
+    const opened = characterSheet.open(combatantId);
+    if (opened) {
+      highlightTokenOnMap(combatantId);
+    }
+    return opened;
+  }
+
+  // Floating character sheet. Every action button delegates to the helpers
+  // above, which in turn call the existing headless Core actions.
+  characterSheet = new View.CharacterSheet({
+    container: document.getElementById("character-sheet-layer"),
+    eventBus: EVENT_BUS,
+    getCombatant: findCombatant,
+    getRound: function () {
+      return encounter.round;
+    },
+    isActiveCombatant: isActiveCombatant,
+    onStrike: function (combatant) {
+      sheetStrike(combatant);
+    },
+    onQuickAction: function (combatant, action) {
+      sheetQuickAction(combatant, action);
+    },
+    onInteract: function (combatant, actionType, payload) {
+      useInteract(combatant, actionType, payload);
+    },
+    onShieldBlock: function (combatant, payload) {
+      useSheetShieldBlock(combatant, payload);
+    },
+    onCast: function (combatant, spell) {
+      prepareSheetSpell(combatant, spell);
+    },
+    onSustain: function (combatant, activeSpellId) {
+      useSustainSpellById(combatant, activeSpellId);
+    },
+    onHpChange: function () {
+      handleSheetMutation();
+    },
+    onDropCompendium: function (combatant, metadata) {
+      handleCharacterSheetDrop(combatant, metadata);
+    },
+    onRemoveItem: function (combatant, item) {
+      removeSheetItem(combatant, item);
+    },
+    onLog: function (message, kind) {
+      log.add(message, kind || "info");
+    },
+    onClose: function () {
+      // Keep the map highlight after the sheet closes so the inspected token
+      // remains easy to find; a board click clears it.
+    },
+  });
+
+  // ------------------------------------------------- Phase 23 compendium glue
+
+  const COMPENDIUM_AREA_TYPES = Object.freeze(["burst", "cone", "line", "emanation"]);
+  const COMPENDIUM_SIZE_MAP = Object.freeze({
+    tiny: "tiny",
+    small: "small",
+    medium: "medium",
+    large: "large",
+    huge: "huge",
+    gargantuan: "huge",
+  });
+  const SPAWN_COLORS = [
+    "#d1495b",
+    "#b07a4a",
+    "#7d6aa8",
+    "#4b8f8c",
+    "#b45f8c",
+    "#6a8caf",
+    "#a66a3a",
+    "#567d46",
+  ];
+  let spawnSerial = 0;
+
+  function isSpellcaster(combatant) {
+    if (!combatant) {
+      return false;
+    }
+    if (Array.isArray(combatant.spells) && combatant.spells.length > 0) {
+      return true;
+    }
+    if (combatant.spellAttackBonus > 0) {
+      return true;
+    }
+    if (
+      combatant.spellSlots &&
+      typeof combatant.spellSlots === "object" &&
+      Object.keys(combatant.spellSlots).length > 0
+    ) {
+      return true;
+    }
+    return Boolean(
+      combatant.focusPoints && combatant.focusPoints.max > 0,
+    );
+  }
+
+  function compendiumRecipients(categoryId) {
+    const living = COMBATANTS.filter(function (combatant) {
+      return allianceOf(combatant) === "player" && combatant.isDefeated !== true;
+    });
+    if (categoryId === "spells") {
+      return living.filter(isSpellcaster);
+    }
+    return living;
+  }
+
+  function compendiumPreferredRecipient(categoryId) {
+    const recipients = compendiumRecipients(categoryId);
+    if (recipients.length === 0) {
+      return null;
+    }
+    const selected = battlefield.getSelectedCombatant();
+    if (selected) {
+      const selectedMatch = recipients.find(function (combatant) {
+        return combatant.id === selected.id;
+      });
+      if (selectedMatch) {
+        return selectedMatch;
+      }
+    }
+    const active = encounter.activeCombatant;
+    if (active) {
+      const activeMatch = recipients.find(function (combatant) {
+        return combatant.id === active.id;
+      });
+      if (activeMatch) {
+        return activeMatch;
+      }
+    }
+    return recipients[0];
+  }
+
+  /**
+   * Foundry area templates that the core does not model directly collapse to
+   * the closest 2D shape. The compendium JSON keeps the original type; only
+   * the engine-side spell object is normalized here.
+   */
+  function compendiumAreaToEngine(area) {
+    if (!area || typeof area.type !== "string") {
+      return null;
+    }
+    const original = String(area.type).toLowerCase();
+    const type =
+      original === "sphere" || original === "cylinder" || original === "square"
+        ? "burst"
+        : original;
+    if (COMPENDIUM_AREA_TYPES.indexOf(type) === -1) {
+      return null;
+    }
+    let value = Number(area.value);
+    if (!Number.isFinite(value) || value <= 0) {
+      return null;
+    }
+    value = Math.max(5, Math.round(value / 5) * 5);
+    if (type === "line") {
+      return { type: type, lengthFeet: value, widthFeet: 5 };
+    }
+    if (type === "cone") {
+      return { type: type, lengthFeet: value };
+    }
+    return { type: type, radiusFeet: value };
+  }
+
+  /**
+   * Convert one generated catalog spell into the headless spell contract used
+   * by CastSpell: cost/type/traits/rank/save/area/damage.
+   */
+  function compendiumSpellToEngine(entry) {
+    if (!entry || typeof entry.name !== "string") {
+      return null;
+    }
+    const traits = Array.isArray(entry.traits) ? entry.traits.slice() : [];
+    if (entry.isCantrip && traits.indexOf("cantrip") === -1) {
+      traits.push("cantrip");
+    }
+    if (entry.isFocus && traits.indexOf("focus") === -1) {
+      traits.push("focus");
+    }
+    if (entry.isSustained && traits.indexOf("sustained") === -1) {
+      traits.push("sustained");
+    }
+
+    const cost =
+      Number.isInteger(entry.actionCost) && entry.actionCost >= 1 && entry.actionCost <= 3
+        ? entry.actionCost
+        : 2;
+    const spell = {
+      id: entry.id,
+      name: entry.name,
+      cost: cost,
+      type: traits.indexOf("attack") !== -1 ? "attack" : "save",
+      traits: traits,
+    };
+
+    // Cantrips are free and display as "Cantrip"; omitting rank keeps the
+    // character sheet from labeling them "Rank 0".
+    if (!entry.isCantrip && Number.isInteger(entry.rank)) {
+      spell.rank = entry.rank;
+    }
+
+    if (entry.save && entry.save.statistic) {
+      spell.saveType = String(entry.save.statistic).toLowerCase();
+      spell.basic = entry.save.basic === true;
+    }
+    if (entry.damage && entry.damage.formula) {
+      spell.damage = {
+        formula: entry.damage.formula,
+        type: entry.damage.type || "untyped",
+      };
+    }
+    const area = compendiumAreaToEngine(entry.area);
+    if (area) {
+      spell.area = area;
+    }
+    if (entry.description) {
+      spell.description = entry.description;
+    }
+    return spell;
+  }
+
+  function compendiumItemToInventory(entry) {
+    if (entry.hardness !== undefined && entry.acBonus !== undefined) {
+      return {
+        id: entry.id,
+        name: entry.name,
+        type: "shield",
+        hardness: entry.hardness,
+        hp: entry.hp,
+        maxHP: entry.maxHP,
+        brokenThreshold: entry.brokenThreshold,
+        acBonus: entry.acBonus,
+        speedPenalty: entry.speedPenalty,
+        hands: 1,
+      };
+    }
+    return {
+      id: entry.id,
+      name: entry.name,
+      type: "weapon",
+      damage: entry.damage ? entry.damage.formula : "1d4",
+      damageType: entry.damage ? entry.damage.type : "untyped",
+      traits: Array.isArray(entry.traits) ? entry.traits.slice() : [],
+      hands: entry.hands === 2 ? 2 : 1,
+    };
+  }
+
+  function sameCompendiumName(left, right) {
+    const a = String(left === undefined || left === null ? "" : left)
+      .trim()
+      .toLowerCase();
+    const b = String(right === undefined || right === null ? "" : right)
+      .trim()
+      .toLowerCase();
+    return a !== "" && a === b;
+  }
+
+  /**
+   * Phase 25 drop path: unlike the "Экипировать" button, dropping the same
+   * weapon/shield twice must create two inventory records. Core de-duplicates
+   * by id, so the view assigns a stable copy suffix before calling the public
+   * addInventoryItem API.
+   */
+  function addCompendiumItemToInventory(combatant, entry) {
+    if (!combatant || !entry) {
+      return null;
+    }
+    const itemInput = compendiumItemToInventory(entry);
+    const existing =
+      typeof combatant.findInventoryItem === "function"
+        ? combatant.findInventoryItem(itemInput.id)
+        : null;
+    if (existing) {
+      let suffix = 2;
+      let candidate = itemInput.id + "-" + suffix;
+      while (
+        typeof combatant.findInventoryItem === "function" &&
+        combatant.findInventoryItem(candidate)
+      ) {
+        suffix += 1;
+        candidate = itemInput.id + "-" + suffix;
+      }
+      itemInput.id = candidate;
+    }
+
+    const item =
+      typeof combatant.addInventoryItem === "function"
+        ? combatant.addInventoryItem(itemInput)
+        : null;
+    if (!item) {
+      log.add("Не удалось добавить " + entry.name + " в инвентарь.", "warn");
+      return null;
+    }
+
+    log.add(
+      "[COMPENDIUM] " +
+        entry.name +
+        " добавлен в инвентарь " +
+        combatant.name +
+        ".",
+      "system",
+    );
+    handleSheetMutation();
+    return item;
+  }
+
+  function equipCompendiumItem(combatant, entry) {
+    if (!combatant || !entry) {
+      return;
+    }
+    const itemInput = compendiumItemToInventory(entry);
+    const item =
+      typeof combatant.addInventoryItem === "function"
+        ? combatant.addInventoryItem(itemInput)
+        : null;
+    if (!item) {
+      log.add("Не удалось добавить " + entry.name + " в инвентарь.", "warn");
+      return;
+    }
+
+    const slot = itemInput.type === "shield" ? "offHand" : undefined;
+    let result = combatant.equipItem(item, slot ? { slot: slot } : undefined);
+    if (!result.ok && itemInput.hands === 1) {
+      // The preferred slot may be busy; let the Combatant pick the other hand.
+      result = combatant.equipItem(item);
+    }
+
+    if (result.ok) {
+      log.add(
+        "[COMPENDIUM] " +
+          combatant.name +
+          " экипирует " +
+          entry.name +
+          (result.slot
+            ? " (" + (result.slot === "mainHand" ? "основная рука" : "вторая рука") + ")."
+            : " (двумя руками)."),
+        "system",
+      );
+    } else {
+      log.add(
+        "[COMPENDIUM] " +
+          entry.name +
+          " добавлен в инвентарь " +
+          combatant.name +
+          ", но не взят в руки (" +
+          (result.reason === "no-free-hand" ? "нет свободной руки" : result.reason) +
+          ").",
+        "warn",
+      );
+    }
+
+    handleSheetMutation();
+    populateSpellPicker();
+    updateSpellUi();
+  }
+
+  function addCompendiumSpell(combatant, entry, options) {
+    if (!combatant || !entry) {
+      return false;
+    }
+    const opts = options || {};
+    const spell = compendiumSpellToEngine(entry);
+    if (!spell) {
+      log.add("Не удалось подготовить " + entry.name + " для боевого ядра.", "warn");
+      return false;
+    }
+
+    const existing = Array.isArray(combatant.spells)
+      ? combatant.spells.find(function (candidate) {
+          return (
+            candidate.id === spell.id ||
+            sameCompendiumName(candidate.name, spell.name) ||
+            sameCompendiumName(candidate.name, entry.name)
+          );
+        })
+      : null;
+    if (existing) {
+      log.add(
+        opts.source === "drop"
+          ? "Заклинание " + entry.name + " уже известно персонажу."
+          : "[COMPENDIUM] " + combatant.name + " уже знает " + entry.name + ".",
+        opts.source === "drop" ? "warn" : "muted",
+      );
+      return false;
+    }
+
+    if (!Array.isArray(combatant.spells)) {
+      combatant.spells = [];
+    }
+    combatant.spells.push(spell);
+    log.add(
+      "[COMPENDIUM] " +
+        entry.name +
+        " добавлено в заклинания " +
+        combatant.name +
+        (entry.isCantrip ? " (кантрип)." : " (ранг " + entry.rank + ")."),
+      "spell",
+    );
+    handleSheetMutation();
+    populateSpellPicker();
+    updateSpellUi();
+    return true;
+  }
+
+  function spawnNameFor(baseName) {
+    const name = String(baseName || "Monster").trim() || "Monster";
+    const existing = COMBATANTS.filter(function (combatant) {
+      return combatant.name === name || combatant.name.indexOf(name + " ") === 0;
+    });
+    return existing.length === 0 ? name : name + " " + (existing.length + 1);
+  }
+
+  function spawnIdFor(baseId) {
+    spawnSerial += 1;
+    let id = String(baseId || "monster") + "-spawn-" + spawnSerial;
+    while (
+      COMBATANTS.some(function (combatant) {
+        return combatant.id === id;
+      })
+    ) {
+      spawnSerial += 1;
+      id = String(baseId || "monster") + "-spawn-" + spawnSerial;
+    }
+    return id;
+  }
+
+  function monsterFootprint(size) {
+    if (size === "large") return 2;
+    if (size === "huge") return 3;
+    return 1;
+  }
+
+  function findFreeSpawnCell(size, anchor) {
+    const footprint = monsterFootprint(size);
+    const hasAnchor =
+      anchor &&
+      Number.isInteger(anchor.x) &&
+      Number.isInteger(anchor.y);
+    const targetX = hasAnchor ? anchor.x : (map.cols - 1) / 2;
+    const targetY = hasAnchor ? anchor.y : (map.rows - 1) / 2;
+    const probe = {
+      id: "__spawn_probe__",
+      x: 0,
+      y: 0,
+      getFootprint: function () {
+        return footprint;
+      },
+    };
+    let best = null;
+    for (let y = 0; y < map.rows; y += 1) {
+      for (let x = 0; x < map.cols; x += 1) {
+        probe.x = x;
+        probe.y = y;
+        if (!Occupancy.canOccupySpace(x, y, probe, map, COMBATANTS)) {
+          continue;
+        }
+        const dx = x - targetX;
+        const dy = y - targetY;
+        const distance = dx * dx + dy * dy;
+        if (!best || distance < best.distance) {
+          best = { x: x, y: y, distance: distance };
+        }
+      }
+    }
+    return best ? { x: best.x, y: best.y } : null;
+  }
+
+  function monsterCombatTraits(entry, attack) {
+    const raw = []
+      .concat(Array.isArray(entry.traits) ? entry.traits : [])
+      .concat(attack && Array.isArray(attack.traits) ? attack.traits : []);
+    const traits = [];
+    let reachFeet = 0;
+    for (const trait of raw) {
+      const text = String(trait);
+      const reach = /^reach(?:-(\d+))?$/i.exec(text);
+      if (reach) {
+        reachFeet = Math.max(reachFeet, reach[1] ? Number.parseInt(reach[1], 10) : 10);
+        continue;
+      }
+      if (/^(ranged|thrown|volley|reload)-0$/i.test(text)) {
+        continue;
+      }
+      if (traits.indexOf(text) === -1) {
+        traits.push(text);
+      }
+    }
+    if (reachFeet >= 10 && traits.indexOf("reach") === -1) {
+      traits.unshift("reach");
+    }
+    return traits;
+  }
+
+  function createMonsterCombatant(entry, options) {
+    const opts = options || {};
+    const requested =
+      opts.position &&
+      Number.isInteger(opts.position.x) &&
+      Number.isInteger(opts.position.y)
+        ? { x: opts.position.x, y: opts.position.y }
+        : null;
+    const position = findFreeSpawnCell(
+      COMPENDIUM_SIZE_MAP[entry.size] || "medium",
+      requested,
+    );
+    if (!position) {
+      return { ok: false, reason: "no-free-cell" };
+    }
+
+    const attacks = Array.isArray(entry.attacks) ? entry.attacks : [];
+    const attack =
+      attacks.find(function (candidate) {
+        return candidate.type === "melee" && candidate.damage;
+      }) ||
+      attacks.find(function (candidate) {
+        return candidate.damage;
+      }) ||
+      attacks[0] ||
+      null;
+
+    const size = COMPENDIUM_SIZE_MAP[entry.size] || "medium";
+    const id = spawnIdFor(entry.id);
+    const name = spawnNameFor(entry.name);
+    const initiative = rollD20() + (Number.isInteger(entry.perception) ? entry.perception : 0);
+    const attackTraits = attack && Array.isArray(attack.traits) ? attack.traits : [];
+    const damage =
+      attack && attack.damage
+        ? {
+            formula: attack.damage.formula,
+            type: attack.damage.type || "untyped",
+          }
+        : { formula: "1d4", type: "untyped" };
+
+    const skills = Object.assign({}, entry.skills || {});
+    skills.perception = Number.isInteger(entry.perception) ? entry.perception : 0;
+
+    const spells = (Array.isArray(entry.spells) ? entry.spells : [])
+      .map(compendiumSpellToEngine)
+      .filter(function (spell) {
+        return spell !== null;
+      });
+
+    const combatant = new Combatant({
+      id: id,
+      name: name,
+      alliance: "enemy",
+      initiative: initiative,
+      x: position.x,
+      y: position.y,
+      size: size,
+      speedFeet: Number.isInteger(entry.speed) && entry.speed > 0 ? entry.speed : 25,
+      maxHP: Number.isInteger(entry.hp) && entry.hp > 0 ? entry.hp : 1,
+      ac: Number.isInteger(entry.ac) ? entry.ac : 10,
+      attackBonus:
+        attack && Number.isInteger(attack.attackBonus) ? attack.attackBonus : 0,
+      damage: damage,
+      damageType: damage.type,
+      traits: monsterCombatTraits(entry, attack),
+      agile: attackTraits.indexOf("agile") !== -1,
+      rangeIncrement:
+        attack && Number.isInteger(attack.rangeIncrement) ? attack.rangeIncrement : undefined,
+      reload:
+        attack && Number.isInteger(attack.reload) ? attack.reload : undefined,
+      saves: entry.saves || {},
+      skills: skills,
+      senses: Array.isArray(entry.senses) ? entry.senses : undefined,
+      spells: spells,
+      spellAttackBonus: Number.isInteger(entry.level) ? Math.max(0, entry.level + 5) : 0,
+    });
+
+    return {
+      ok: true,
+      combatant: combatant,
+      position: position,
+      requested: requested,
+    };
+  }
+
+  /**
+   * Add a spawned combatant to the roster and rebuild the Encounter around the
+   * same live combatants. Rebuilding through the public constructor keeps the
+   * canonical initiative tie-break order while preserving the current round
+   * and active turn.
+   */
+  function registerSpawnedCombatant(combatant) {
+    const previousActive = encounter.activeCombatant;
+    let activeId = previousActive ? previousActive.id : null;
+    const previousRound = encounter.round;
+    const wasStarted = encounter.started;
+
+    COMBATANTS.push(combatant);
+    const next = new Encounter({ combatants: COMBATANTS, eventBus: EVENT_BUS });
+    next.round = previousRound;
+    next.started = wasStarted;
+    next.over = next.livingCombatants.length === 0;
+    if (!wasStarted) {
+      // Spawning into an empty or freshly cleared arena starts the encounter
+      // immediately so the new monster can act without an extra setup step.
+      const startedActive = next.startEncounter();
+      activeId = startedActive ? startedActive.id : null;
+      next.round = previousRound || 1;
+    } else {
+      next.activeCombatantIndex = activeId ? next.indexOf(activeId) : -1;
+    }
+    if (typeof next._syncRound === "function") {
+      next._syncRound();
+    }
+    encounter = next;
+    return activeId;
+  }
+
+  function spawnCompendiumMonster(entry, options) {
+    if (!entry) {
+      return;
+    }
+    const created = createMonsterCombatant(entry, options);
+    if (!created.ok) {
+      log.add(
+        "[BESTIARY] Нет свободной клетки для " + entry.name + " на поле.",
+        "warn",
+      );
+      return;
+    }
+
+    const combatant = created.combatant;
+    COLORS[combatant.id] = SPAWN_COLORS[(spawnSerial - 1) % SPAWN_COLORS.length];
+
+    const activeId = registerSpawnedCombatant(combatant);
+    const selected = battlefield.getSelectedCombatant();
+    const selectedId = selected ? selected.id : null;
+
+    battlefield.setWorld(COMBATANTS, map);
+    battlefield.setActiveCombatant(activeId);
+    suppressSelectionLog = true;
+    if (selectedId) {
+      battlefield.selectCombatant(selectedId);
+    } else if (activeId) {
+      battlefield.selectCombatant(activeId);
+    } else {
+      battlefield.clearSelection();
+    }
+    suppressSelectionLog = false;
+
+    rebuildTokenCards();
+    updateTokenCards();
+    populateSpellPicker();
+    updateSpellUi();
+    updateHoverStatus(null);
+
+    const requested = created.requested;
+    const adjusted =
+      requested &&
+      (requested.x !== combatant.x || requested.y !== combatant.y);
+    log.add(
+      "[BESTIARY] " +
+        combatant.name +
+        " (уровень " +
+        entry.level +
+        ") появляется на " +
+        Grid.gridToLabel(combatant) +
+        (adjusted ? " — ближайшая свободная клетка" : "") +
+        " · HP " +
+        combatant.maxHP +
+        " · AC " +
+        combatant.ac +
+        " · инициатива " +
+        combatant.initiative +
+        ".",
+      "system",
+    );
+  }
+
+  /**
+   * Phase 25: a catalog card dropped on the canvas. Monsters spawn at the
+   * exact cell under the cursor (or the nearest free footprint); spells and
+   * items are added to a friendly token standing on that cell.
+   */
+  function handleBattlefieldDrop(metadata, cell, token) {
+    if (!metadata || metadata.type !== "compendium-item" || !metadata.entry) {
+      return;
+    }
+    const category = metadata.category;
+    const entry = metadata.entry;
+
+    if (category === "monsters") {
+      spawnCompendiumMonster(entry, { position: cell });
+      return;
+    }
+
+    if (category !== "spells" && category !== "weapons" && category !== "shields") {
+      return;
+    }
+
+    const target = token && token.isDefeated !== true ? token : null;
+    if (!target) {
+      log.add(
+        "[DROP] На клетке " +
+          Grid.gridToLabel(cell) +
+          " нет бойца — " +
+          entry.name +
+          " не добавлен.",
+        "warn",
+      );
+      return;
+    }
+    if (allianceOf(target) !== "player") {
+      log.add(
+        "[DROP] " +
+          entry.name +
+          " можно добавить только дружественному бойцу; " +
+          target.name +
+          " — противник.",
+        "warn",
+      );
+      return;
+    }
+
+    if (category === "spells") {
+      addCompendiumSpell(target, entry, { source: "drop" });
+    } else {
+      addCompendiumItemToInventory(target, entry);
+    }
+  }
+
+  /**
+   * Phase 25: the floating character sheet accepts the same payload.
+   */
+  function handleCharacterSheetDrop(combatant, metadata) {
+    if (!combatant || !metadata || metadata.type !== "compendium-item") {
+      return;
+    }
+    const category = metadata.category;
+    const entry = metadata.entry;
+    if (category === "spells") {
+      addCompendiumSpell(combatant, entry, { source: "drop" });
+      return;
+    }
+    if (category === "weapons" || category === "shields") {
+      addCompendiumItemToInventory(combatant, entry);
+      return;
+    }
+    if (category === "monsters") {
+      log.add(
+        "[DROP] Монстров нельзя добавить в лист персонажа — перетащите карточку на поле боя.",
+        "warn",
+      );
+    }
+  }
+
+  /**
+   * Phase 25: ✖ in the character sheet. Release a held item first, then let
+   * the Combatant remove it from the inventory.
+   */
+  function removeSheetItem(combatant, item) {
+    if (!combatant || !item) {
+      return false;
+    }
+    if (
+      typeof combatant.isItemHeld === "function" &&
+      combatant.isItemHeld(item) &&
+      typeof combatant.unequipItem === "function"
+    ) {
+      combatant.unequipItem(item);
+    }
+    const removed =
+      typeof combatant.removeInventoryItem === "function"
+        ? combatant.removeInventoryItem(item)
+        : false;
+    if (!removed) {
+      log.add("Не удалось удалить " + (item.name || item.id) + " из инвентаря.", "warn");
+      return false;
+    }
+    log.add(
+      "[SHEET] " +
+        (item.name || item.id) +
+        " удалён из инвентаря " +
+        combatant.name +
+        ".",
+      "system",
+    );
+    handleSheetMutation();
+    return true;
+  }
+
+  if (View.CompendiumBrowser) {
+    compendiumBrowser = new View.CompendiumBrowser({
+      root: document.querySelector("[data-compendium-root]"),
+      dataBasePath: "data/compendiums/",
+      getRecipients: compendiumRecipients,
+      getPreferredRecipient: compendiumPreferredRecipient,
+      onEquipItem: equipCompendiumItem,
+      onAddSpell: addCompendiumSpell,
+      onSpawnMonster: spawnCompendiumMonster,
+      onLog: function (message, kind) {
+        log.add(message, kind || "info");
+      },
+      onStateChanged: function () {
+        handleSheetMutation();
+      },
+    });
+  }
+
   function advanceTurn() {
+    if (COMBATANTS.length === 0) {
+      log.add("The battlefield is empty — no turn to advance.", "muted");
+      return;
+    }
     const turn = encounter.nextTurn();
     flushEventLog();
 
@@ -3425,6 +5218,10 @@
   }
 
   function useRollInitiative() {
+    if (COMBATANTS.length === 0) {
+      log.add("No combatants on the battlefield to roll initiative for.", "warn");
+      return;
+    }
     const report = encounter.rollInitiative({ rollD20: rollD20 });
     for (const entry of report.entries) {
       log.add(
@@ -4033,6 +5830,13 @@
       const restored = Serializer.deserializeCombatState(json, {
         eventBus: EVENT_BUS,
       });
+      if (tokenHud) {
+        tokenHud.close();
+      }
+      if (characterSheet) {
+        characterSheet.close();
+      }
+      clearTokenHighlight();
       encounter = restored.encounter;
       map = restored.map;
       COMBATANTS = restored.combatants;
@@ -4079,6 +5883,61 @@
     }
   }
 
+  // Phase 22 — double-click any token to open its floating character sheet.
+  // The first click still performs normal battlefield input; the dblclick
+  // handler is an additional inspection affordance and never mutates rules.
+  canvas.addEventListener("dblclick", function (event) {
+    if (battlefield.getPaintTool() !== PAINT_TOOLS.SELECT) {
+      return;
+    }
+    const point = battlefield.eventPoint(event);
+    if (!point) {
+      return;
+    }
+    const token = battlefield.findTokenAt(point.x, point.y);
+    if (!token) {
+      return;
+    }
+    event.preventDefault();
+    openCharacterSheet(token.id);
+  });
+
+  // Any board click clears the read-only Actors highlight; a real selection
+  // ring remains because it is driven by BattlefieldView.selectedCombatant.
+  canvas.addEventListener("click", function () {
+    clearTokenHighlight();
+  });
+
+  // Phase 24: Delete / Backspace removes the currently selected token. Typing
+  // in a form control or a modal must never trigger it.
+  document.addEventListener("keydown", function (event) {
+    if (event.defaultPrevented || event.repeat) {
+      return;
+    }
+    if (event.key !== "Delete" && event.key !== "Backspace") {
+      return;
+    }
+    if (confirmDialog.isOpen) {
+      return;
+    }
+    const target = event.target;
+    if (
+      target &&
+      (target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT" ||
+        target.isContentEditable === true)
+    ) {
+      return;
+    }
+    const selected = battlefield.getSelectedCombatant();
+    if (!selected) {
+      return;
+    }
+    event.preventDefault();
+    deleteCombatant(selected, { source: "hotkey" });
+  });
+
   if (endTurnEl) {
     endTurnEl.addEventListener("click", advanceTurn);
   }
@@ -4089,6 +5948,7 @@
 
   if (castSpellButton) {
     castSpellButton.addEventListener("click", function () {
+      selectCursorMode();
       const spell = findSpellById(spellSelectEl ? spellSelectEl.value : null);
       if (!spell) {
         log.add("Select a spell first.", "warn");
@@ -4159,6 +6019,7 @@
 
   for (const button of modeButtons) {
     button.addEventListener("click", function () {
+      selectCursorMode();
       const mode = button.dataset.mode;
       battlefield.setMode(mode);
       updateModeUi();
@@ -4234,7 +6095,24 @@
       meta.append(name, conditionBadges, sub, hp);
       card.append(dot, meta, pools);
       card.addEventListener("click", function () {
-        battlefield.selectCombatant(combatant.id);
+        const active = encounter.activeCombatant;
+        if (active && active.id === combatant.id) {
+          battlefield.selectCombatant(combatant.id);
+          clearTokenHighlight();
+          return;
+        }
+        highlightTokenOnMap(combatant.id);
+        log.add(
+          combatant.name +
+            " highlighted on the map (inspect only — " +
+            (active ? active.name + "'s turn" : "no active combatant") +
+            ").",
+          "muted",
+        );
+      });
+      card.addEventListener("dblclick", function (event) {
+        event.preventDefault();
+        openCharacterSheet(combatant.id);
       });
 
       tokenListEl.append(card);
@@ -4251,6 +6129,13 @@
   }
 
   rebuildTokenCards();
+
+  const demoGoblin = COMBATANTS.find(function (combatant) {
+    return combatant.id === "goblin";
+  });
+  const demoMerisiel = COMBATANTS.find(function (combatant) {
+    return combatant.id === "merisiel";
+  });
 
   const firstActive = encounter.startEncounter();
   if (firstActive) {
@@ -4384,6 +6269,19 @@
       return HAZARDS;
     },
     battlefield: battlefield,
+    tokenHud: tokenHud,
+    sidebar: sidebar,
+    characterSheet: characterSheet,
+    compendiumBrowser: compendiumBrowser,
+    sceneEditor: sceneEditor,
+    applyScenePreset: applyScenePreset,
+    clearBoard: clearBoard,
+    deleteCombatant: deleteCombatant,
+    paintTerrainCell: paintTerrainCell,
+    openCharacterSheet: openCharacterSheet,
+    spawnCompendiumMonster: spawnCompendiumMonster,
+    dropCompendium: handleBattlefieldDrop,
+    removeSheetItem: removeSheetItem,
     eventBus: EVENT_BUS,
     eventLog: eventLog,
     log: log,

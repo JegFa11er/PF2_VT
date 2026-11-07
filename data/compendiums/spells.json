@@ -1,0 +1,5069 @@
+[
+  {
+    "id": "sxQZ6yqTn0czJxVd",
+    "name": "Fireball",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A roaring blast of fire detonates at a spot you designate, dealing 6d6 fire damage. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "9AAkVUCwF6WVNNY2",
+    "name": "Lightning Bolt",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "electricity",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 120
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "4d12",
+      "type": "electricity"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A bolt of lightning strikes outward from your hand, dealing 4d12 electricity damage. Heightened (+1) The damage increases by 1d12."
+  },
+  {
+    "id": "wdA52JJnsuQWeyqz",
+    "name": "Harm",
+    "rank": 1,
+    "traits": [
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d8",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You channel void energy to harm the living or heal the undead. If the target is a living creature, you deal 1d8 void damage to it, and it gets a basic Fortitude save. If the target is a willing undead creature, you restore that amount of Hit Points. The number of actions you spend when Casting this Spell determines its targets, range, area, and other parameters. 1 The spell has a range of touch. 2 (concentrate) The spell has a range of 30 feet. If you're healing an undead creature, increase the Hit Points restored…"
+  },
+  {
+    "id": "rfZpqmj0AIIdkVIs",
+    "name": "Heal",
+    "rank": 1,
+    "traits": [
+      "healing",
+      "manipulate",
+      "vitality"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d8",
+      "type": "vitality"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You channel vital energy to heal the living or damage the undead. If the target is a willing living creature, you restore 1d8 Hit Points. If the target is undead, you deal that amount of vitality damage to it, and it gets a basic Fortitude save. The number of actions you spend when Casting this Spell determines its targets, range, area, and other parameters. 1 The spell has a range of touch. 2 (concentrate) The spell has a range of 30 feet. If you're healing a living creature, increase the Hit Points restored by 8…"
+  },
+  {
+    "id": "7ZinJNzxq0XF0oMx",
+    "name": "Bane",
+    "rank": 1,
+    "traits": [
+      "aura",
+      "concentrate",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 10
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You fill the minds of your enemies with doubt. Enemies in the area must succeed at a Will save or take a –1 status penalty to attack rolls as long as they are in the area. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet and force enemies in the area that weren't yet affected to attempt another saving throw. Bane can counteract ."
+  },
+  {
+    "id": "o4lRVTwSxnOOn5vl",
+    "name": "Sleep",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "incapacitation",
+      "manipulate",
+      "mental",
+      "sleep"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 5
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Each creature in the area becomes drowsy, possibly nodding off. A creature that falls from this spell doesn't fall or release what it's holding. This spell doesn't prevent creatures from waking up due to a successful Perception check, limiting its utility in combat. Critical Success The creature is unaffected. Success The creature takes a –1 status penalty to Perception checks for 1 round. Failure The creature falls unconscious. If it's still unconscious after 1 minute, it wakes up automatically. Critical Failure…"
+  },
+  {
+    "id": "hVU9msO9yGkxKZ3J",
+    "name": "Divine Wrath",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "sanctified",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "4d10",
+      "type": "spirit"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You channel the fury of divinity against your foes. You deal 4d10 spirit damage to enemies in the area, depending on their Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and is Sickened 1. Critical Failure The creature takes full damage and is Sickened 2; while it's sickened, it's also Slowed 1. Heightened (+1) The damage increases by 1d10."
+  },
+  {
+    "id": "r7ihOgKv19eJQnik",
+    "name": "Disintegrate",
+    "rank": 6,
+    "traits": [
+      "attack",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "12d10",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A black tracer bolt flies toward your target, and upon making contact intensifies into a powerful destructive beam. Make a spell attack against the target. If you hit an object or force construct (such as a wall of force), it's destroyed with no save unless it's an artifact or similarly powerful. A single casting can destroy no more than a 10-foot cube of matter. If you hit a creature, it takes 12d10 damage (no damage type) with a basic Fortitude save. If you critically hit, the target gets a result one degree of…"
+  },
+  {
+    "id": "vLA0q0WOK2YPuJs6",
+    "name": "Charm",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "emotion",
+      "incapacitation",
+      "manipulate",
+      "mental",
+      "subtle"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "To the target, your words are honey and your visage seems bathed in a dreamy haze. It must attempt a Will save, with a +4 circumstance bonus if you or your allies recently threatened it or used hostile actions against it. You can Dismiss the spell. If you use hostile actions against the target, the spell ends. When the spell ends, the target doesn't necessarily realize it was charmed unless its friendship with you or the actions you convinced it to take clash with its expectations, meaning you could potentially co…"
+  },
+  {
+    "id": "4koZzrnMXhhosn0D",
+    "name": "Fear",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "emotion",
+      "fear",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You plant fear in the target; it must attempt a Will save. Critical Success The target is unaffected. Success The target is Frightened 1. Failure The target is Frightened 2. Critical Failure The target is Frightened 3 and for 1 round. Heightened (3rd) You can target up to five creatures."
+  },
+  {
+    "id": "Wu0xFpewMKRK3HG8",
+    "name": "Grease",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You conjure grease, choosing an area or target. Area [4 contiguous 5-foot squares] All solid ground in the area is covered with grease. Each creature standing on the greasy surface must succeed at a Reflex save or an Acrobatics check against your spell DC or fall . Creatures using an action to move onto the greasy surface during the spell's duration must attempt either a Reflex save or an Acrobatics check to . A creature that Steps or Crawls doesn't have to attempt a check or save. Target [1 object of Bulk 1 or le…"
+  },
+  {
+    "id": "WsUwpfmhKrKwoIe3",
+    "name": "Slow",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You dilate the flow of time around the target, slowing its actions. Critical Success The target is unaffected. Success The target is Slowed 1 for 1 round. Failure The target is Slowed 1 for 1 minute. Critical Failure The target is Slowed 2 for 1 minute. Heightened (6th) You can target up to 10 creatures."
+  },
+  {
+    "id": "XSujb7EsSwKl19Uu",
+    "name": "Bless",
+    "rank": 1,
+    "traits": [
+      "aura",
+      "concentrate",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 15
+    },
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Blessings from beyond help your companions strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract ."
+  },
+  {
+    "id": "TDNlDWbYb58Y55Da",
+    "name": "Chain Lightning",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "electricity",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "8d12",
+      "type": "electricity"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You discharge a powerful bolt of lightning at the target, dealing 8d12 electricity damage. The target must attempt a basic Reflex save. The electricity arcs to another creature within 30 feet of the first target, jumps to another creature within 30 feet of that target, and so on. You can end the chain at any point. You can't target the same creature more than once, and you must have line of effect to all targets. Roll the damage only once, and apply it to each target (halving or doubling as appropriate for its sav…"
+  },
+  {
+    "id": "gpzpAAAJ1Lza2JVl",
+    "name": "Detect Magic",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "detection",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 30
+    },
+    "save": null,
+    "damage": null,
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You send out a pulse that registers the presence of magic. You receive no information beyond the presence or absence of magic. You can choose to ignore magic you're fully aware of, such as the magic items and ongoing spells of you and your allies. You detect illusion magic only if that magic's effect has a lower rank than the rank of your detect magic spell. However, items that have an illusion aura but aren't deceptive in appearance (such as an invisibility potion ) typically are detected normally. Heightened (3r…"
+  },
+  {
+    "id": "r3NeUnsgt9mS03Sn",
+    "name": "Shocking Grasp",
+    "rank": 1,
+    "traits": [
+      "attack",
+      "concentrate",
+      "electricity",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d12",
+      "type": "electricity"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You shroud your hands in a crackling field of lightning. Make a melee spell attack roll. On a hit, the target takes 2d12 electricity damage. If the target is wearing metal armor or is made of metal, you gain a +1 circumstance bonus to your attack roll with shocking grasp, and the target also takes ] damage on a hit. On a critical hit, double the initial damage, but not the persistent damage. Heightened (+1) The damage increases by 1d12, and the persistent electricity damage increases by 1."
+  },
+  {
+    "id": "XXqE1eY3w3z6xJCB",
+    "name": "Invisibility",
+    "rank": 2,
+    "traits": [
+      "illusion",
+      "manipulate",
+      "subtle"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Illusions bend light around the target, rendering it . This makes it to all creatures, though the creatures can attempt to find the target, making it to them instead. If the target uses a hostile action, the spell ends after that hostile action is completed. Heightened (4th) The spell lasts 1 minute, but it doesn't end if the target uses a hostile action."
+  },
+  {
+    "id": "Fq9yCbqI2RDt6Orw",
+    "name": "Spiritual Weapon",
+    "rank": 2,
+    "traits": [
+      "attack",
+      "concentrate",
+      "force",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d8",
+      "type": "force"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "A weapon made of pure magical force materializes and attacks foes you designate within range. This weapon has a ghostly appearance and manifests as a club, a dagger, or your deity's favored weapon. When you cast the spell, the weapon appears next to a foe you choose within range and makes a Strike against it. Each time you Sustain the Spell, you can move the weapon to a new target within range (if needed) and Strike with it. The spiritual weapon uses and contributes to your multiple attack penalty. The weapon's St…"
+  },
+  {
+    "id": "o6YCGx4lycsYpww4",
+    "name": "Haste",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Magic empowers the target to act faster. It gains the condition and can use the extra action each round only for Strike and Stride actions. Heightened (7th) You can target up to 6 creatures."
+  },
+  {
+    "id": "KqvqNAfGIE5a9wSv",
+    "name": "Heroism",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You unlock the target's inner heroism, granting it a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks. Heightened (6th) The status bonus increases to +2. Heightened (9th) The status bonus increases to +3."
+  },
+  {
+    "id": "gISYsBFby1TiXfBt",
+    "name": "Acid Splash",
+    "rank": 0,
+    "traits": [
+      "acid",
+      "attack",
+      "cantrip",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "1d6",
+      "type": "acid"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You splash a glob of acid that splatters your target and nearby creatures. Make a spell attack. If you hit, you deal 1d6 acid damage plus 1 splash acid damage. On a critical success, the target also takes ] damage. Heightened (3rd) The initial damage increases to 2d6, and the persistent damage increases to 2. Heightened (5th) The initial damage increases to 3d6, the persistent damage increases to 3, and the splash damage increases to 2. Heightened (7th) The initial damage increases to 4d6, the persistent damage in…"
+  },
+  {
+    "id": "WBmvzNDfpwka3qT4",
+    "name": "Light",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "light",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create an orb of light that sheds bright light in a 20-foot radius (and dim light for the next 20 feet) in a color you choose. If you create the light in the same space as a willing creature, you can attach the light to the creature, causing it to float near that creature as it moves. You can Sustain the spell to move the light up to 60 feet; you can attach or detach it from a creature as part of this movement. You can Dismiss the spell. If you Cast the Spell while you already have four light spells active, yo…"
+  },
+  {
+    "id": "gYjPm7YwGtEa1oxh",
+    "name": "Ray of Frost",
+    "rank": 0,
+    "traits": [
+      "attack",
+      "cantrip",
+      "cold",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d4",
+      "type": "cold"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You blast an icy ray. Make a spell attack roll. The ray deals 2d4 cold damage. Critical Success The target takes double damage and takes a –10-foot status penalty to its Speeds for 1 round. Success The target takes normal damage. Heightened (+1) The damage increases by 1d4."
+  },
+  {
+    "id": "TVKNbcgTee19PXZR",
+    "name": "Shield",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "force"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the reaction with your magic shield. The shield has Hardness 5. You can use the spell's reaction to reduce damage from any spell or magical effect, even if it doesn't deal physical damage. After you use Shield Block, the spell ends and you can't cast it again for 10 minutes. He…"
+  },
+  {
+    "id": "IarZrgCeaiUqOuRu",
+    "name": "Wall of Fire",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "4d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You raise a blazing wall that burns creatures passing through it. You create either a 5-foot-thick wall of flame in a straight line up to 60 feet long and 10 feet high, or a 5-foot-thick, 10-foot-radius ring of flame with the same height. The wall stands vertically in either form; if you wish, the wall can be of a shorter length or height. Everything on each side of the wall is from creatures on the opposite side. Any creature that crosses the wall or is occupying the wall's area at the start of its turn takes 4d6…"
+  },
+  {
+    "id": "3puDanGfpEt6jK5k",
+    "name": "Cone of Cold",
+    "rank": 5,
+    "traits": [
+      "cold",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "12d6",
+      "type": "cold"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Icy cold rushes forth from your hands. You deal 12d6 cold damage to creatures in the area. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "A2JfEKe6BZcTG1S8",
+    "name": "Fly",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "The target can soar through the air, gaining a fly Speed equal to its Speed or 20 feet, whichever is greater. Heightened (7th) The duration increases to 1 hour."
+  },
+  {
+    "id": "j8vIoIEWElvpwkcI",
+    "name": "Mirror Image",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "illusion",
+      "manipulate",
+      "visual"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Three illusory images of you swirl about your space, potentially causing those who attack you to hit one of the images instead of you. Any attack that would hit you has a random chance of hitting one of your images instead of you. If all three images remain, there is a 1 in 4 chance of hitting you (1 on [[/r 1d4]]). With two images remaining, there is a 1 in 3 chance of hitting you (1-2 on [[/r 1d6]]). With only one image, the chances are 1 in 2 (1-3 on [[/r 1d6]]). Once an image is hit, it is destroyed. If an att…"
+  },
+  {
+    "id": "6dDtGIUerazSHIOu",
+    "name": "Wish",
+    "rank": 10,
+    "traits": [],
+    "actionCost": 1,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You weave the fabric of reality itself to grant the target's greatest desire. The target declares their wish in a loud voice at the start of the ritual and again at the end. The target's wish can be anything, ranging from simpler wishes such as vast riches or the casting of a certain spell or ritual, to greater wishes like the destruction of an entire kingdom or ascension to divinity. The GM might decide a wish draws the attention of deities or other powerful creatures, leading to interference with the ritual or a…"
+  },
+  {
+    "id": "y6rAdMK6EFlV6U0t",
+    "name": "Breathe Fire",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A gout of flame sprays from your mouth. You deal 2d6 fire damage to creatures in the area with a basic Reflex save. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "8TQiFzGf4feoHeH0",
+    "name": "Chilling Spray",
+    "rank": 1,
+    "traits": [
+      "cold",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "cold"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A cone of icy shards bursts from your spread hands and coats the targets in a layer of frost. You deal 2d4 cold damage to creatures in the area; they must each attempt a Reflex save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and takes a –5-foot status penalty to its Speeds for 2 rounds. Critical Failure The creature takes double damage and takes a –10-foot status penalty to its Speeds for 2 rounds. Heightened (+1) The damage increase…"
+  },
+  {
+    "id": "k34hDOfIIMAxNL4a",
+    "name": "Grim Tendrils",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 30
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Tendrils of darkness curl out from your fingertips and race through the air. You deal 2d4 void damage and ] damage to living creatures in the line. Each living creature in the line must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half the void damage and no persistent bleed damage. Failure The creature takes full damage. Critical Failure The creature takes double void damage and double persistent bleed damage. Heightened (+1) The void damage increases by 2d4, a…"
+  },
+  {
+    "id": "g8QqHpv2CWDwmIm1",
+    "name": "Gust of Wind",
+    "rank": 1,
+    "traits": [
+      "air",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 60
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A violent wind issues forth from your palm, blowing from the point where you are when you Cast the Spell to the line's opposite end. The wind extinguishes small non-magical fires, disperses fog and mist, blows objects of light Bulk or less around, and pushes larger objects. Large or smaller creatures in the area must attempt a Fortitude save. Large or smaller creatures that later move into the gust must attempt the save on entering. Critical Success The creature is unaffected. Success The creature can't move again…"
+  },
+  {
+    "id": "1meVElIu1CEVYWkv",
+    "name": "Noxious Vapors",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "poison"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 10
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d6",
+      "type": "poison"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You emit a cloud of toxic smoke that temporarily obscures you from sight. Each creature except you in the area when you Cast the Spell takes 1d6 poison damage (basic Fortitude save). A creature that critically fails the saving throw also becomes Sickened 1. All creatures in the area become , and all creatures outside the smoke become concealed to creatures within it. This smoke can be dispersed by a strong wind. Heightened (+1) The damage increases by 1d6"
+  },
+  {
+    "id": "Rn2LkoSq1XhLsODV",
+    "name": "Pummeling Rubble",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "earth",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A spray of heavy rocks flies through the air in front of you. The rubble deals 2d4 bludgeoning damage to each creature in the area. Each creature must attempt a Reflex save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and is pushed 5 feet away from you. Critical Failure The creature takes double damage and is pushed 10 feet away from you. Heightened (+1) Increase the damage by 2d4."
+  },
+  {
+    "id": "WqPhJNzLa8vSjrH6",
+    "name": "Animated Assault",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d10",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You use your mind to manipulate unattended objects in the area, temporarily animating them to attack. The objects hover in the air, then hurl themselves at nearby creatures in a chaotic flurry of debris. This assault deals 2d10 bludgeoning damage (basic Reflex save) to each creature in the area. On subsequent rounds, the first time each round you Sustain this Spell, it deals ] damage (basic Reflex save) to each creature in the area. Heightened (+2) The initial damage increases by 2d10 and the subsequent damage inc…"
+  },
+  {
+    "id": "x0rWq0wS06dns4G2",
+    "name": "Final Sacrifice",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You channel disruptive energies through the bond between you and your minion, causing it to violently explode. The target is immediately slain, and the explosion deals 6d6 fire damage to creatures within 20 feet of it with a basic Reflex save. If the target has the cold or water trait, the spell deals cold damage and has the cold trait instead of the fire trait. Attempting to cast this spell targeting a creature that you temporarily seized control of, such as an undead commanded by bind undead, automatically fails…"
+  },
+  {
+    "id": "2ZdHjnpEQJuqOYSG",
+    "name": "Floating Flame",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "square",
+      "value": 5
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "3d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You create a fire that burns without fuel and moves to your commands. The flame deals 3d6 fire damage to each creature in the square in which it appears, with a basic Reflex save. When you Sustain this spell, you can levitate the flame up to 10 feet. It then deals damage to each creature whose space it shared at any point during its flight. This uses the same damage and save, and you roll the damage once each time you Sustain. A given creature can take damage from floating flame only once per round. Heightened (+1…"
+  },
+  {
+    "id": "3VxVbZqIRvpKkg3O",
+    "name": "Fungal Infestation",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "fungus",
+      "manipulate",
+      "poison"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "poison"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Toxic spores swarm over creatures in the area, causing them to erupt in grotesque fungal growths. These noxious growths deal 2d6 persistent poison damage, and each creature must attempt a Fortitude save. Critical Success The creature is unaffected. Success The target takes half the persistent poison damage. Failure The target takes the full persistent poison damage. While it's taking this persistent poison damage, it has weakness 1 to fire and weakness 1 to slashing. Critical Failure As failure, but double the per…"
+  },
+  {
+    "id": "wzLkNU3AAqOSKFPR",
+    "name": "Noise Blast",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d10",
+      "type": "sonic"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A cacophonous noise blasts out, dealing 2d10 sonic damage. Each creature must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and is for 1 round. Critical Failure The creature takes double damage, is deafened for 1 minute, and is Stunned 1. Heightened (+1) The damage increases by 1d10."
+  },
+  {
+    "id": "XFtO4BBI22Uox2QP",
+    "name": "Sudden Blight",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d10",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You accelerate the processes of decay in the area. Each living creature in the area takes 2d10 void damage with a basic Fortitude save. A creature afflicted by a disease takes a –2 circumstance penalty to this save. You can also direct the blight to rot all Small and Tiny non-creature plants in the area, eliminating non-magical undergrowth and any resulting difficult terrain, cover, and concealment. Sudden blight attempts to counteract any magical effect on the plants before withering them. Heightened (+1) The dam…"
+  },
+  {
+    "id": "cB17yFc9456Pyfec",
+    "name": "Vomit Swarm",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 30
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d8",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You belch forth a swarm of magical vermin. You evoke and shape the creatures from your own imagination, allowing you to change the appearance of the creatures (typically a mix of centipedes, roaches, wasps, and worms), but this doesn't change the effect of the spell. The vermin swarm over anyone in the area, their bites and stings dealing 2d8 piercing damage (basic Reflex save). A creature that fails its saving throw also becomes Sickened 1. Once the spell ends, the swarm disappears. Heightened (+1) The damage inc…"
+  },
+  {
+    "id": "T4QKmtYPeCgYxVGe",
+    "name": "Crashing Wave",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 30
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You summon a crashing wave that sweeps away from you. You deal 6d6 bludgeoning damage to creatures in the area. The water also extinguishes non-magical fires in the area. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "0JWyMwVnLxX9CDYQ",
+    "name": "Rouse Skeletons",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "slashing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "Misshapen skeletal forms erupt from a solid surface, such as a stone floor, and fill the burst. The area they fill is difficult terrain. Their grasping claws deal 2d6 slashing damage to creatures on the ground in the area when the skeletons first appear with a basic Reflex save. On subsequent rounds, the first time you Sustain the Spell each round, you can move the area of skeletons up to 20 feet within the range of the spell and deal 2d6 slashing damage with a basic Reflex save to each creature in the new area. D…"
+  },
+  {
+    "id": "thAHF1zxNplLCJPO",
+    "name": "Caustic Blast",
+    "rank": 0,
+    "traits": [
+      "acid",
+      "cantrip",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 5
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d8",
+      "type": "acid"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You fling a large glob of acid that immediately detonates, spraying nearby creatures. Creatures in the area take 1d8 acid damage with a basic Reflex save; on a critical failure, the creature also takes ] damage. Heightened (+2) The initial damage increases by 1d8, and the persistent damage on a critical failure increases by 1."
+  },
+  {
+    "id": "dDiOnjcsBFbAvP6t",
+    "name": "Gale Blast",
+    "rank": 0,
+    "traits": [
+      "air",
+      "cantrip",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 5
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Wind flows from your outstretched hands and whirls around you in a 5-foot emanation. Each creature in the area takes 1d6 bludgeoning damage, with a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and is pushed 5 feet away from you. Critical Failure The creature takes double damage and is pushed 10 feet away from you. Heightened (+1) The damage increases by 1d6."
+  },
+  {
+    "id": "b5BQbwmuBhgPXTyi",
+    "name": "Haunting Hymn",
+    "rank": 0,
+    "traits": [
+      "auditory",
+      "cantrip",
+      "concentrate",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d8",
+      "type": "sonic"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You echo a jarring hymn that only creatures in the area can hear. The hymn deals 1d8 sonic damage, with a basic Fortitude save. If a target critically fails the save, it's also for 1 minute. Heightened (+2) The damage increases by 1d8."
+  },
+  {
+    "id": "zA0jNIBRgLsyTpbm",
+    "name": "Scatter Scree",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "earth",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "bludgeoning"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A jumble of rocks cascades into the area. The scattering rocks deal 2d4 bludgeoning damage (basic Reflex save). The ground in the area becomes difficult terrain for the duration of the spell. A creature can Interact to clear a square of this scree. If you cast this spell again, any previous scatter scree you've cast ends. Heightened (+1) The damage increases by 1d4."
+  },
+  {
+    "id": "eSL5hVT9gXrnRLtd",
+    "name": "Spout",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cube",
+      "value": 5
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "bludgeoning"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Water blasts upward, coming out of the ground, rising from a pool, or even manifesting from thin air. Any creatures in the area take 2d4 bludgeoning damage, with a basic Reflex saving throw. A creature that critically fails its save is disoriented by the explosion of water, becoming until the end of your next turn. You can change this spell's area to a , provided you center the burst in a body of water. This body of water can be as small as a pond or creek, but not as small as a puddle or bathtub. Heightened (+1)…"
+  },
+  {
+    "id": "TSyFZNAbqfkRrcq0",
+    "name": "Concordant Choir",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "sonic"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "sonic"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You unleash a dangerous consonance of reverberating sound, focusing on a single target or spreading out to damage many foes. The number of actions you spend Casting this Spell determines its targets, range, area, and other parameters. 1 The spell deals 1d4 sonic damage to a single enemy, with a basic Fortitude save. 2 (manipulate) The spell deals 2d4 sonic damage to all creatures in a , with a basic Fortitude save. 3 (manipulate) The spell deals 2d4 sonic damage to all creatures in a , with a basic Fortitude save.…"
+  },
+  {
+    "id": "R8bqnYiThB6MYTxD",
+    "name": "Phantom Pain",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "illusion",
+      "manipulate",
+      "mental",
+      "nonlethal"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Illusory pain wracks the target, dealing 2d4 mental damage and ] damage. The target must attempt a Will save. Critical Success The target is unaffected. Success The target takes full initial damage but no persistent damage, and the spell ends immediately. Failure The target takes full initial and persistent damage, and the target is Sickened 1. If the target recovers from being Sickened, the persistent damage ends and the spell ends. Critical Failure As failure, but the target is Sickened 2. Heightened (+1) The da…"
+  },
+  {
+    "id": "DYdvMZ8G2LiSLVWw",
+    "name": "Spider Sting",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "poison"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d4",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You magically duplicate a spider's venomous sting. You deal 1d4 piercing damage to the touched creature and afflict it with spider venom. The target must attempt a Fortitude save. Critical Success The target is unaffected. Success The target takes ] damage. Failure The target is afflicted with spider venom at stage 1. Critical Failure The target is afflicted with spider venom at stage 2. Spider Venom (poison) Level 1 Maximum Duration 4 rounds Stage 1 1d4 poison damage and Enfeebled 1 (1 round) Stage 2 1d4 poison d…"
+  },
+  {
+    "id": "zDJS8E66UI0himqV",
+    "name": "Thunderstrike",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "electricity",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d12",
+      "type": "electricity"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You call down a tendril of lightning that cracks with thunder, dealing 1d12 electricity damage and 1d4 sonic damage to the target with a basic Reflex save. A target wearing metal armor or made of metal takes a –1 circumstance bonus to its save, and if damaged by the spell is Clumsy 1 for 1 round. Heightened (+1) The damage increases by 1d12 electricity and 1d4 sonic."
+  },
+  {
+    "id": "9h9YCncqah6VNsKf",
+    "name": "Acid Grip",
+    "rank": 2,
+    "traits": [
+      "acid",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d8",
+      "type": "acid"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "An ephemeral, taloned hand grips the target, burning it with magical acid. The target takes 2d8 acid damage plus ] damage depending on its Reflex save. A creature taking persistent damage from this spell takes a –10-foot status penalty to its Speeds. Critical Success The creature is unaffected. Success The creature takes half damage and no persistent damage, and the claw moves it up to 5 feet in a direction of your choice. Failure The creature takes full damage and persistent damage, and the claw moves it up to 10…"
+  },
+  {
+    "id": "hoR6w8BqX2F35Tdx",
+    "name": "Blistering Invective",
+    "rank": 2,
+    "traits": [
+      "auditory",
+      "concentrate",
+      "emotion",
+      "fear",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A heap of insults and invectives spew from your mouth-words so devastating your foes burn from the intensity of your diatribe. Your words deal 2d6 persistent fire damage, and the target must attempt a Will save. If the target doesn't understand the language or you're not speaking a language, it gains a +4 circumstance bonus to its save. Critical Success The target is unaffected. Success The target takes half the persistent fire damage. Failure The target becomes Frightened 1 and takes the full persistent fire dama…"
+  },
+  {
+    "id": "TaaMEYdZXQXF0Sks",
+    "name": "Blood Vendetta",
+    "rank": 2,
+    "traits": [
+      "curse"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "bleed"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Requirements You can bleed. Trigger A creature deals piercing, slashing, or persistent bleed damage to you. You curse the target, punishing it for having the audacity to spill your blood. The target takes 2d6 persistent bleed damage and must attempt a Will save. Critical Success The target is unaffected. Success The target takes half the persistent bleed damage. Failure The target takes the full persistent bleed damage. Until the bleeding stops, the target has weakness 1 to piercing and slashing damage. Critical F…"
+  },
+  {
+    "id": "3x6eUCm17n6ROzUa",
+    "name": "Crisis of Faith",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You assault the target's faith, riddling the creature with doubt and mental turmoil that deal 6d6 mental damage, or 6d8 mental damage if it can cast divine spells. The effects are determined by its Will save. To many deities, casting this spell on a follower of your own deity without significant cause is anathema. Critical Success The target is unaffected. Success The target takes half damage. Failure The target takes full damage; if the target can cast divine spells, it's Stupefied 1 for 1 round. Critical Failure…"
+  },
+  {
+    "id": "B3eLlbaPxOYHcs1o",
+    "name": "Curse of Lost Time",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "curse",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "4d6",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You curse the target with rapid aging or erosion. The effect depends on whether the target is an object, a construct, or a living creature. Artifacts, along with objects and constructs made of precious materials (as determined by the GM), are immune. Object If the object is attended, its bearer can attempt a Fortitude save. If the bearer fails or the object is unattended, the object immediately takes 4d6 damage (applying Hardness normally) and the item is cursed with an unlimited duration. Until the curse ends, th…"
+  },
+  {
+    "id": "N1Z1oLPdBxaSgrEE",
+    "name": "Vampiric Feast",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "death",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Your touch leeches the lifeblood out of a target to empower yourself. You deal 6d6 void damage to the target. You gain temporary Hit Points equal to half the void damage the target takes (after applying resistances and the like). You lose any remaining temporary Hit Points after 1 minute. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "jfVCuOpzC6mUrf6f",
+    "name": "Hydraulic Push",
+    "rank": 1,
+    "traits": [
+      "attack",
+      "concentrate",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "3d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You call forth a powerful blast of pressurized water that bludgeons the target and knocks it back. Make a ranged spell attack roll. Critical Success The target takes 6d6 bludgeoning damage and is knocked back 10 feet. Success The target takes 3d6 bludgeoning damage and is knocked back 5 feet. Heightened (+1) The bludgeoning damage increases by 2d6."
+  },
+  {
+    "id": "WPu3UE3kTXSLqO40",
+    "name": "Spiritual Armament",
+    "rank": 2,
+    "traits": [
+      "attack",
+      "concentrate",
+      "manipulate",
+      "sanctified",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d8",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You create a ghostly, magical echo of one weapon you're wielding or wearing and fling it. Attempt a spell attack roll against the target's AC, dealing 2d8 damage on a hit (or double damage on a critical hit). The damage type is the same as the chosen weapon (or any of its types for a versatile weapon). The attack deals spirit damage instead if that would be more detrimental to the creature (as determined by the GM). This attack uses and contributes to your multiple attack penalty. After the attack, the weapon retu…"
+  },
+  {
+    "id": "sRfSBHWHdbIa0aGc",
+    "name": "Chilling Darkness",
+    "rank": 3,
+    "traits": [
+      "attack",
+      "cold",
+      "concentrate",
+      "darkness",
+      "manipulate",
+      "unholy"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "5d6",
+      "type": "cold"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You shoot an utterly cold ray of darkness tinged with unholy energy. Make a ranged spell attack. The ray deals 5d6 cold damage. If the target has the holy trait, you deal an extra 5d6 spirit damage. Critical Success The target takes double damage. Success The target takes full damage. If the ray passes through an area of magical light or targets a creature affected by magical light, chilling darkness attempts to counteract the light. If you need to determine whether the ray passes through an area of light, draw a…"
+  },
+  {
+    "id": "DyiD239dNS7RIxZE",
+    "name": "Holy Light",
+    "rank": 3,
+    "traits": [
+      "attack",
+      "concentrate",
+      "fire",
+      "holy",
+      "light",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "5d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You shine a blazing ray of light tinged with holy energy. Make a ranged spell attack. The ray deals 5d6 fire damage. If the target has the unholy trait, you deal an extra 5d6 spirit damage. Critical Success The target takes double damage. Success The target takes full damage. If the light passes through an area of magical darkness or targets a creature affected by magical darkness, holy light attempts to counteract the darkness. If you need to determine whether the light passes through an area of darkness, draw a…"
+  },
+  {
+    "id": "4gBIw4IDrSfFHik4",
+    "name": "Daze",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "manipulate",
+      "mental",
+      "nonlethal"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d6",
+      "type": "mental"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You push into the target's mind and daze it with a mental jolt. The jolt deals 1d6 mental damage, with a basic Will save. If the target critically fails the save, it is also Stunned 1. Heightened (+2) The damage increases by 1d6."
+  },
+  {
+    "id": "kBhaPuzLUSwS6vVf",
+    "name": "Electric Arc",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "electricity",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "electricity"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "An arc of lightning leaps from one target to another. Each target takes 2d4 electricity damage with a basic Reflex save. Heightened (+1) The damage increases by 1d4."
+  },
+  {
+    "id": "IxhGEKl63R4QBvkj",
+    "name": "Frostbite",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "cold",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "cold"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "An orb of biting cold coalesces around your target, freezing its body. The target takes 2d4 cold damage with a basic Fortitude save. On a critical failure, the target also gains weakness 1 to bludgeoning until the start of your next turn. Heightened (+1) The damage increases by 1d4 and the weakness on a critical failure increases by 1."
+  },
+  {
+    "id": "D7ZEhTNIDWDLC2J4",
+    "name": "Puff of Poison",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "manipulate",
+      "poison"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d4",
+      "type": "poison"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You exhale a shimmering cloud of toxic breath at an enemy's face. The target takes 1d4 poison damage and ], depending on its Fortitude save. Critical Success The creature is unaffected. Success The target takes half initial damage and no persistent damage. Failure The target takes full initial and persistent damage. Critical Failure The target takes double initial and persistent damage. Heightened (+2) The initial poison damage increases by 1d4, and the persistent poison damage increases by 1d4."
+  },
+  {
+    "id": "kcelf6IHl3L9VXXg",
+    "name": "Vitality Lash",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "manipulate",
+      "vitality"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "vitality"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You demolish the target's corrupted essence with energy from Creation's Forge. You deal 2d6 vitality damage with a basic Fortitude save. If the creature critically fails the save, it is also Enfeebled 1 until the start of your next turn. Heightened (+1) The damage increases by 1d6."
+  },
+  {
+    "id": "mAMEt4FFbdqoRnkN",
+    "name": "Void Warp",
+    "rank": 0,
+    "traits": [
+      "cantrip",
+      "concentrate",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "void"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You call upon the Void to harm life force. The target takes 2d4 void damage with a basic Fortitude save. On a critical failure, the target is also Enfeebled 1 until the start of your next turn. Heightened (+1) The damage increases by 1d4."
+  },
+  {
+    "id": "0H1ozccQGGFLUwFI",
+    "name": "Cry of Destruction",
+    "rank": 1,
+    "traits": [
+      "cleric",
+      "concentrate",
+      "focus",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d8",
+      "type": "sonic"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "Your voice booms, smashing what's in front of you. Each creature and unattended object in the area takes 1d8 sonic damage. If you already dealt damage to an enemy this turn with a Strike or spell, increase the damage dice from this spell to d12s. Heightened (+1) The damage increases by 1d8."
+  },
+  {
+    "id": "mlNYROcFrUF8nFgk",
+    "name": "Spray of Stars",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "fire",
+      "focus",
+      "light",
+      "manipulate",
+      "oracle"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You fling a spray of tiny shooting stars, dealing 2d4 fire damage. Each creature in the area must attempt a Reflex save. Critical Success The creature is unaffected. Success The creature takes half damage and is for 1 round. Failure The creature takes full damage and is dazzled for 3 rounds. Critical Failure The creature takes double damage and is dazzled for 1 minute. Heightened (+1) Increase the damage by 1d4."
+  },
+  {
+    "id": "JcobNl4iE9HmMYtE",
+    "name": "Dragon Breath",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "focus",
+      "manipulate",
+      "sorcerer"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 30
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "5d6",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You spew energy from your mouth, dealing 5d6 damage with a basic Reflex save. The damage type depends on the magical tradition related to the dragon that influenced your bloodline. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "oo7YcRC2gcez81PV",
+    "name": "Qi Blast",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "focus",
+      "force",
+      "manipulate",
+      "monk"
+    ],
+    "actionCost": 1,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "force"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You unleash your qi as a powerful blast that deals 2d6 force damage. If you use 2 actions to cast qi blast , increase the size of the cone to 30 feet and the damage to 3d6. If you use 3 actions to cast qi blast , increase the cone to 60 feet and the damage to 4d6. Each creature in the area must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and is pushed 5 feet. Critical Failure The creature takes double damage a…"
+  },
+  {
+    "id": "LFSwMtQVP05EzlZe",
+    "name": "Thunderburst",
+    "rank": 3,
+    "traits": [
+      "air",
+      "concentrate",
+      "focus",
+      "manipulate",
+      "oracle",
+      "sonic"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You create a powerful blast of air and a loud peal of thunder, dealing 2d6 bludgeoning damage and 2d6 sonic damage. Each creature in the area must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and is for 1 minute. Critical Failure The creature takes double damage and is deafened for 1 hour. Heightened (+2) Each type of damage increases by 2d6, and the area increases by 5 feet."
+  },
+  {
+    "id": "Wi2HcreCfujKiCvW",
+    "name": "Whirling Flames",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "fire",
+      "focus",
+      "manipulate",
+      "oracle"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 5
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "5d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You call forth a storm of whirling flames, engulfing all creatures in that area and dealing 5d6 fire damage with a basic Reflex save. Heightened (+2) The damage increases by 3d6, and you can add another non-overlapping 5-foot burst to the area."
+  },
+  {
+    "id": "qwZBXN6zBoB9BHXE",
+    "name": "Divine Lance",
+    "rank": 0,
+    "traits": [
+      "attack",
+      "cantrip",
+      "concentrate",
+      "manipulate",
+      "sanctified",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d4",
+      "type": "spirit"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You unleash a beam of divine energy. Make a ranged spell attack against the target's AC. On a hit, the target takes 2d4 spirit damage (double damage on a critical hit). Heightened (+1) The damage increases by 1d4."
+  },
+  {
+    "id": "MPxbKoR54gkYkqLO",
+    "name": "Gouging Claw",
+    "rank": 0,
+    "traits": [
+      "attack",
+      "cantrip",
+      "concentrate",
+      "manipulate",
+      "morph"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d6",
+      "type": "untyped"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You temporarily morph your limb into a clawed appendage. Make a melee spell attack roll against your target's AC. If you hit, you deal your choice of 2d6 slashing damage or 2d6 piercing damage, plus 2 persistent bleed damage. On a critical success, you deal double damage and double bleed damage. Heightened (+1) The damage increases by 1d6 and the persistent bleed damage increases by 1."
+  },
+  {
+    "id": "6DfLZBl8wKIV03Iq",
+    "name": "Ignition",
+    "rank": 0,
+    "traits": [
+      "attack",
+      "cantrip",
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d4",
+      "type": "fire"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You snap your fingers and point at a target, which begins to smolder. Make a spell attack roll against the target's AC, dealing 2d4 fire damage on a hit. If the target is within your melee reach, you can choose to make a melee spell attack with the flame instead of a ranged spell attack, which increases all the spell's damage dice to d6s. Critical Success The target takes double damage and 1d4 persistent fire damage. Success The target takes full damage. Heightened (+1) The initial damage increases by 1d4 and the…"
+  },
+  {
+    "id": "Vbj8bTQ1nwrOBbYF",
+    "name": "Live Wire",
+    "rank": 0,
+    "traits": [
+      "attack",
+      "cantrip",
+      "concentrate",
+      "electricity",
+      "manipulate",
+      "metal"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "1d4",
+      "type": "slashing"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You conjure up a length of sharp copper filament humming with electrical current that strikes out at your foe. The wire deals 1d4 slashing damage and 1d4 electricity damage, depending on your spell attack roll against the target's AC. Critical Success The target takes double damage and ] damage. Success The target takes full damage. Failure The target takes the electricity damage, but not the slashing damage. Critical Failure The target is unaffected. Heightened (+2) The slashing damage, initial electricity damage…"
+  },
+  {
+    "id": "60sgbuMWN0268dB7",
+    "name": "Telekinetic Projectile",
+    "rank": 0,
+    "traits": [
+      "attack",
+      "cantrip",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d6",
+      "type": "untyped"
+    },
+    "isCantrip": true,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target. If you hit, you deal 2d6 bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled. No specific traits or magic properties of the hurled item affect the attack or the damage. Critical Success You deal double damage. Success You deal full damage. Heightened (+1) The damage increases by 1d6."
+  },
+  {
+    "id": "UKsIOWmMx4hSpafl",
+    "name": "Dizzying Colors",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "illusion",
+      "incapacitation",
+      "manipulate",
+      "visual"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You unleash a swirling multitude of colors that overwhelms creatures based on their Will saves. Critical Success The creature is unaffected. Success The creature is for 1 round. Failure The creature is Stunned 1, for 1 round, and dazzled for 1 minute. Critical Failure The creature is stunned for 1 round and blinded for 1 minute."
+  },
+  {
+    "id": "b515AZlB0sridKSq",
+    "name": "Calm",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "emotion",
+      "incapacitation",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You forcibly calm creatures in the area, soothing them into a nonviolent state; each creature must attempt a Will save. Critical Success The creature is unaffected. Success Calming urges impose a -1 status penalty to the creature's attack rolls. Failure Any emotion effects that would affect the creature are suppressed and the creature can't use hostile actions. If the target is subject to hostility from any other creature, it ceases to be affected by calm . Critical Failure As failure, but hostility doesn't end th…"
+  },
+  {
+    "id": "J6vNvrUT3b1hx2iA",
+    "name": "Entangling Flora",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "plant",
+      "wood"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Plants and fungi burst out or quickly grow, entangling creatures. All surfaces in the area are difficult terrain. Each round that a creature starts its turn in the area, it must attempt a Reflex save. On a failure, it takes a –10-foot circumstance penalty to its Speeds until it leaves the area, and on a critical failure, it's also for 1 round. Creatures can attempt to to remove these effects."
+  },
+  {
+    "id": "dxOF7d5kAWusLKWF",
+    "name": "Reaper's Lantern",
+    "rank": 2,
+    "traits": [
+      "aura",
+      "concentrate",
+      "death",
+      "light",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 5
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You call forth a ghostly lantern that guides the living toward death and the undead toward true death. It sheds bright light in the spell's area and dim light to twice that area. The lantern is insubstantial and floats near you, suspended from an ephemeral, skeletal hand. Living creatures and undead in the area when you Cast the Spell, or that enter the area later, must attempt Fortitude saves. Living creatures that fail their Fortitude saves gain only half the normal benefit from healing effects while within the…"
+  },
+  {
+    "id": "0qaqksrGGDj74HXE",
+    "name": "Revealing Light",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "light",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A wave of magical light washes over the area. You choose the appearance of the light, such as colorful, heatless flames or sparkling motes. A creature affected by revealing light is . If the creature was , it becomes instead. If the creature was already concealed for any other reason, it is no longer concealed. Critical Success The target is unaffected. Success The light affects the creature for 2 rounds. Failure The light affects the creature for 1 minute. Critical Failure The light affects the creature for 10 mi…"
+  },
+  {
+    "id": "9s5tqqXNzcoKamWx",
+    "name": "Web",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create a sticky web in the area that impedes creatures' movement. Squares filled with the web are difficult terrain. Each time a creature in the web begins to use a move action or enters the web during a move action it's using, it must attempt an check or Reflex save against your spell DC to avoid taking a circumstance penalty to its Speeds or becoming immobilized. A creature that gets out of the web ceases to take a circumstance penalty to its Speed from the web. Each square can be cleared of the web by a sin…"
+  },
+  {
+    "id": "06pzGkKTyPE3tHR8",
+    "name": "Gravity Well",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 30
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create a sphere of altered gravity. All creatures and unsecured objects in the area move towards the center, depending on their Reflex saving throws. This follows the rules for forced movement. If there's not enough space near the center of the sphere, creatures and objects nearer to the center move first, and others move as far as they can without being blocked, up to the amount set by their saving throw outcomes. Critical Success The creature is unaffected. Success The creature moves 5 feet toward the center…"
+  },
+  {
+    "id": "K2WpC3FFoHrqX9Q5",
+    "name": "Hypnotize",
+    "rank": 3,
+    "traits": [
+      "illusion",
+      "manipulate",
+      "subtle",
+      "visual"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You create a cloud of mesmerizing patterns and colors that hovers in the air. Creatures are while inside the cloud. In addition, a creature must attempt a Will saving throw if it is inside the cloud when you cast it, when it enters the cloud, when it ends its turn within the cloud, or if it uses a or Interact action on the cloud. A creature currently by hypnotize doesn't attempt new saves. Success The target is unaffected. Failure The target is fascinated by the cloud. Critical Failure The target is fascinated by…"
+  },
+  {
+    "id": "gKKqvLohtrSJj3BM",
+    "name": "Force Barrage",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "force",
+      "manipulate"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "1d4+1",
+      "type": "force"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You fire a shard of solidified magic toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, increase the number of shards you shoot by one, to a maximum of three shards for 3 actions. You choose the target for each shard individually. If you shoot more than one shard at the same target, combine the damage before applying bonuses or penalties to damage, resistances, weaknesses, and so forth. Heightened (+2) You fire one addi…"
+  },
+  {
+    "id": "szIyEsvihc5e1w8n",
+    "name": "Soothe",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "emotion",
+      "healing",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "1d10+4",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You grace the target's mind, boosting its mental defenses and healing its wounds. The target regains 1d10+4 Hit Points when you Cast the Spell and gains a +2 status bonus to saves against mental effects for the duration. Heightened (+1) The amount of healing increases by 1d10+4."
+  },
+  {
+    "id": "yHujiDQPdtXW797e",
+    "name": "Spirit Link",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "healing",
+      "manipulate",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You form a spiritual link with another creature, taking in its pain. When you Cast this Spell and at the start of each of your turns, if the target is below maximum Hit Points, it regains 2 Hit Points (or the difference between its current and maximum Hit Points, if that's lower). You lose as many Hit Points as the target regained. This is a spiritual transfer, so no effects apply that would increase the Hit Points the target regains or decrease the Hit Points you lose. This transfer also ignores any temporary Hit…"
+  },
+  {
+    "id": "1xbFBQDRs0hT5xZ9",
+    "name": "Shatter",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d10",
+      "type": "sonic"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A high-frequency sonic attack shatters a nearby object. You deal 2d10 sonic damage to the object, ignoring the object's Hardness if it is 4 or lower. Heightened (+1) The damage increases by 1d10, and the Hardness the spell ignores increases by 2."
+  },
+  {
+    "id": "KsWhliKfUs3IpW3c",
+    "name": "Wall of Thorns",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "plant",
+      "wood"
+    ],
+    "actionCost": 3,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "3d4",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You grow a wall of thorny brambles from the ground. You create a 5-foot-thick wall of brambles and thorns in a straight line up to 60 feet long and 10 feet high. You must create the wall in an unbroken open space so its edges don't pass through any creatures or objects, or the spell is lost. The wall stands vertically. If you wish, the wall can be of a shorter length or height. Everything on each side of the wall has cover from creatures on the opposite side, and the wall's spaces are difficult terrain. For every…"
+  },
+  {
+    "id": "rnNGALRtsjspFTws",
+    "name": "Acidic Burst",
+    "rank": 1,
+    "traits": [
+      "acid",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 5
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d6",
+      "type": "acid"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create a shell of acid around yourself that immediately bursts outward, dealing 2d6 acid damage to each creature in the area with a basic Reflex save. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "d2pi7laQkzlr3wrS",
+    "name": "Ancestral Touch",
+    "rank": 1,
+    "traits": [
+      "emotion",
+      "fear",
+      "focus",
+      "manipulate",
+      "mental",
+      "oracle"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You touch a creature and force them to see and feel the ancestors surrounding you. The target takes 2d4 mental damage, with results depending on a Will save. Critical Success The target is unaffected. Success The target takes half damage. Failure The target is Frightened 1 and takes full damage. Critical Failure The target is Frightened 2 and takes double damage. Heightened (+1) The mental damage increases by 1d4."
+  },
+  {
+    "id": "Aap7nGpC7neTWm78",
+    "name": "Animal Allies",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 5
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "3d4",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You summon tiny, ordinary animals from the environment, such as insects, birds, or fish, to quickly lash out at nearby foes. The animals swarm around the creatures in the area, dealing each of them 3d4 piercing damage with a basic Reflex save. Heightened (+1) The damage increases by 3d4"
+  },
+  {
+    "id": "k2QrUk7jWMAWozMh",
+    "name": "Brain Drain",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "focus",
+      "manipulate",
+      "mental",
+      "oracle"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d8",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You probe the target's mind to glean knowledge. This deals 1d8 mental damage with a basic Will save. If the target fails the save, you sort through the stolen memories to attempt a single check to . Choose a skill that has the Recall Knowledge action, and use the target's skill modifier for the check. Heightened (+1) The mental damage increases by 1d8."
+  },
+  {
+    "id": "f9m9DayyGy3meqUX",
+    "name": "Dehydrate",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 5
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You stir the inner fire of all things within the area, driving out moisture. All creatures in the area take 1d6 persistent fire damage with a basic Fortitude save; creatures with the water or plant traits get a result one degree of success worse than they rolled. The spell ends for a creature when its persistent damage ends. A creature affected by dehydrate attempts an additional Fortitude save at the end of each of its turns, before rolling to recover from the persistent damage. It can forgo this additional save…"
+  },
+  {
+    "id": "aEitTTb9PnOyidRf",
+    "name": "Needle of Vengeance",
+    "rank": 1,
+    "traits": [
+      "focus",
+      "hex",
+      "manipulate",
+      "mental",
+      "witch"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": true,
+    "description": "A long, jagged needle jabs into the target foe's psyche whenever it tries to attack a creature your patron holds in special regard. Name yourself or one of your allies. The target takes 2 mental damage any time it uses a hostile action against the named creature, with a basic Will save. Heightened (+1) Increase the damage by 2."
+  },
+  {
+    "id": "xn0V2HDrmDWNzPEt",
+    "name": "Savor the Sting",
+    "rank": 1,
+    "traits": [
+      "cleric",
+      "focus",
+      "manipulate",
+      "mental",
+      "nonlethal"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d4",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You inflict pain upon the target and revel in their anguish. This deals 1d4 mental damage and ] damage; the target must attempt a Will save. As long as the target is taking persistent damage from this spell, you gain a +1 status bonus to attack rolls and skill checks against the target. Critical Success The target is unaffected. Success The target takes half damage and no persistent damage. Failure The target takes full initial and persistent damage. Critical Failure The target takes double initial and persistent…"
+  },
+  {
+    "id": "dgCH2E0gMLMUgyFl",
+    "name": "Shockwave",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "earth",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create a wave of energy that ripples through the earth. Terrestrial creatures in the affected area must attempt a Reflex save to avoid stumbling as the shockwave shakes the ground. Critical Success The creature is unaffected. Success The creature is until the start of its next turn. Failure The creature falls . Critical Failure As failure, plus the creature takes 1d6 bludgeoning damage. Heightened (+1) The area increases by 5 feet (to a 20-foot cone at 2nd rank, and so on)."
+  },
+  {
+    "id": "ZrRhweQ7KQ0wKN3m",
+    "name": "Signal Skyrocket",
+    "rank": 1,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 30
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d10",
+      "type": "sonic"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "With a pinch of metallic powder and gunpowder, you call forth blistering red energy that shoots straight upward into the air and explodes, unleashing a crackling boom. Over time, you might even customize your own pattern and color for the skyrocket as you refine the spell. You can't change the direction or distance of the rocket-it must go straight up, continuing up to the maximum range if possible. If the rocket explodes at its maximum height, the bright light can be seen up to 10 miles away, and the sound of the…"
+  },
+  {
+    "id": "D6T17BdazhNy3KPm",
+    "name": "Soul Siphon",
+    "rank": 1,
+    "traits": [
+      "focus",
+      "manipulate",
+      "oracle",
+      "void"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d4",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You siphon off a portion of the target's soul to bolster your own vitality. The target must attempt a Fortitude save or take 1d4 void damage. You gain temporary Hit Points equal to the total amount of HP the target loses, including the HP lost from becoming . Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and becomes Drained 1. Critical Failure The creature takes double damage and becomes Drained 2. Heightened (+1) Increase the damage by…"
+  },
+  {
+    "id": "ho1jSoYKrHUNnM90",
+    "name": "Tempest Surge",
+    "rank": 1,
+    "traits": [
+      "air",
+      "concentrate",
+      "druid",
+      "electricity",
+      "focus",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d12",
+      "type": "electricity"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You surround a foe in a swirling storm of violent winds, roiling clouds, and crackling lightning. The storm deals 1d12 electricity damage to the target with a basic Reflex save. On a failure, the target also is Clumsy 2 for 1 round. Heightened (+1) The initial damage increases by 1d12."
+  },
+  {
+    "id": "EzB9i7R6aBRAtJCh",
+    "name": "Tempest Touch",
+    "rank": 1,
+    "traits": [
+      "cold",
+      "focus",
+      "manipulate",
+      "oracle",
+      "water"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d4",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "Your touch calls forth a churning mass of icy water that clings to your target, dealing 1d4 bludgeoning damage and 1d4 cold damage. The target must attempt a Fortitude save. Critical Success The target is unaffected. Success The target takes half damage and a –5-foot circumstance penalty to its Speeds until the end of your next turn. Failure The target takes full damage and a –10-foot circumstance penalty to its Speeds until the end of your next turn. Critical Failure As failure, but the target takes double damage…"
+  },
+  {
+    "id": "GYI4xloAgkm6tTrT",
+    "name": "Touch of Undeath",
+    "rank": 1,
+    "traits": [
+      "cleric",
+      "focus",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d6",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You attack the target's life force with undeath, dealing 1d6 void damage. The target must attempt a Fortitude save. Critical Success The target is unaffected. Success The target takes half damage. Failure The target takes full damage, and vitality effects heal it only half as much as normal for 1 round. Critical Failure The target takes double damage, and vitality effects heal it only half as much as normal for 1 minute. Heightened (+1) The damage increases by 1d6."
+  },
+  {
+    "id": "23cv1p49NFd0Onng",
+    "name": "Ash Cloud",
+    "rank": 2,
+    "traits": [
+      "air",
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You summon a tumultuous cloud of ash and smoke. The cloud is difficult terrain for flying creatures, and creatures in the cloud can't detect anything using their sense of smell. Creatures that start their turn within the cloud take 2d4 fire damage as their lungs fill with the hot, acrid smoke, with a Fortitude save. Critical Success The target is unaffected. Success The target takes half damage. Failure The target takes full damage and is for 1 round. Critical Failure The target takes double damage and is for 1 ro…"
+  },
+  {
+    "id": "S708JF3E0kuhuRzG",
+    "name": "Bone Spray",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d10",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You fire a torrent of jagged bone shards from your hands that rips through the fleshy bodies of your enemies. The spray deals 2d10 piercing damage and 1 persistent bleed damage to all creatures in the area, with a basic Reflex save. Heightened (+1) The piercing damage increases by 1d10, and the persistent bleed damage increases by 1."
+  },
+  {
+    "id": "iALgymtr6vhsHFCr",
+    "name": "Disorienting Flash",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "light",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 1,
+    "area": {
+      "type": "burst",
+      "value": 5
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d10",
+      "type": "sonic"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create a small explosion of bright light and ear-piercing sound that rocks the senses. Creatures in the area take sonic damage with a basic Fortitude save. The number of actions you spend when Casting this Spell determines the damage and other parameters. 1 This spell deals 1d10 sonic damage, and its area is a 5-foot square. Creatures that fail their save become until the end of your next turn. 2 This spell deals 2d10 sonic damage, and its area is a 10-foot burst. Creatures that fail their save become dazzled…"
+  },
+  {
+    "id": "v89KwyaBd6g5rWVS",
+    "name": "Exploding Earth",
+    "rank": 2,
+    "traits": [
+      "attack",
+      "concentrate",
+      "earth",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "4d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You throw a hard-packed ball of earth and stone at a creature, and the projectile explodes upon impact. Attempt a spell attack against the target's AC. If you hit, you deal 4d6 bludgeoning damage plus 1d6 bludgeoning splash damage. On a critical hit, double the initial damage, but not the splash damage, and the target you hit must succeed at a Fortitude saving throw or fall . Heightened (+2) The damage increases by 2d6, and the splash damage increases by 1d6."
+  },
+  {
+    "id": "Ru9v8U9IRk3LtWx8",
+    "name": "Feral Shades",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 30
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "slashing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A wave of gray mist formed of energy from the Void spills out from your outstretched hand, briefly taking the shape of a pack of predatory animals that set viciously on your foes. You deal 2d4 slashing damage and 2d4 void damage to creatures in the area, with a basic Fortitude save. The shades set upon the vulnerable with greater ferocity: creatures or those taking persistent bleed damage take a –2 status penalty to the save. Heightened (+1) The slashing damage and the void damage each increase by 1d4."
+  },
+  {
+    "id": "3GXU3ugrwLv0P7AH",
+    "name": "Ignite Fireworks",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "1d8",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A brilliant and clamorous display of sparks and colorful fireworks explode around your enemies, dealing 1d8 fire damage and 1d8 sonic damage to creatures within a 10-foot burst. All creatures in the area must attempt a Reflex save. Critical Success The creature is unaffected. Success The creature takes half damage and is for 1 round. Failure The creature takes full damage and is dazzled for 3 rounds. Critical Failure The creature takes double damage, takes ] damage, and is dazzled for 1 minute. Heightened (+2) The…"
+  },
+  {
+    "id": "eSEmqOBuywoJ6tYd",
+    "name": "Inner Radiance Torrent",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "force",
+      "light",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "4d4",
+      "type": "force"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You gradually merge several kinds of energy into your cupped hands before firing off a storm of bolts and beams that deal 4d4 force damage to all creatures in a 60-foot line. Creatures in the area must attempt a basic Reflex save. On a critical failure, they're also for 1 round. The number of actions you spend when Casting this Spell determines the area. If the line passes through an area of magical darkness or targets a creature affected by magical darkness, inner radiance torrent attempts to counteract the darkn…"
+  },
+  {
+    "id": "RGBZrVRIEDb2G48h",
+    "name": "Soothing Mist",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "focus",
+      "healing",
+      "manipulate",
+      "ranger",
+      "vitality"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d8",
+      "type": "vitality"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You call forth a magical mist that envelops a creature. The mist restores 2d8 Hit Points to a target living creature and ends one source of persistent acid, bleed, fire, poison, or void damage affecting it. If the creature is taking persistent damage from multiple sources, you select which one is removed. Against an undead target, you deal 2d8 vitality damage (basic Fortitude save); if it fails the save, it also takes ] damage. Heightened (+1) The amount of healing (or damage to an undead target) increases by 1d8,…"
+  },
+  {
+    "id": "nb7qD4UXemhQJrSd",
+    "name": "Spray of Salt",
+    "rank": 2,
+    "traits": [
+      "concentrate",
+      "earth",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "5d4",
+      "type": "acid"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A wave of purified salt burns away moisture and wickedness, dealing 5d4 acid damage. Each creature within the area must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage. If the creature has the ooze, unholy, or water trait, it also takes ] damage. Critical Failure The creature takes double damage, and double persistent damage if it has the ooze, unholy, or water trait. Heightened (+1) The acid damage increases by 2…"
+  },
+  {
+    "id": "YuCBhE9tGgN8G2zU",
+    "name": "Blastback",
+    "rank": 3,
+    "traits": [
+      "air",
+      "concentrate"
+    ],
+    "actionCost": 1,
+    "area": {
+      "type": "emanation",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d4",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Trigger You fall more than 10 feet. You hit the ground with a shuddering boom, propelling the force of your fall out in a wave. You take no damage from the fall as the displaced air allows you to land gently, but all other creatures in the spell's area take 6d4 bludgeoning damage. Creatures that fail their save are also pushed back 5 feet. Heightened (+2) The emanation increases by 10 feet, and the damage increases by 1d4."
+  },
+  {
+    "id": "KEkPxx7Sm6Xf4W3s",
+    "name": "Blazing Dive",
+    "rank": 3,
+    "traits": [
+      "air",
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "3d4",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Superheated air collects under you, buoying you high into the sky before you plummet back down in a fiery comet. You Fly 15 feet straight up into the air, then Fly in a straight line to an empty space of your choice on the ground within 60 feet. When you land, blistering air blasts out from you, dealing 3d4 bludgeoning damage and 3d6 fire damage (basic Reflex save) to all creatures in a 10-foot emanation. Heightened (+1) The damage increases by 1d4 bludgeoning and 1d6 fire."
+  },
+  {
+    "id": "KEagmnwgsSbGmkme",
+    "name": "Cave Fangs",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "earth",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Sharp flowstone formations protrude from the ground and ceiling, dealing 6d6 piercing damage to creatures in the area with a basic Reflex save. Densely packed with protrusions, the area becomes difficult terrain for the duration. The protrusions turn to dust when the spell ends. You can Dismiss the spell. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "zf2OwwvIwu8JHoY2",
+    "name": "Corpse Bloom",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "poison"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 5
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "3d4",
+      "type": "poison"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Area three 5-foot bursts that don't overlap You conjure three deadly clusters of flesh-devouring fungi. Whenever a creature starts its turn in one of the clusters or the first time a creature enters a cluster each round, it takes 3d4 poison damage with a Fortitude save as poisonous spores fill the air. Corpses within a cluster rapidly decompose. Critical Success The target is unaffected. Success The target takes half damage and becomes Sickened 1. Failure The target takes full damage and becomes sickened 1. Critic…"
+  },
+  {
+    "id": "cqdmSmQnM0q6wbWG",
+    "name": "Drain Life",
+    "rank": 3,
+    "traits": [
+      "focus",
+      "manipulate",
+      "sorcerer",
+      "void"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "3d4",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You close your hand and pull life energy from another creature into yourself. This deals 3d4 void damage; the target must attempt a basic Fortitude save. You gain temporary Hit Points equal to the damage the target takes, after resolving its save and applying a blood magic effect if applicable. If the target's Hit Points were lower than the damage you dealt, you gain temporary Hit Points equal to their remaining Hit Points instead. The temporary Hit Points last for 1 minute. Heightened (+1) The damage increases by…"
+  },
+  {
+    "id": "NyxQAazFBdBAqZGX",
+    "name": "Elemental Annihilation Wave",
+    "rank": 3,
+    "traits": [
+      "air",
+      "concentrate",
+      "earth",
+      "fire",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 30
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "1d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You draw elemental power from your surroundings, and combining it with your own magical energy, unleash a wave of utter destruction and swirling colors that deals 1d6 fire damage and 3d6 bludgeoning damage with a basic Reflex save. You can replace the air trait with the metal and wood traits when you cast the spell. The number of actions you spend when Casting this Spell determines the area and other parameters. 2 (somatic, verbal) The spell is a 30-foot cone. 3 (material, somatic, verbal) The spell is a 30-foot c…"
+  },
+  {
+    "id": "YZiPAxdZFYXu6BvA",
+    "name": "Garden of Stone",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "earth",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "3d10",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "The ground shakes as you conjure a 10-foot-tall stalagmite from below. The stalagmite fills the area and has AC 10, Hardness 5, and 30 Hit Points. When you Cast the Spell, all creatures in the area take 3d10 piercing damage, with a basic Reflex save, and are pushed to the nearest unoccupied space as the stalagmite rises. The area in a around the stalagmite becomes difficult terrain, as smaller stalagmites grow around it. If the stalagmite survives to the end of the spell's duration, it remains as an ordinary, non-…"
+  },
+  {
+    "id": "alG1y2mnNZGRywad",
+    "name": "Gravity Wave",
+    "rank": 3,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 30
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "6d4",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You send forth a ripple of gravitic force, lifting enemies into the air before slamming them down to the ground, dealing 6d4 bludgeoning damage with a Fortitude save. Critical Success The target is unaffected. Success The target takes half damage. Failure The target takes full damage and falls . Critical Failure The target takes double damage and falls prone. Heightened (+1) The damage increases by 2d4."
+  },
+  {
+    "id": "DZ9bzXYqMjAK9TzC",
+    "name": "Holy Cascade",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "holy",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "3d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You call upon sacred energy to amplify a vial of , tossing it an incredible distance. It explodes in an enormous burst that deals 3d6 bludgeoning damage to creatures in the area from the cascade of water. The water deals an additional ] damage to creatures with the unholy trait in the area. Heightened (+1) The bludgeoning damage increases by 1d6, and the additional spirit damage increases by 2d6."
+  },
+  {
+    "id": "Y3G6Y6EDgCY0s3fq",
+    "name": "Hydraulic Torrent",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 60
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "8d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A swirling torrent of water manifests along a straight line, battering creatures and unattended objects in its path and possibly pushing them away from you. The torrent deals 8d6 bludgeoning damage. Each creature in the area must attempt a basic Fortitude save; unattended objects automatically fail. Creatures and objects that fail are also knocked back 5 feet (10 feet on a critical failure). Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "kHyjQbibRGPNCixx",
+    "name": "Ice Storm",
+    "rank": 4,
+    "traits": [
+      "cold",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d8",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You create a gray storm cloud that pelts creatures with an icy deluge. When you Cast the Spell, a burst of magical hail deals 2d8 bludgeoning damage and 2d8 cold damage to each creature in the area below the cloud (basic Reflex save). Snow and sleet continue to rain down in the area for the remainder of the spell's duration, making the area difficult terrain. Any creature that ends its turn in the storm takes ] damage. If you Cast this Spell outdoors, you can create two nonoverlapping clouds instead of one. As nor…"
+  },
+  {
+    "id": "A16eFTRh82xIjMu8",
+    "name": "Divine Immolation",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate",
+      "sanctified",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Divine flames scour creatures within the area. Creatures take 6d6 fire damage and ] damage. The divine power within the flames scorches the spirit as well; a creature takes spirit damage instead of fire damage from divine immolation if that would be more detrimental to the creature (as determined by the GM). Critical Success The creature is unaffected. Success The creature takes half damage and no persistent damage. Failure The creature takes full damage and persistent damage. Critical Failure The creature takes d…"
+  },
+  {
+    "id": "xxWhyl81w3ckslAU",
+    "name": "Howling Blizzard",
+    "rank": 5,
+    "traits": [
+      "air",
+      "cold",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "10d6",
+      "type": "cold"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Freezing winds extend from your hands, pushing away from you with great force. If you Cast this Spell with 2 actions, it has an area of a 60-foot cone; if you Cast this Spell with 3 actions, it has a range of 500 feet and an area of a 30-foot burst. Each creature in the area takes 10d6 cold damage with a basic Reflex save. Snowdrifts and icy gales fill the area until the start of your next turn, making the area difficult terrain. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "hghGRzOSzEl4UXdS",
+    "name": "Invoke Spirits",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "emotion",
+      "fear",
+      "manipulate",
+      "mental",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "will",
+      "basic": true
+    },
+    "damage": {
+      "formula": "2d4",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "Ragged apparitions of the dead rise to stalk the living. They deal 2d4 mental damage and 2d4 void damage to each living creature in the area, with a basic Will save. Additionally, creatures that critically fail the save are Frightened 2 and are for 1 round. On subsequent rounds, the first time you Sustain the Spell each round, you can move the area up to 30 feet within the range of the spell. Living creatures in the new area must attempt saves with the same effects as above, except that critically failing doesn't…"
+  },
+  {
+    "id": "JyT346VmGtRLsDnV",
+    "name": "Lightning Storm",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "electricity",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "4d12",
+      "type": "electricity"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You create a black, rumbling storm cloud and call down one lightning bolt within the spell's area. The bolt is a vertical line from the top of the storm cloud to the ground below, dealing 4d12 electricity damage to creatures in the line (basic Reflex save). On subsequent rounds, the first time you Sustain the Spell each round, you can call another lightning bolt within the area. If you Cast this Spell outdoors, you can create two non-overlapping clouds instead of one, though you can still call down only one bolt p…"
+  },
+  {
+    "id": "xFp4EwVcYwSG336t",
+    "name": "Slither",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "shadow"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "3d6",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A mass of snakes made of shadow rise up to capture creatures in the area. Each creature in the area when you Cast the Spell takes 3d6 piercing damage and 1d6 persistent poison damage from a biting snake, and it's grabbed or restrained depending on its Reflex save. A creature that ends its turn in the area must also attempt this save, even if it's already grabbed or restrained by the snakes. You can Dismiss the spell. Success The creature is unaffected. Failure The creature takes full damage and is by a snake. The…"
+  },
+  {
+    "id": "MlpbeZ61Euhl0d60",
+    "name": "Toxic Cloud",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "death",
+      "manipulate",
+      "poison"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d8",
+      "type": "poison"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You conjure a poisonous fog. This functions as , except the area moves 10 feet away from you each round. You deal 6d8 poison damage to each breathing creature that starts its turn in the spell's area. You can Dismiss the spell. Heightened (+1) The damage increases by 1d8."
+  },
+  {
+    "id": "jj5d830iUi2ZlQfs",
+    "name": "Blessed Boundary",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "force",
+      "manipulate",
+      "sanctified"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "7d8",
+      "type": "force"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Manifestations of divine force appear in the hundreds, swirling in a massive, protective sphere. These typically look like spiky fragments, but often take on an appearance themed to the deity of the caster. The sphere is hollow, with the manifestations forming a shell 2 inches deep on the outer edge. You can choose to make the burst smaller, in 5-foot increments, when you cast it. The shell provides cover and can intersect solid terrain without affecting it. The shell deals 7d8 force damage to each creature who in…"
+  },
+  {
+    "id": "0XP2XOxT9VSiXFDr",
+    "name": "Phantasmal Calamity",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "illusion",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 30
+    },
+    "save": {
+      "statistic": "will",
+      "basic": true
+    },
+    "damage": {
+      "formula": "11d6",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A vision of apocalyptic destruction fills the mind of each creature in the area. The vision deals 11d6 mental damage (basic Will save). On a critical failure, the creature must also succeed at a save or believe it's trapped (stuck in a fissure, adrift at sea, or some other fate in keeping with its vision). If it fails the second save, it's also for 1 minute. It can attempt a new Will save at the end of each of its turns, and on a success, it disbelieves the illusion and recovers from the stunned condition. Heighte…"
+  },
+  {
+    "id": "fd31tAHSSGXyOxW6",
+    "name": "Vampiric Exsanguination",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "death",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 30
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "12d6",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You draw in the blood and life force of other creatures through your outstretched arms. You deal 12d6 void damage to living creatures in the area with a basic Fortitude save. You gain temporary Hit Points equal to half the damage a single creature takes from this spell; calculate these temporary Hit Points using the creature that took the most damage. You lose any remaining temporary Hit Points after 1 minute. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "07xYlmGX32XtHGEt",
+    "name": "Vampiric Maiden",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "4d4",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A ghostly iron maiden snaps shut on the target and drains its vitality for your gain. This deals 4d4 piercing damage and 4d4 void damage, and the target must attempt a Fortitude save. You gain temporary Hit Points equal to the void damage the target takes (after applying resistances, weaknesses, and the like). You lose any remaining temporary Hit Points after 1 minute. Critical Success The target is unaffected. Success The target takes half damage. Failure The target is briefly trapped within the vampiric maiden.…"
+  },
+  {
+    "id": "Jmxru8zMdYMRuO5n",
+    "name": "Vision of Death",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "death",
+      "emotion",
+      "fear",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "8d6",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You force the target to see a vision of its own death. It takes 8d6 mental damage with a Will save. If the target is reduced to 0 HP by this spell, its vision becomes reality and kills it instantly. Critical Success The target is unaffected. Success The target takes half damage and is Frightened 1. Failure The target takes full damage and is Frightened 2. Critical Failure The target takes double damage, is Frightened 4 and is for as long as it's frightened. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "59NR1hA2jPSgg2sW",
+    "name": "Blister",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "7d6",
+      "type": "acid"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You point at a target in range, and its skin grows searing blisters filled with caustic fluid. The target must attempt a Fortitude save. Critical Success The target is unaffected. Success The target grows one blister. You can spend a single action, which has the concentrate trait, to pop a blister. The target and each creature in a originating from the target takes 7d6 acid damage (basic Fortitude save). You choose the direction of the cone, which can't include the target. When no blisters are left, the spell ends…"
+  },
+  {
+    "id": "BlfOg9Ceymgjstjm",
+    "name": "Corrosive Muck",
+    "rank": 5,
+    "traits": [
+      "acid",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "8d6",
+      "type": "acid"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Area all squares in two {10-foot bursts}. You create two puddles of acidic slime that hinders the movement of anyone who walks through them. The area of each pool becomes greater difficult terrain. Each round that a creature starts its turn in one of the pools or enters a pool during a move action it's using, it takes 8d6 acid damage with a basic Reflex save. A creature that critically fails its saving throw also takes ]. As normal, if a Large or larger creature starts its turn in both pools, it takes the damage o…"
+  },
+  {
+    "id": "d9sBzPOXX3KT8uTu",
+    "name": "Grisly Growths",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "10d6",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "This gruesome spell causes the target to grow excess limbs and organs, whether it be fingers multiplying until hands resemble bushes, eyes popping open in bizarre places, legs sprouting from the side of the body, or some other result. The target takes 10d6 piercing damage (basic Fortitude save) as the new features erupt. This spell has no effect on a target with a mutable anatomy or no limbs, such as an ooze or a protean. The growths rot rapidly and fall away after 1 round. In addition, unless the initial target c…"
+  },
+  {
+    "id": "oXeEbcUdgJGWHGEJ",
+    "name": "Impaling Spike",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "metal"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "8d6",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You conjure a spike that thrusts up from the earth beneath a target creature, potentially impaling it. The spike is made of cold iron and deals 8d6 piercing damage. The target must attempt a Reflex save. Critical Success The target dodges the spike and is unaffected. Success The target is struck by the spike and takes half damage. Failure The target is impaled through a leg or another nonvital body part. The creature takes full damage and, if it's standing on solid ground, becomes . It can attempt to (the DC is yo…"
+  },
+  {
+    "id": "PHVHBbdHeQRfjLmE",
+    "name": "Spirit Blast",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "16d6",
+      "type": "spirit"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You concentrate ethereal energy and attack a creature's spirit, dealing 16d6 spirit damage with a basic Fortitude save. Heightened (+1) The damage increases by 2d6."
+  },
+  {
+    "id": "x5rGOmhDRDVQPrnW",
+    "name": "Field of Life",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "healing",
+      "manipulate",
+      "vitality"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": null,
+    "damage": {
+      "formula": "1d8",
+      "type": "vitality"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "A field of life energy fills the area, exuding warmth and rejuvenating those within. Each living creature that starts its turn in the area regains 1d8 Hit Points, and any undead creature that starts its turn in the area takes 1d8 vitality damage. Heightened (8th) The healing and damage increase to 1d10. Heightened (9th) The healing and damage increase to 1d12."
+  },
+  {
+    "id": "J5MNC4xq3CHH31qT",
+    "name": "Eradicate Undeath",
+    "rank": 4,
+    "traits": [
+      "cleric",
+      "concentrate",
+      "focus",
+      "manipulate",
+      "vitality"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 30
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "4d12",
+      "type": "vitality"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "A massive deluge of life energy causes the undead to fall apart. Each undead creature in the area takes 4d12 vitality damage. Heightened (+1) The damage increases by 1d12."
+  },
+  {
+    "id": "crF4g9jRN1y84MSD",
+    "name": "Chthonian Wrath",
+    "rank": 5,
+    "traits": [
+      "concentrate",
+      "focus",
+      "manipulate",
+      "sorcerer"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "4d6",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "You evoke the energy of a part of the Outer Rifts. The damage types of the spell (one energy and one physical) are based on the result of rolling on the table below. You deal 4d6 damage of each of the corresponding damage types to each creature in the cone (8d6 total damage). Heightened (+1) The damage for each type increases by 1d6 Chthonian Wrath [[/r 1D4]] Realm Manifestation Damage and type 1 Skies Bolts and lightning and flying debris Bludgeoning and electricity 2 Depths Acid and demonic shells Acid and slash…"
+  },
+  {
+    "id": "sX2o0HH4RjJDAZ8C",
+    "name": "Divine Decree",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "sanctified",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 40
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "7d10",
+      "type": "spirit"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You utter a potent litany from your faith, a mandate that harms those who oppose your ideals. You deal 7d10 spirit damage to your enemies in the area; each enemy must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and is Enfeebled 2 for 1 minute. Critical Failure The creature takes double damage and is enfeebled 2 for 1 minute. If you're on your home plane and the creature is not, the creature is sent back to its…"
+  },
+  {
+    "id": "0jadeyQIItIuRgeH",
+    "name": "Eclipse Burst",
+    "rank": 7,
+    "traits": [
+      "cold",
+      "concentrate",
+      "darkness",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "8d10",
+      "type": "cold"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A globe of freezing darkness explodes in the area, dealing 8d10 cold damage to creatures in the area, plus an additional 8d4 void damage to living creatures. Each creature in the area must attempt a Reflex save. If the globe overlaps with an area of magical light or affects a creature affected by magical light, eclipse burst attempts to counteract the light effect. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage. Critical Failure The creat…"
+  },
+  {
+    "id": "a3aQxCpoj1q1NQxC",
+    "name": "Sunburst",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "fire",
+      "light",
+      "manipulate",
+      "vitality"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "8d10",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A powerful globe of searing sunlight explodes in the area, dealing 8d10 fire damage to all creatures in the area, plus an additional ] damage to undead creatures. Each creature in the area must attempt a Reflex save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage. Critical Failure The creature takes full damage and becomes permanently. If the globe overlaps with an area of magical darkness, sunburst attempts to counteract the darkness eff…"
+  },
+  {
+    "id": "jBGAYmR0BkkbpJvG",
+    "name": "Visions of Danger",
+    "rank": 7,
+    "traits": [
+      "auditory",
+      "concentrate",
+      "illusion",
+      "manipulate",
+      "visual"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 30
+    },
+    "save": {
+      "statistic": "will",
+      "basic": true
+    },
+    "damage": {
+      "formula": "8d8",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "An illusion of horrific creatures fills the spell's area. The creatures look like Tiny swarming monsters with a specific appearance of your choice, such as fiendish flies or animated saw blades. The burst deals 8d8 mental damage with a basic Will save to each creature that's inside the burst when it's created, enters the burst, or starts its turn inside the burst. A creature that critically succeeds at its Will save can immediately attempt to disbelieve the illusion. A creature that tries to Interact with the mons…"
+  },
+  {
+    "id": "O7ZEqWjwdKyo2CUv",
+    "name": "Volcanic Eruption",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cylinder",
+      "value": 5
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "14d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Area 5-foot radius, 80-foot-tall cylinder The ground opens up, spraying a column of lava high into the air in a vertical cylinder, dealing 14d6 fire damage to creatures in the area. The lava rapidly cools and encases creatures in the area. A creature encased in rock is Clumsy 1 and takes a –10-foot status penalty to its Speeds. All normal terrain is difficult terrain to a flying creature, and such creatures immediately descend 20 feet the moment they're encased, but they don't take damage from this fall. A creatur…"
+  },
+  {
+    "id": "C2GYCH3TtUFqPfdX",
+    "name": "Arctic Rift",
+    "rank": 8,
+    "traits": [
+      "cold",
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 120
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "12d8",
+      "type": "cold"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A jagged crack opens in the air, dealing 12d8 cold damage as it draws away warmth. Each creature along the rift must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full damage and is Slowed 1 until the start of your next turn. Critical Failure The creature takes double damage, is by a layer of ice, and is slowed 1 as long as it's immobilized. The ice is an object with 60 Hit Points, Hardness 5, immunity to cold damage, and v…"
+  },
+  {
+    "id": "x7SPrsRxGb2Vy2nu",
+    "name": "Earthquake",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "earth",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "11d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You shake the ground, topple creatures into fissures, and collapse structures. The GM might add additional effects in certain areas. Cliffs might collapse, causing creatures to fall, or a lake might drain as fissures open up below its surface, leaving a morass of quicksand. Shaking Ground The ground is difficult terrain, and creatures on it take a -2 circumstance penalty to attack rolls, AC, and skill checks. Fissures Each creature on the ground must attempt a Reflex save at the start of its turn to keep its footi…"
+  },
+  {
+    "id": "Ht35SDf9PDStJfoC",
+    "name": "Spirit Song",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 60
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "14d6",
+      "type": "spirit"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Your eldritch song sends pulsing waves of ethereal energy to attack creatures' spirits in the area, dealing 14d6 spirit damage that causes their bodies to momentarily freeze up from the hypnotic nature of the tune, depending on the result of their Fortitude save. The vibrating waves of spirit song penetrate into, but not through, solid barriers, damaging incorporeal creatures hiding in solid objects in the area but not passing onward to damage creatures in other rooms. Critical Success The creature takes no damage…"
+  },
+  {
+    "id": "10VcmSYNBrvBphu1",
+    "name": "Massacre",
+    "rank": 9,
+    "traits": [
+      "concentrate",
+      "death",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 60
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "9d6",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You unleash a wave of death to snuff out the life force of those in its path. Each living creature of 17th level or lower in the line must attempt a Fortitude save. If the damage from massacre reduces a creature to 0 Hit Points, that creature dies instantly. If massacre doesn't kill even a single creature, the void energy hungrily turns backward toward you, dealing an additional ] damage to every living creature in the line (even those above 17th level) and 30 void damage to you. Critical Success The creature is u…"
+  },
+  {
+    "id": "FEsuyf203wTNE2et",
+    "name": "Wails of the Damned",
+    "rank": 9,
+    "traits": [
+      "auditory",
+      "concentrate",
+      "death",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 40
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "8d10",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You howl a lament of damned souls. Each living enemy in the area takes 8d10 void damage and must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes full damage. Failure The creature takes full damage and is [[/r 1d4]]. Critical Failure The creature takes double damage and is Drained 4."
+  },
+  {
+    "id": "wLIvH0AT1u7oa64N",
+    "name": "Cataclysm",
+    "rank": 10,
+    "traits": [
+      "acid",
+      "air",
+      "cold",
+      "concentrate",
+      "earth",
+      "electricity",
+      "fire",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "3d10",
+      "type": "acid"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You call upon the unimaginable power of world-ending cataclysms, ripping a small piece of each cataclysm and combining them together into one horrifically powerful attack. The following effects come down upon all creatures in the area. Treat the resistances of creatures in the area as if they were 10 lower for the purpose of determining the cataclysm's damage. Each creature attempts one basic Reflex save that applies to all five types of damage. Flesh-dissolving acid rain deals 3d10 acid damage. A roaring earthqua…"
+  },
+  {
+    "id": "FwW2asotQE8dH1WP",
+    "name": "Whispers of the Void",
+    "rank": 4,
+    "traits": [
+      "auditory",
+      "concentrate",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You whisper baleful secrets that transcend language and carry magically to the ears of your foes. The words take physical form, weakening the life force of the targets, each of which must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes ] damage. Failure The creature takes ] damage and becomes Drained 1. Critical Failure The creature takes ] damage and becomes Drained 2 and Doomed 1. Heightened (+2) The persistent void damage increases by 1d8 on a success, or by 2d8…"
+  },
+  {
+    "id": "c3XygMbzrZMgV1y3",
+    "name": "Collective Transposition",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "teleportation"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 30
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You teleport the targets to new positions within the area. The creatures must each be able to fit in their new space, and their positions must be unoccupied, entirely within the area, and in your line of sight. Unwilling creatures can attempt a Will save. Critical Success The target can teleport if it wants, but it chooses the destination within range. Success The target is unaffected. Failure You teleport the target and choose its destination. Heightened (+1) The number of targets increases by 1."
+  },
+  {
+    "id": "RQjSQVZRG497cJhX",
+    "name": "Vibrant Pattern",
+    "rank": 6,
+    "traits": [
+      "illusion",
+      "incapacitation",
+      "manipulate",
+      "subtle",
+      "visual"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You create a pattern of lights that pulses with intensity. Creatures are while inside the pattern. In addition, a creature must attempt a Will saving throw if it's inside the pattern when you cast it, enters the pattern, ends its turn within the pattern, or uses a Seek or Interact action on the pattern. A creature currently by the pattern doesn't need to attempt new saving throws. Success The creature is unaffected. Failure The creature is Blinded by the pattern. If it exits the pattern, it can attempt a new save…"
+  },
+  {
+    "id": "YrzBLPLd3r9m6t1p",
+    "name": "Fire Shield",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "2d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create a hovering shield made of fire. As long as the shield persists, its heat grants you cold resistance 5 and makes you immune to mild and severe environmental cold. You can Raise a Shield with the fire shield as a normal shield to gain a +1 circumstance bonus to AC. You can use the Shield Block reaction with the fire shield , which has Hardness 10, is immune to fire, and has 40 HP (with no Broken Threshold), and its Hardness is halved against effects that have the water trait. If you Shield Block a melee a…"
+  },
+  {
+    "id": "h7RtKSKGViNtD5o4",
+    "name": "Coral Eruption",
+    "rank": 4,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Area two 10-foot bursts that don't overlap Razor sharp coral erupts from the ground, transforming the landscape into a dangerous coral reef. You can create a third nonoverlapping burst if the centers of all three bursts are underwater. Creatures in the area when the spell is cast take 6d6 piercing damage and must attempt a basic Reflex save. A creature that critically fails its saving throw also takes ] damage. The area becomes difficult terrain and hazardous terrain. A creature that moves through the area takes ]…"
+  },
+  {
+    "id": "7PnjDM52lb4LEqHR",
+    "name": "Arrow Salvo",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "wood"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 30
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "8d10",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You conjure an immense wooden bow that launches a salvo of massive arrows at all nearby enemies. All creatures in the affected area take 8d10 piercing damage, with a basic Reflex save. On a critical failure, the target is knocked from the force of the impact. Heightened (+1) Increase the damage by 1d10."
+  },
+  {
+    "id": "ZMvplR106Jxl7B15",
+    "name": "Awaken Entropy",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 10
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "8d6",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "All things age, all things die, and at the end of days, even the universe will grow quiet and still. You awaken the cosmic principle of entropy, accelerating time in an area—flesh falters, plants shrivel, and even stone begins to crumble. Any creature that enters or begins its turn in the area takes 8d6 void damage with a basic Fortitude save, or 8d6 force damage if the creature normally doesn't take void damage, such as if the creature is a construct or undead. Even beings such as fiends with unlimited lifespans…"
+  },
+  {
+    "id": "OdqM06M0wDUqZWiR",
+    "name": "Cast into Time",
+    "rank": 6,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "cone",
+      "value": 15
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "5d8",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You release a wave of temporal energy that sends creatures violently tumbling through time, scarring their thoughts with the information flowing around them. Although the journey can feel like it lasts for minutes or even days, the targets reappear instantly. Witnessing this chaotic flow of time and being bashed against objects from the past and future deals 5d8 mental damage and 5d6 bludgeoning damage to creatures in the area, with a Fortitude save. A creature that falls into time disappears until the end of your…"
+  },
+  {
+    "id": "Z9OrRXKgAPv6Hn5l",
+    "name": "Execute",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "death",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "70",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You point at a creature and invoke the demise of all things. The target takes 70 void damage with a basic Fortitude save. If the target is undead or otherwise has void healing, the spell loses the death and void traits and gains the vitality trait, and the target takes 70 vitality damage with a basic Fortitude save. Heightened (+1) The damage increases by 10."
+  },
+  {
+    "id": "qlxM7Ik3uUeUIOcv",
+    "name": "Canticle of Everlasting Grief",
+    "rank": 8,
+    "traits": [
+      "auditory",
+      "concentrate",
+      "curse",
+      "emotion",
+      "fear",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "10d6",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create a melody distilled from pure grief, conveying the inevitable loss of everything your target cherishes, audible to only them. The target takes 10d6 mental damage depending on its Will save. A creature cursed by this spell can't benefit from circumstance or status bonuses, for the duration noted in the degree of success. Critical Success The target is unaffected. Success The target takes half damage, is Frightened 1, and is cursed for 1 round. Failure The target takes full damage, is Frightened 3, and is…"
+  },
+  {
+    "id": "M0jQlpQYUr0pp2Sv",
+    "name": "Desiccate",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "10d10",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You pull the moisture from the targets' bodies, dealing 10d10 void damage. Creatures made of water (such as water elementals) and plant creatures use the outcome for one degree of success worse than the result of their saving throw. Creatures whose bodies contain no significant moisture (such as earth elementals) are immune to desiccate. Heightened (+1) The damage increases by 1d10."
+  },
+  {
+    "id": "jrBa9deU2ULFWvSl",
+    "name": "Falling Stars",
+    "rank": 9,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "6d10",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Area 4 40-foot bursts You reach into the skies and call down an array of falling stars that explode upon colliding with the ground. Choose for the falling stars to be airbursts (sonic), asteroids (fire), comets (cold), or plasma (electricity). The spell gains the trait of the falling star type you chose. The four stars' central 10-foot bursts can't overlap. Each falling star deals 6d10 bludgeoning damage to each creature in the at the center of its area of effect before exploding, dealing 14d6 energy damage of the…"
+  },
+  {
+    "id": "4WS7HrFjwNvTn8T2",
+    "name": "Implosion",
+    "rank": 9,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "75",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You crush the target by causing it to collapse in on itself, dealing 75 damage. The first time each round you Sustain the spell, you must choose a new target to be subject to the same effect; the same creature can never be targeted more than once with a single casting of this spell. You also can't affect more than one creature per turn with implosion. You can't target a creature that's incorporeal, gaseous, or liquid, or otherwise lacking a solid form. Heightened (+1) The damage increases by 10."
+  },
+  {
+    "id": "MJx7DmjsWYzDZ3a4",
+    "name": "Phantasmagoria",
+    "rank": 9,
+    "traits": [
+      "concentrate",
+      "death",
+      "illusion",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "16d6",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You fill the targets' minds with endless images, like countless dreams and lives colliding with each other. The onrushing information deals 16d6 mental damage to each target, depending on its Will save. Critical Success The target is unaffected. Success The target takes half damage and can't use reactions until the start of your next turn. Failure The target takes full damage and is until the start of your next turn. Critical Failure The target takes double damage and is confused for 1 minute."
+  },
+  {
+    "id": "n8eEXXAtguoErW0y",
+    "name": "Shadow's Web",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "focus",
+      "manipulate",
+      "monk"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 30
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "14d4",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "Grasping darkness surges from you, dealing 14d4 void damage. Each creature in the area must attempt a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage and is Enfeebled 1 for 1 round. Failure The creature takes full damage and is Enfeebled 2 for 1 round. Critical Failure The creature takes double damage, is Stunned 1, and enfeebled 2 for 1 round, and for 1 round or until it Escapes, whichever comes first. Heightened (+1) The void damage increases by 2d4."
+  },
+  {
+    "id": "oGV6YdpZLIG4G4gH",
+    "name": "Impaling Briars",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "druid",
+      "focus",
+      "manipulate",
+      "plant",
+      "wood"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "emanation",
+      "value": 100
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "10d6",
+      "type": "piercing"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": true,
+    "description": "The ground within the area transforms into a mass of dangerous briars that assault and impede your foes. When you Cast the Supell and the first time you Sustain it each turn on subsequent rounds, select one of the following effects to occur in the area. Ensnare The briars clump around your foes, attempting to hold them in place. A foe within the area (or flying at most 20 feet above the area) must attempt a Reflex save. On a failure, it takes a –10-foot circumstance penalty to all Speeds for 1 round, and on a crit…"
+  },
+  {
+    "id": "XYhU3Wi94n1RKxTa",
+    "name": "Storm Lord",
+    "rank": 9,
+    "traits": [
+      "air",
+      "concentrate",
+      "druid",
+      "electricity",
+      "focus",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 100
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "10d6",
+      "type": "electricity"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": true,
+    "description": "The sky above you darkens in a matter of moments, swirling with ominous clouds punctuated by flashes of lighting. When you Cast the Spell and the first time you Sustain it each turn on subsequent rounds, select one of the following effects to occur in the area. Calm No additional effect. Fog Heavy fog rolls in, concealing the area with the effects of . Rain Torrential rain falls from the sky, dousing ordinary flames. Creatures in the area take a -2 circumstance penalty to Acrobatics and Perception checks. Wind Pow…"
+  },
+  {
+    "id": "HES5jvGiNZZnJycK",
+    "name": "Lifewood Cage",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "vitality",
+      "wood"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "cube",
+      "value": 20
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You create an immobile, prison of hardened wood suffused with vital energy from the Forge of Creation. The cage is a 20-foot cube made of wooden branches, each a half inch thick and a half inch apart. Each creature in the area where you create the cage must attempt a Reflex save. If such a creature fails, it becomes trapped inside the cage. If it succeeds, it's pushed outside the cage into a space of its choice. If a creature in the area is too big to fit inside the prison, the spell automatically fails. The cage…"
+  },
+  {
+    "id": "uEyfLoFQsRKBRIcB",
+    "name": "Confusing Colors",
+    "rank": 8,
+    "traits": [
+      "illusion",
+      "incapacitation",
+      "manipulate",
+      "subtle",
+      "visual"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "A cloud of cascading, ever-changing colors manifests in the air. Creatures are while inside the cloud, as are those within 20 feet of the cloud's area. A creature must attempt a Will save if it is inside the cloud when you cast it, enters the cloud, ends its turn within the cloud, or uses a or Interact action on the cloud. A creature currently affected by the cloud doesn't need to attempt new saves. Success The creature is unaffected. Failure The creature is for [[/r 1d4 #rounds]]{1d4 rounds}. Critical Failure The…"
+  },
+  {
+    "id": "kUSShxXzY1sPtJA0",
+    "name": "Detonate Magic",
+    "rank": 9,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 5
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "8d6",
+      "type": "force"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You cause the magic within the target to dissipate in a destructive explosion. You attempt to counteract the target. If the attempt succeeds, an explosion of magical force deals 8d6 force damage with a basic Reflex save. If you successfully counteract the magic of an item, it's deactivated for 1 week (or destroyed on a critical success) and the explosion is a 5-foot emanation from the item. If you successfully counteract a spell, the effect ends and the explosion affects either all creatures in the spell's area or…"
+  },
+  {
+    "id": "Tc5NLaMu71vrGTJQ",
+    "name": "Nature's Enmity",
+    "rank": 9,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "plant",
+      "wood"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 500
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Animals, plants, and fungi in the area turn against the targets. Each target suffers from the following effects as long as it remains in the area. Vegetation springs up from every surface, giving each target a –10-foot circumstance penalty to its Speed any time it's adjacent to the plants and fungi. Aggressive animals attack unpredictably. At the start of its turn, each target rolls a . On a failure, it's attacked by creatures that deal ] damage. The target attempts a basic Reflex save and is for 1 round on any ou…"
+  },
+  {
+    "id": "fkDeKktdmbeplYRY",
+    "name": "Overwhelming Presence",
+    "rank": 9,
+    "traits": [
+      "auditory",
+      "concentrate",
+      "incapacitation",
+      "manipulate",
+      "mental",
+      "visual"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 40
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You surround yourself with supernatural splendor, appearing to be a god or similarly majestic being, with an appearance, regalia, and iconography of your choice. Targets must attempt a Will save. Regardless of the outcome, the target is then temporarily immune for 1 minute. Critical Success The target is unaffected. Success The target must pay tribute to you two times. Paying tribute requires that the target spend a single action, which has either the move trait (as they bow) or manipulate trait (as they offer up…"
+  },
+  {
+    "id": "ZqmP9gijBmK7y8Xy",
+    "name": "Weapon of Judgment",
+    "rank": 9,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "sanctified",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "4d10",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "An immense weapon of spiritual energy appears, hovering in the air above the target. The weapon has the ghostly visual appearance of your deity's favored weapon. Name war or peace when you cast this spell. If you name \"war,\" mentally choose one creature. This must be a creature both you and the target can see. The target instinctively knows which creature this is. At the end of each of the target's turns, if the target didn't use a hostile action against the creature you chose during that turn, the weapon Strikes…"
+  },
+  {
+    "id": "HpIJTVqgXorH9X0L",
+    "name": "Revival",
+    "rank": 10,
+    "traits": [
+      "concentrate",
+      "healing",
+      "manipulate",
+      "vitality"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "10d8+40",
+      "type": "untyped"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "A burst of healing energy soothes living creatures and temporarily rouses those recently slain. All living targets regain 10d8+40 Hit Points. In addition, you return any number of dead targets to life temporarily, with the same effects and limitations as . The raised creatures have a number of temporary Hit Points equal to the Hit Points you gave living creatures, but no normal Hit Points. The raised creatures can't regain Hit Points or gain temporary Hit Points in other ways, and once revival 's duration ends, th…"
+  },
+  {
+    "id": "dKWc83KKiXoIJkhp",
+    "name": "Beheading Buzz Saw",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "metal"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "line",
+      "value": 60
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "5d10",
+      "type": "slashing"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You compress molten scraps pulled from the Plane of Metal into a spinning disc with gruesome blades protruding from its edges. It wheels forward, slicing through anyone in its path. Each creature in the area takes 5d10 slashing damage and 4d6 persistent bleed damage, with a Reflex save. Success The creature is unaffected. Failure The creature takes full damage. Critical Failure The creature takes double damage. If the creature has a head, it must succeed at a save or be decapitated; this kills any creature except…"
+  },
+  {
+    "id": "smiVuoFMSgY2FTOO",
+    "name": "Dancing Fountain",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 30
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "10d6",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "Area 30-foot burst centered on you Tapping the ground, you create a shallow pool of water that spreads over the affected area, and majestic sprays, jets, and mists of water erupt forth in a dazzling water show. When you Cast the Spell, and the first time each round you Sustain the spell, you can command the fountain to use one of the following displays, which is accompanied by a loud burst of music. The dancing fountain is somewhat fickle in its desire for novelty, meaning it can't be commanded to use the same dis…"
+  },
+  {
+    "id": "x9RIFhquazom4p02",
+    "name": "Deity's Strike",
+    "rank": 7,
+    "traits": [
+      "attack",
+      "concentrate",
+      "force",
+      "manipulate",
+      "sanctified",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "7d12",
+      "type": "force"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "A manifested version of your deity's favored weapon made of pure magical might appears in the air above the target. This weapon attacks using your spell attack modifier. On a hit, the weapon deals 7d12 force damage, or double damage on a critical hit. After the attack, whether it succeeds or fails, divine energy bursts from the weapon in a shock wave. It emits in a {10-foot-wide, 30-foot-long line} line starting from the target and continuing in a direction you choose. Your target and any other creatures within th…"
+  },
+  {
+    "id": "oQXM2XeIDGOmFuZr",
+    "name": "Fiendish Rift",
+    "rank": 7,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "spirit",
+      "unholy"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 20
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": false
+    },
+    "damage": {
+      "formula": "7d6",
+      "type": "spirit"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You open a tear in reality that leads to a fiendish plane such as Abaddon, Hell, or the Outer Rifts. Fiends reach out of the rift, grabbing at creatures with various appendages. When you Cast the Spell and the first time you Sustain it each turn on subsequent rounds, each creature in the area takes 7d6 spirit damage; creatures with the holy trait take an additional ] damage. An affected creature attempts a Fortitude save. Critical Success The creature is unaffected. Success The creature takes half damage. Failure…"
+  },
+  {
+    "id": "kWDt0JcKPgX6MvdD",
+    "name": "Burning Blossoms",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "fire",
+      "manipulate",
+      "plant"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "cylinder",
+      "value": 30
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "6d6",
+      "type": "fire"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Area 30-foot radius, 100-foot tall cylinder An intangible hollow tree grows to towering height, radiating a fiery passion and fascinating viewers. The base of the tree takes up a single square and grows 100 feet upward, while its branches extend outward 30 feet, forming the spell's cylindrical area. The tree then blossoms, growing delicate white flowers that burn with white-hot fire. As the tree's branches gently rustle in the wind, flower petals drift to the ground in a shower of flame. Any creature that ends its…"
+  },
+  {
+    "id": "it4wx2mDIJDlZGqS",
+    "name": "Divine Armageddon",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "sanctified",
+      "spirit",
+      "vitality",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 60
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "10d6",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You call forth a divine cataclysm from your deity, destroying living and undead creatures in the area alike. Creatures in the area take 10d6 void damage and 10d6 spirit damage. A creature harmed by vitality damage, such as one with void healing, takes vitality damage instead of void damage from this spell. ,(@item.level+2)d6[spirit]|traits:spirit]{Leveled Void + Spirit Damage} ,(@item.level+2)d6[spirit]|traits:spirit]{Leveled Vitality + Spirit Damage} Heightened (+1) The damage increases by 1d6 void damage and 1d6…"
+  },
+  {
+    "id": "tI7wp8qybqI9eFCl",
+    "name": "Roar of Freedom",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "emotion",
+      "manipulate",
+      "sonic"
+    ],
+    "actionCost": 1,
+    "area": {
+      "type": "emanation",
+      "value": 30
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "12d8",
+      "type": "sonic"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You let out a furious roar, vowing never to be ruled by tyrants. Enemies within the emanation take 12d8 sonic damage and must attempt a Will save; particularly tyrannical creatures, like a despot or a devil, take a –2 circumstance penalty to their saves. The GM determines which creatures take this penalty. Allied creatures within the emanation gain 15 temporary Hit Points that last for 1 minute. Critical Success The creature is unaffected. Success The creature takes half damage. Failure The creature takes full dam…"
+  },
+  {
+    "id": "0fjz8qc9NfkmWmJZ",
+    "name": "Whirlpool",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "water"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "cylinder",
+      "value": 25
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": false
+    },
+    "damage": {
+      "formula": "6d10",
+      "type": "bludgeoning"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "Area 25-foot radius, 20-foot tall cylinder With a spin of your hand, you create a large swirling vortex of storming waves. All squares in the whirlpool are difficult terrain. The constant churning of the fierce waves means that creatures are constantly tossed between areas of air and water, allowing both air- and water-breathing creatures to breathe within the vortex. Any creature with a swim Speed can Swim instead of Stride to move within the whirlpool ; the DC to Swim within it is equal to your spell DC. All cre…"
+  },
+  {
+    "id": "drmvQJETA3WZzXyw",
+    "name": "Voracious Gestalt",
+    "rank": 9,
+    "traits": [
+      "aura",
+      "concentrate",
+      "death",
+      "manipulate",
+      "unholy",
+      "void"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "emanation",
+      "value": 30
+    },
+    "save": {
+      "statistic": "fortitude",
+      "basic": true
+    },
+    "damage": {
+      "formula": "14d6",
+      "type": "void"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": true,
+    "description": "You create a powerful spirit entity that grows and builds strength by consuming the spirits of foes you both slay. When you Cast the Spell, the gestalt deals 14d6 void damage to all living creatures of your choice in the area, with a basic Fortitude save. Creatures you choose that end their turns in the area take ] damage, with a basic Fortitude save. At the end of each of your turns, if you killed a living creature during that turn or if the gestalt's damage killed a creature since the end of your last turn, you…"
+  },
+  {
+    "id": "A125k5hYixepbzNb",
+    "name": "Planar Collision",
+    "rank": 10,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": {
+      "type": "burst",
+      "value": 100
+    },
+    "save": {
+      "statistic": "reflex",
+      "basic": true
+    },
+    "damage": {
+      "formula": "8d6",
+      "type": "force"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You rip out a portion of an elemental plane and smash it into your plane, unleashing a chaotic maelstrom. When you Cast this Spell, choose an elemental plane. The collision deals 8d6 force damage and 8d8 damage of a type depending on the chosen plane to each creature in the area with a basic Reflex save. A creature that fails the saving throw is also pushed 25 feet away from the center of the burst (or 50 feet on a critical failure). Each creature whose movement is stopped by a firm surface, such as a wall, takes…"
+  },
+  {
+    "id": "hvKtmoHwekDZ5iOH",
+    "name": "Shadow Army",
+    "rank": 10,
+    "traits": [
+      "auditory",
+      "concentrate",
+      "illusion",
+      "manipulate",
+      "mental",
+      "shadow",
+      "visual"
+    ],
+    "actionCost": 3,
+    "area": {
+      "type": "burst",
+      "value": 50
+    },
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": {
+      "formula": "3d10",
+      "type": "mental"
+    },
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You create dozens of semi-real copies of yourself that swarm across the battlefield and fight your enemies. You're virtually indistinguishable from your clones, allowing you to [[/act hide]] and [[/act sneak]] among them. An enemy that's in the area when the spell is cast or that ends their turn in the area takes 3d10 mental damage and 3d10 bludgeoning damage, and is possibly inflicted with a condition, depending on the result of their Will save. When you Cast the Spell, you choose a condition your shadows impose…"
+  },
+  {
+    "id": "MS60WhVifb45qORJ",
+    "name": "Spiritual Epidemic",
+    "rank": 8,
+    "traits": [
+      "concentrate",
+      "curse",
+      "manipulate",
+      "spirit"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You curse the target, sapping its spirit and leaving a contagious trap in its essence. The target must attempt a Will save. Any creature that casts a divine or occult spell on the target while it's affected is targeted by spiritual epidemic and must also attempt a Will save. The curse continues to spread in this way. Critical Success The target is unaffected. Success The target is Enfeebled 2 and Stupefied 2 for 1 round. Failure The target is enfeebled 2 and stupefied 2 for 1 minute and Enfeebled 1 and Stupefied 1…"
+  },
+  {
+    "id": "ItZgGznUBhgWBwFG",
+    "name": "Telepathic Demand",
+    "rank": 9,
+    "traits": [
+      "concentrate",
+      "incapacitation",
+      "linguistic",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 3,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You send the target a message of 25 words or fewer, and it can respond immediately with its own message of 25 words or fewer. Your message is insidious and has the effect of a spell, with the message substituting for the spoken suggestion. On a successful save, the target is temporarily immune for 1 day, and on a critical success, the target is temporarily immune for 1 month. You can target a creature only if you've previously been in telepathic contact with it before, such as via the telepathy spell."
+  },
+  {
+    "id": "6s0UW4bujggma9TC",
+    "name": "Fabricated Truth",
+    "rank": 10,
+    "traits": [
+      "concentrate",
+      "incapacitation",
+      "manipulate",
+      "mental"
+    ],
+    "actionCost": 3,
+    "area": null,
+    "save": {
+      "statistic": "will",
+      "basic": false
+    },
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "Choose a single statement you want the targets to believe. The fact could be narrow, such as \"a dragon is circling overhead and wants to kill me\"; wide-reaching, such as \"all humanoids are disguised abominations\"; or conceptual, such as \"if I don't live a kinder life, I'll be punished in the afterlife.\" The targets' experiences color how they react to this \"truth\" and how their behavior changes. If the statement changes what they perceive, they treat the change as a sudden revelation. The effect of the spell depen…"
+  },
+  {
+    "id": "uGXWkR2h8q9MRzEM",
+    "name": "Hero's Defiance",
+    "rank": 10,
+    "traits": [
+      "champion",
+      "concentrate",
+      "focus",
+      "healing",
+      "vitality"
+    ],
+    "actionCost": 1,
+    "area": null,
+    "save": null,
+    "damage": {
+      "formula": "6d8+20",
+      "type": "vitality"
+    },
+    "isCantrip": false,
+    "isFocus": true,
+    "isSustained": false,
+    "description": "Trigger An attack would bring you to 0 Hit Points. You shout in defiance and are filled with a burst of healing. Just before applying the attack's damage, you recover 6d8+20 Hit Points. If this is enough to prevent the attack from bringing you to 0 Hit Points, you don't become or . Either way, cheating death is difficult, and you can't use hero's defiance again until you Refocus or make your daily preparations. Hero's defiance can't be used against effects with the death trait or that would leave no remains, such…"
+  },
+  {
+    "id": "ckUOoqOM7Kg7VqxB",
+    "name": "Avatar",
+    "rank": 10,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "polymorph"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You transform into an avatar of your deity, assuming a Huge battle form. You have hands in this battle form and can take manipulate actions. You can Dismiss this spell. You gain the following statistics and abilities regardless of which deity's battle form you assume: AC = 25 + your level. Ignore your armor's check penalty and Speed reduction. 30 temporary Hit Points. Darkvision. One or more attacks specific to your deity's battle form, which are the only attacks you can with. You're trained with them. Your attack…"
+  },
+  {
+    "id": "1dsahW4g1ggXtypx",
+    "name": "Freeze Time",
+    "rank": 10,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You temporarily stop time for everything but yourself, allowing you to use several actions in what appears to others to be no time at all. Immediately after casting freeze time , you can use up to 9 actions in 3 sets of up to 3 actions each. After each set of actions, 1 round passes, but for only you, effects specifically targeting or affecting you, and effects that you create during the stoppage. All other creatures and objects are invulnerable to your attacks, and you can't target or affect them with anything. O…"
+  },
+  {
+    "id": "UG0SmRYSdbrx2rTA",
+    "name": "Indestructibility",
+    "rank": 10,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You sever yourself from cause and effect. For the duration of the spell, you are immune to any effect or damage that would harm you, excluding effects caused by artifacts, deific power, and similarly powerful sources. You can selectively allow yourself to be affected by anything you're willing to have affect you."
+  },
+  {
+    "id": "AuIiqc7jjiy1GZ75",
+    "name": "Manifestation",
+    "rank": 10,
+    "traits": [
+      "concentrate",
+      "manipulate"
+    ],
+    "actionCost": 3,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "You spin secrets from the fundaments of magic, shaping them into a power with nearly unlimited potential. You duplicate a spell of 9th rank or lower of the tradition from which you cast manifestation , or a spell of 7th rank or lower from any tradition. Though you can normally choose only spells that are common or to which you have access, the GM might allow broader options."
+  },
+  {
+    "id": "ZXwxs5tRjEGrjAJT",
+    "name": "Nature Incarnate",
+    "rank": 10,
+    "traits": [
+      "concentrate",
+      "manipulate",
+      "polymorph"
+    ],
+    "actionCost": 2,
+    "area": null,
+    "save": null,
+    "damage": null,
+    "isCantrip": false,
+    "isFocus": false,
+    "isSustained": false,
+    "description": "The primal power of the world flows through you. You transform into an incarnation of nature, either a green man or a kaiju. Your battle form is Medium for a green man or Gargantuan (30-foot-by-30-foot space) for a kaiju. While in this form, you gain the plant trait (for a green man) or the beast trait (for a kaiju). You can Dismiss the spell. You gain the following statistics and abilities regardless of which battle form you choose: AC = 25 + your level. Ignore your armor's check penalty and Speed reduction. 30 t…"
+  }
+]
