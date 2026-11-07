@@ -151,6 +151,10 @@ const suites = [
     name: "Core/AI — Tactical AI Engine",
     register: require("./AI/tactical-ai.test.js"),
   },
+  {
+    name: "Core/AI — Headless AI Stress Simulation",
+    register: require("./AI/stress-simulation.test.js"),
+  },
 ];
 
 let totalPassed = 0;

@@ -342,6 +342,35 @@
       t.assertEqual(attacker.actionsRemaining, 3);
     });
 
+    t.test("multi-cell creatures use edge-to-edge line of sight", function () {
+      const map = new GridMap({ cols: 6, rows: 6 });
+      map.setBlocked(1, 1, true);
+
+      // A Medium attacker on the anchor cell has no line of sight through the
+      // wall, but a Large attacker's near edge reaches around it.
+      const medium = makeCombatant({ x: 0, y: 0 });
+      const mediumTarget = makeEnemy({ x: 2, y: 1 });
+      const blocked = Strike.evaluateStrike({
+        attacker: medium,
+        target: mediumTarget,
+        map: map,
+        reachFeet: 10,
+      });
+      t.assertTrue(!blocked.ok);
+      t.assertEqual(blocked.reason, Strike.STRIKE_REASONS.NO_LINE_OF_SIGHT);
+
+      const attacker = makeCombatant({ x: 0, y: 0, size: "large" });
+      const target = makeEnemy({ x: 2, y: 1, size: "large" });
+      const evaluation = Strike.evaluateStrike({
+        attacker: attacker,
+        target: target,
+        map: map,
+        reachFeet: 10,
+      });
+      t.assertTrue(evaluation.ok, "edge-to-edge line of sight is used");
+      t.assertTrue(evaluation.lineOfSight);
+    });
+
     t.test("Strike cannot target an ally", function () {
       const attacker = makeCombatant({ x: 0, y: 0 });
       const ally = makeCombatant({ id: "merisiel", x: 1, y: 0 });

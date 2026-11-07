@@ -33,9 +33,11 @@
  *   1. Can the creature act at all? (unconscious / dying / paralyzed / stunned)
  *   2. Stand if Prone.
  *   3. Acquire the nearest living hostile by A* approach cost, then lowest HP.
- *   4. If already in reach, keep the position unless a one-Step flank is free.
- *   5. If out of reach, Stride/Step toward the closest reachable attack cell.
- *      A Step is preferred when the current square is threatened by a reaction.
+ *   4. If already in reach AND the target is strikeable (no wall blocks line of
+ *      effect), keep the position unless a one-Step flank is free.
+ *   5. If out of reach, or in reach but blocked by a wall, Stride/Step toward
+ *      the closest reachable attack cell with a clear line of effect. A Step is
+ *      preferred when the current square is threatened by a reaction.
  *   6. Rotation: Strike (MAP -0), Strike (MAP -5), then Raise a Shield if the
  *      shield is usable, else Take Cover / a third Strike.
  */
@@ -45,6 +47,7 @@
   if (typeof module === "object" && module.exports) {
     module.exports = factory(
       require("../Grid/grid-math.js"),
+      require("../Grid/los-math.js"),
       require("../Grid/pathfinding.js"),
       require("../Grid/occupancy.js"),
       require("../Grid/flanking.js"),
@@ -63,6 +66,7 @@
     root.PF2e.Core.AI = root.PF2e.Core.AI || {};
     root.PF2e.Core.AI.TacticalAI = factory(
       root.PF2e.Core.Grid,
+      root.PF2e.Core.LosMath,
       root.PF2e.Core.Pathfinding,
       root.PF2e.Core.Occupancy,
       root.PF2e.Core.Flanking,
@@ -78,6 +82,7 @@
   }
 })(typeof globalThis !== "undefined" ? globalThis : this, function (
   Grid,
+  LosMath,
   Pathfinding,
   Occupancy,
   Flanking,
@@ -379,8 +384,52 @@
   }
 
   /**
+   * Dry-run Line of Effect check that reuses Strike's own validation. The
+   * attacker is wrapped in a prototype-linked projection so
+   * `Strike.evaluateStrike` reads the (possibly projected) anchor cell without
+   * mutating the live combatant. Returns true only when the Strike would be
+   * refused with `no-line-of-sight` — i.e. a wall or total cover sits between
+   * the attacker and the target even though they are geometrically in reach.
+   */
+  function isStrikeBlockedByWall(actor, cell, target, map, combatants) {
+    const projected = Object.create(actor);
+    projected._x = cell.x;
+    projected._y = cell.y;
+    try {
+      const evaluation = Strike.evaluateStrike({
+        attacker: projected,
+        target: target,
+        map: map,
+        allies: combatants,
+      });
+      return (
+        evaluation.ok === false &&
+        evaluation.reason === Strike.STRIKE_REASONS.NO_LINE_OF_SIGHT
+      );
+    } catch (error) {
+      // An unexpected evaluation failure is treated as "blocked" so the AI
+      // repositions instead of crashing or idling in a reject loop.
+      return true;
+    }
+  }
+
+  /**
+   * Cheap centre-to-centre line of sight used to prune candidate attack cells
+   * (a single ray, no cover or flanking work). This is the same primary LOS
+   * gate `Strike.evaluateStrike` applies via `LosMath.traceLineOfSight`.
+   */
+  function hasLineOfSight(from, target, map) {
+    return LosMath.hasLineOfSight(
+      { x: from.x, y: from.y },
+      { x: target.x, y: target.y },
+      map,
+    );
+  }
+
+  /**
    * Cells from which a medium-or-larger attacker could Strike the target.
-   * Candidates must be fully occupiable and inside the map.
+   * Candidates must be fully occupiable, inside the map, and have an
+   * unobstructed line of sight to the target.
    */
   function attackCellsAround(actor, target, map, combatants) {
     const reach = reachFeetOf(actor);
@@ -416,6 +465,9 @@
           targetCells,
         );
         if (distance <= reach) {
+          if (!hasLineOfSight({ x: x, y: y }, target, map)) {
+            continue;
+          }
           cells.push({ x: x, y: y, distanceFeet: distance });
         }
       }
@@ -434,7 +486,10 @@
     const reach = reachFeetOf(actor);
     const currentDistance = distanceAt(from.x, from.y, actor, target);
 
-    if (currentDistance <= reach) {
+    if (
+      currentDistance <= reach &&
+      !isStrikeBlockedByWall(actor, from, target, map, combatants)
+    ) {
       return {
         found: true,
         inReach: true,
@@ -903,8 +958,22 @@
     const reach = reachFeetOf(actor);
     const distance = distanceAt(state.x, state.y, actor, target);
 
-    // Out of melee reach: close the distance.
-    if (distance > reach) {
+    // The target is not strikeable when it is out of reach, or when a wall (or
+    // total cover) blocks line of effect even though it is geometrically in
+    // reach. Reposition around the obstruction instead of issuing a Strike the
+    // engine will reject with "no-line-of-sight".
+    const lineBlocked =
+      distance <= reach &&
+      isStrikeBlockedByWall(
+        actor,
+        { x: state.x, y: state.y },
+        target,
+        map,
+        combatants,
+      );
+
+    // Out of melee reach (or blocked): close the distance around the wall.
+    if (distance > reach || lineBlocked) {
       const movement = chooseMovement(actor, state, target, map, combatants);
       if (movement !== null) {
         return movement;
@@ -922,8 +991,8 @@
       return defensiveAction(actor, map, combatants, state);
     }
 
-    // Already in reach. Do not spend actions closing in; only a single-Step
-    // flank reposition is worth an action.
+    // Already in reach and strikeable. Do not spend actions closing in; only a
+    // single-Step flank reposition is worth an action.
     if (state.actionsRemaining >= 2) {
       const flank = findFlankStep(actor, state, target, map, combatants);
       if (flank !== null) {

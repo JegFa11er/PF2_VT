@@ -350,6 +350,51 @@
       t.assertEqual(strikes[0].result.offGuard, true, "flanking grants Off-Guard");
     });
 
+    t.test("AI navigates around wall when adjacent but blocked", function () {
+      const map = makeMap();
+      // A corner of wall blocks the diagonal between the hero and the goblin:
+      // hero (2,2) and goblin (3,3) are diagonally adjacent (5 ft apart), but
+      // the centre-to-centre ray passes through both wall cells, so a Strike is
+      // refused with "no-line-of-sight".
+      map.setBlocked(3, 2, true);
+      map.setBlocked(2, 3, true);
+      const hero = makeHero({ x: 2, y: 2 });
+      const goblin = makeGoblin({
+        x: 3,
+        y: 3,
+        maxHP: 100,
+        currentHP: 100,
+        maxReactions: 0,
+      });
+      const combatants = [hero, goblin];
+
+      const result = TacticalAI.executeAITurn({
+        combatant: hero,
+        map: map,
+        combatants: combatants,
+        rollD20: fixedD20(20),
+        rollDamageDie: fixedDamage(4),
+      });
+
+      t.assertTrue(result.ok);
+      t.assertTrue(
+        result.executedActions[0].type !== TacticalAI.ACTION_TYPES.STRIKE,
+        "the AI does not Strike through the wall",
+      );
+      t.assertTrue(
+        result.executedActions[0].type === TacticalAI.ACTION_TYPES.STRIDE ||
+          result.executedActions[0].type === TacticalAI.ACTION_TYPES.STEP,
+        "the AI repositions (Stride/Step) around the wall",
+      );
+      t.assertTrue(hero.x !== 2 || hero.y !== 2, "the hero moved off the blocked square");
+
+      const strikes = strikesAgainst(result.executedActions, "goblin");
+      t.assertTrue(strikes.length >= 1, "the AI strikes after gaining clear LoS");
+      t.assertEqual(strikes[0].ok, true, "the Strike is not rejected by no-line-of-sight");
+      t.assertEqual(strikes[0].hit, true, "the deterministic d20 of 20 connects");
+      t.assertTrue(goblin.currentHP < 100, "the goblin lost HP");
+    });
+
     t.test("Dying or unconscious combatants take no actions", function () {
       const map = makeMap();
       const hero = makeHero({ conditions: ["unconscious"] });

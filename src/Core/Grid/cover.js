@@ -2,10 +2,12 @@
  * PF2E REMASTERED — COVER GEOMETRY (HEADLESS CORE)
  *
  * Cover is evaluated from the attacker's best corner to every corner of the
- * target's square:
+ * target's footprint, edge-to-edge:
  *
- *   - the attacker chooses the corner of its own square that produces the
- *     fewest wall-blocked rays;
+ *   - for a multi-cell (Large/Huge/Gargantuan) creature the corners are the
+ *     four outer corners of its whole footprint, not the anchor (top-left) cell;
+ *   - the attacker chooses the corner that produces the fewest wall-blocked
+ *     rays;
  *   - each ray that crosses the interior of a solid obstacle counts as blocked;
  *   - 1-2 blocked rays -> standard cover (+2 circumstance AC);
  *   - 3 blocked rays  -> greater cover (+4 circumstance AC);
@@ -25,13 +27,13 @@
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory();
+    module.exports = factory(require("./grid-math.js"));
   } else {
     root.PF2e = root.PF2e || {};
     root.PF2e.Core = root.PF2e.Core || {};
-    root.PF2e.Core.Cover = factory();
+    root.PF2e.Core.Cover = factory(root.PF2e.Core.Grid);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Grid) {
   "use strict";
 
   const COVER_DEGREES = Object.freeze({
@@ -122,21 +124,52 @@
     );
   }
 
-  function sameCell(a, b) {
-    return a.x === b.x && a.y === b.y;
+  function footprintsOverlap(a, b) {
+    const aCells = Grid.occupiedCellsOf(a);
+    const bCells = Grid.occupiedCellsOf(b);
+    const seen = new Set();
+    for (const cell of aCells) {
+      seen.add(cell.x + "," + cell.y);
+    }
+    for (const cell of bCells) {
+      if (seen.has(cell.x + "," + cell.y)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function copyCell(cell) {
     return { x: cell.x, y: cell.y };
   }
 
-  /** The four grid-vertex corners of a cell, in NW, NE, SW, SE order. */
-  function cellCorners(cell) {
+  /**
+   * The four outer grid-vertex corners of a unit's whole footprint, in NW, NE,
+   * SW, SE order. A Medium (1x1) creature yields the same corners as its single
+   * cell; a Large (2x2) creature yields the four corners of the 2x2 area, so
+   * cover and line of effect are judged edge-to-edge rather than from the
+   * anchor (top-left) cell only.
+   *
+   * @param {object} unit
+   * @returns {{x:number,y:number}[]}
+   */
+  function footprintCorners(unit) {
+    const cells = Grid.occupiedCellsOf(unit);
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const cell of cells) {
+      if (cell.x < minX) minX = cell.x;
+      if (cell.y < minY) minY = cell.y;
+      if (cell.x > maxX) maxX = cell.x;
+      if (cell.y > maxY) maxY = cell.y;
+    }
     return [
-      { x: cell.x, y: cell.y },
-      { x: cell.x + 1, y: cell.y },
-      { x: cell.x, y: cell.y + 1 },
-      { x: cell.x + 1, y: cell.y + 1 },
+      { x: minX, y: minY },
+      { x: maxX + 1, y: minY },
+      { x: minX, y: maxY + 1 },
+      { x: maxX + 1, y: maxY + 1 },
     ];
   }
 
@@ -276,7 +309,7 @@
   }
 
   function buildRays(corner, target, map, roster, attacker) {
-    return cellCorners(target).map(function (to) {
+    return footprintCorners(target).map(function (to) {
       const wall = firstWallAlongRay(corner, to, map);
       const creature = wall === null
         ? firstCreatureAlongRay(corner, to, roster, attacker, target)
@@ -344,11 +377,11 @@
 
     const roster = normalizeCombatants(combatants);
 
-    if (sameCreature(attacker, target) || sameCell(attacker, target)) {
+    if (sameCreature(attacker, target) || footprintsOverlap(attacker, target)) {
       return emptyCover();
     }
 
-    const candidates = cellCorners(attacker).map(function (corner) {
+    const candidates = footprintCorners(attacker).map(function (corner) {
       const rays = buildRays(corner, target, gridMap, roster, attacker);
       return {
         corner: corner,
@@ -387,7 +420,7 @@
       label: COVER_LABELS[degree],
       bestCorner: copyCell(best.corner),
       attackerCorner: copyCell(best.corner),
-      targetCorners: cellCorners(target),
+      targetCorners: footprintCorners(target),
       rays: best.rays,
       blockedRaysCount: blockedRaysCount,
       creatureCover: creatureCover,

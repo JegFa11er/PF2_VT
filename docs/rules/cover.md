@@ -6,12 +6,17 @@
 combatants and does not apply AC itself; Strike injects the result through the
 central modifier resolver.
 
-1. Take the four grid-vertex corners of the attacker's square.
-2. For each attacker corner, draw four rays to the four corners of the target's
-   square.
+1. Take the four outer grid-vertex corners of the attacker's whole footprint.
+2. For each attacker corner, draw four rays to the four outer corners of the
+   target's whole footprint.
 3. A ray is **wall-blocked** when it crosses the interior of a solid obstacle.
    Rays that only run along a wall edge or touch a wall corner are not blocked.
 4. The attacker uses the corner with the fewest wall-blocked rays.
+
+For multi-cell (Large/Huge/Gargantuan) creatures the "corners" are the four
+outer corners of the full footprint, not the anchor (top-left) cell, so cover
+and line of effect are judged edge-to-edge. A Medium (1x1) creature yields the
+same corners as its single cell.
 5. Count the blocked rays:
 
 | Wall-blocked rays | Degree | AC bonus |
@@ -177,6 +182,7 @@ Valeros strikes Goblin: d20(12) + 9 (base) = 21 vs AC 20 (16 + 2 Shield Raised [
 - defeated creature → no cover;
 - full wall → 4 blocked rays, `lineOfSight === false`;
 - edge-only rays do not count as wall blocking;
+- Large creatures use their full footprint corners (edge-to-edge cover);
 - modifier contract and invalid input.
 
 `tests/Actions/take-cover.test.js`:

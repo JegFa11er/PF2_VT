@@ -210,7 +210,7 @@
     t.test("startEncounter skips a defeated first combatant", function () {
       const a = makeCombatant("a", 30);
       const b = makeCombatant("b", 20);
-      const c = makeCombatant("c", 10);
+      const c = makeCombatant("c", 10, { alliance: "enemy" });
       a.takeDamage(a.maxHP);
 
       const encounter = new Encounter({ combatants: [a, b, c] });
@@ -249,6 +249,26 @@
       const turn = encounter.nextTurn();
       t.assertEqual(turn.active, null);
       t.assertEqual(encounter.isOver, true);
+    });
+
+    t.test("combat ends when only one alliance remains", function () {
+      const a = makeCombatant("a", 30, { alliance: "player" });
+      const b = makeCombatant("b", 20, { alliance: "enemy" });
+      const c = makeCombatant("c", 10, { alliance: "enemy" });
+      const encounter = new Encounter({ combatants: [a, b, c] });
+      encounter.startEncounter();
+
+      t.assertEqual(encounter.isOver, false, "two alliances are still fighting");
+
+      a.takeDamage(a.maxHP); // the player side is wiped
+      t.assertEqual(encounter.isOver, true, "no opposition remains");
+
+      // The surviving enemy side keeps its turn cycle but the encounter is over.
+      const living = encounter.livingCombatants;
+      t.assertEqual(living.length, 2);
+      t.assertTrue(living.every(function (combatant) {
+        return combatant.alliance === "enemy";
+      }));
     });
     t.test("nextTurn forwards die callbacks and reports persistent damage", function () {
       const a = makeCombatant("a", 20, { maxHP: 20 });

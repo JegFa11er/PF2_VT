@@ -12,7 +12,10 @@ Rules used:
    A weapon with the `reach` trait uses **10 ft**. `reachFeet` can still be
    overridden per Strike for special effects.
 3. The target must be a **living hostile**. Defeated targets and allies are rejected.
-4. The target must be visible via centre-to-centre **line of sight**.
+4. The target must be visible via **line of sight**. For multi-cell (Large/Huge/
+   Gargantuan) creatures line of sight is traced edge-to-edge across every pair
+   of occupied cells, so a clear edge counts even when the anchor (top-left)
+   cell is blocked.
 5. The attack check is `d20 + resolved attack modifier` against the target's
    resolved AC. Attack and defense values both flow through
    `src/Core/Rules/modifiers.js` (base attack bonus + Frightened [status] +

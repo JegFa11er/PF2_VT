@@ -1,6 +1,156 @@
 # Handoff
 
-## Current milestone — Phase 25.1 (complete): Final mechanical-debt cleanup
+## Current milestone — Phase 28 (complete): Encounter victory + edge-to-edge LOS
+
+Status: **implemented and verified**; full suite **558/558 tests pass, 38 suites**.
+
+```text
+Feature Readiness:
+- goal: close the two defects left by the stress test — (1) Encounter.isOver only
+  returned true when every combatant was defeated, so a decisive AI-vs-AI wipe
+  still ran out the 15-round cap; (2) Strike LOS and Cover rays for multi-cell
+  creatures were cast from the anchor (top-left) cell only.
+- pf2e_remaster_rule:
+  * Combat ends when no side can still fight another: every living combatant on
+    one alliance, or nobody left.
+  * Line of effect and cover are judged from a creature's space, edge-to-edge,
+    matching the already-fixed geometric distance and flanking (Foundry measures
+    cover rays between the corners of each token's full mechanical bounds).
+- behavior_and_boundaries:
+  * Encounter.isOver (getter) is alliance-aware. The raw `over` latch is still
+    only set by the turn cycle when all combatants are defeated; serialization
+    and the View keep using the latch, while the getter derives victory from
+    living alliances.
+  * Strike.evaluateStrike now traces line of sight across every pair of occupied
+    cells (Grid.occupiedCellsOf) and accepts the first visible pair.
+  * Cover.determineCover casts from the four outer corners of the attacker's
+    whole footprint to the four outer corners of the target's whole footprint;
+    same-cell overlap is now footprint overlap.
+- data_contracts: no new public result fields. cover.js gains a grid-math
+  dependency (Grid.occupiedCellsOf); strike.js adds the internal
+  traceCombatantLineOfSight helper.
+- acceptance_tests:
+  * tests/Encounter/encounter.test.js — "combat ends when only one alliance
+    remains"; the defeated-first-combatant fixture now uses mixed alliances.
+  * tests/Grid/cover.test.js — Large footprint targetCorners + edge-to-edge
+    cover around a wall.
+  * tests/Actions/step-strike.test.js — "multi-cell creatures use edge-to-edge
+    line of sight" (Medium anchor blocked vs Large edge clear).
+  * Stress: 25/25 battles resolved decisively (11 player / 14 enemy), 0 timeouts,
+    0 stalls, 0 anomalies. Full suite 558 passed, 0 failed.
+- delegated_assumptions: alliance identity is the authored `alliance` string
+  (Combatant defaults un-authored alliance to "player" with
+  `allianceExplicit === false`; encounter fixtures always author it).
+- confidence: 97%.
+```
+
+- `src/Core/Encounter/encounter.js` — `isOver` returns true when all living
+  combatants share one `alliance`, or when none remain.
+- `src/Core/Actions/strike.js` — `traceCombatantLineOfSight` replaces the
+  single anchor-cell `LosMath.traceLineOfSight` in `evaluateStrike`.
+- `src/Core/Grid/cover.js` — requires `grid-math.js`; `footprintCorners` and
+  `footprintsOverlap` replace the single-cell `cellCorners`/`sameCell`.
+- `docs/STRESS_TEST_REPORT.md` — rewritten with the resolved 25/25 result.
+- `docs/rules/cover.md` / `docs/rules/strikes.md` — documented edge-to-edge
+  footprint LOS/cover.
+
+## Previous milestone — Phase 27 (complete): LOS-aware AI repositioning
+
+Status: **implemented and verified**; full suite **554/554 tests pass, 38 suites**.
+
+```text
+Feature Readiness:
+- goal: fix the tactical stall where a target geometrically in melee reach but
+  blocked by a wall was never repositioned around; the AI instead issued Strikes
+  that Strike.evaluateStrike rejected with "no-line-of-sight".
+- pf2e_remaster_rule: a Strike requires line of effect (centre-to-centre LoS plus
+  cover's noLineOfSight gate). Reuses Strike.evaluateStrike as the authoritative
+  dry-run; no new rule is invented.
+- behavior_and_boundaries: before treating an in-reach target as strikeable, the AI
+  runs a dry-run Strike.evaluateStrike. On "no-line-of-sight" it treats the target
+  as out of reach and routes around the wall via Pathfinding.findPath. Candidate
+  attack cells are pruned by LoS so the AI walks to a square with a clear shot
+  instead of another blocked one. Multi-cell (Large/Huge) footprint-aware LoS is
+  explicitly deferred (Core scope).
+- data_contracts: no new public contracts. tactical-ai.js gains a require of
+  ../Grid/los-math.js (already loaded before it in index.html/test_runner.html).
+- acceptance_tests: tests/AI/tactical-ai.test.js adds "AI navigates around wall
+  when adjacent but blocked" (diagonally-adjacent pair + wall corner must Stride
+  around, then Strike). Full suite 554 passed, 0 failed.
+- delegated_assumptions: the dry-run uses Strike.evaluateStrike's anchor-cell
+  (top-left) LoS trace, matching the actual Strike; footprint-aware LoS for
+  multi-cell creatures is a separate Core limitation.
+- confidence: 97%.
+```
+
+- `src/Core/AI/tactical-ai.js` — three call sites now gate "in reach" on line of
+  effect, driven by two helpers:
+  - `isStrikeBlockedByWall(actor, cell, target, map, combatants)` — a dry-run
+    `Strike.evaluateStrike` against a prototype-linked projection of the attacker
+    (so a projected anchor cell is read without mutating the live combatant);
+    returns true only for the `no-line-of-sight` refusal.
+  - `hasLineOfSight(from, target, map)` — cheap `LosMath.hasLineOfSight` used to
+    prune candidate attack cells.
+  - `chooseNextAction` treats an in-reach-but-blocked target as out of reach and
+    calls `chooseMovement`; `computeApproach` no longer returns `inReach` when the
+    wall blocks line of effect; `attackCellsAround` drops LOS-blocked candidates.
+- `tests/AI/tactical-ai.test.js` — the regression test asserts the AI does **not**
+  Strike through the wall first, repositions (Stride/Step), and only then resolves
+  a successful Strike.
+- `docs/STRESS_TEST_REPORT.md` — added the Resolution note and corrected the
+  root-cause analysis: the remaining 25/25 timeouts are post-wipe idling (24) and a
+  Huge-vs-Huge anchor-cell-LoS standoff (1), not the AI targeting gap.
+
+## Previous milestone — Phase 26 (complete): Headless AI Stress-Test
+
+Status: **implemented and verified**; full suite **553/553 tests pass, 38 suites**.
+
+```text
+Feature Readiness:
+- goal: drive the headless Core (Encounter + TacticalAI + GridMap + Combatant)
+  through thousands of randomized AI-vs-AI turns and re-validate the core combat
+  invariants every turn, so a rules regression surfaces as a loud failure.
+- pf2e_remaster_rule: exercises existing rules; the invariants encode the
+  Remastered contracts the Core already implements (HP clamp [0, maxHP]; 3-action
+  pool; living footprints never overlap walls or other living creatures;
+  Restrained blocks attack/manipulate except Escape; Grabbed rolls a DC 5 flat
+  check for manipulate actions).
+- behavior_and_boundaries: seeded (mulberry32) generation of 15x15/20x20 arenas
+  (5-15 connected walls, difficult/greater-difficult/hazardous fire cells, 1-2
+  traps) and two teams of 2-4 combatants spanning Tiny..Huge and six equipment
+  profiles. Combat loop: rollInitiative -> executeAITurn -> nextTurn, capped at
+  15 rounds (timeout is a valid outcome). No View layer was touched.
+- data_contracts: consumes GridMap, Combatant, Encounter, TacticalAI, Strike,
+  Stride. Emits a per-battle audit and a stdout summary; overridable via
+  PF2E_STRESS_SEED / PF2E_STRESS_BATTLES.
+- acceptance_tests: tests/AI/stress-simulation.test.js (generator sanity, the
+  Restrained gate, the Grabbed DC-5 flat check, and the >= 25-battle simulation
+  with per-turn invariant validation). Full suite 553 passed, 0 failed.
+- delegated_assumptions: synthetic stress stat blocks (not bestiary data); traps
+  modelled as concentrated hazardous terrain; every combatant effectively
+  threatens Reactive Strike (engine has no per-creature reaction feature flag).
+- confidence: 95%.
+```
+
+- `tests/AI/stress-simulation.test.js` — new suite registered in
+  `tests/run-node.js`: seeded PRNG, arena/combatant generators, the AI-vs-AI
+  combat loop, per-turn invariant validation (HP/action/occupancy/condition/
+  deadlock), and stall detection (no HP/position change for >= 8 consecutive
+  turns). Report: **25/25 battles ran, 0 crashes, 0 invariant violations, 51,628
+  invariant checks**.
+- **Finding (not a defect in the test):** all 25 battles stalled to the 15-round
+  timeout. Root cause: the AI decides a target is "in reach" by geometric distance
+  and never repositions when a wall blocks line of sight, so it idles issuing
+  `no-line-of-sight` Strikes. Documented in `docs/STRESS_TEST_REPORT.md`.
+  Recommended next slice: make `TacticalAI` line-of-effect-aware (fall back to
+  movement when the chosen target is in reach but not strikeable). **Resolved in
+  Phase 27** — see `docs/STRESS_TEST_REPORT.md` for the corrected root-cause
+  analysis (the residual timeouts are post-wipe idling plus one Huge-vs-Huge
+  anchor-cell-LoS standoff).
+- `docs/STRESS_TEST_REPORT.md` — full run report with the metric table, root-cause
+  analysis, invariant coverage, and the recommended next slice.
+
+## Previous milestone — Phase 25.1 (complete): Final mechanical-debt cleanup
 
 Status: **implemented and verified**; full suite **549/549 tests pass, 37 suites**.
 

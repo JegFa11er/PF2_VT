@@ -506,6 +506,36 @@
   }
 
   /**
+   * Edge-to-edge line of sight between two combatants. For multi-cell (Large+)
+   * creatures this tests every pair of occupied cells, so line of effect is
+   * judged from the closest / most favourable edge of each footprint rather
+   * than a single anchor (top-left) cell. Returns the first visible trace, or
+   * (when no pair is visible) the first blocked trace for `blockedBy` reporting.
+   *
+   * @param {object} attacker
+   * @param {object} target
+   * @param {object} map
+   * @returns {object} a LosMath.traceLineOfSight result
+   */
+  function traceCombatantLineOfSight(attacker, target, map) {
+    const fromCells = Grid.occupiedCellsOf(attacker);
+    const toCells = Grid.occupiedCellsOf(target);
+    let firstBlocked = null;
+    for (const from of fromCells) {
+      for (const to of toCells) {
+        const trace = LosMath.traceLineOfSight(from, to, map);
+        if (trace.visible) {
+          return trace;
+        }
+        if (firstBlocked === null) {
+          firstBlocked = trace;
+        }
+      }
+    }
+    return firstBlocked;
+  }
+
+  /**
    * Validation without spending an action or rolling dice.
    *
    * @param {{
@@ -659,11 +689,7 @@
     let sight = null;
     let cover = null;
     if (hasMap) {
-      sight = LosMath.traceLineOfSight(
-        { x: attacker.x, y: attacker.y },
-        { x: target.x, y: target.y },
-        opts.map,
-      );
+      sight = traceCombatantLineOfSight(attacker, target, opts.map);
       if (!sight.visible) {
         return {
           ok: false,

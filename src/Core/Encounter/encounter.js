@@ -315,7 +315,21 @@
     }
 
     get isOver() {
-      return this.over || this.livingCombatants.length === 0;
+      // Combat ends when the battle has no remaining opposition: either every
+      // combatant is defeated, or every living combatant belongs to one and the
+      // same `alliance`. A one-sided wipe therefore reports victory immediately
+      // instead of waiting for the surviving side to idle out the round cap.
+      if (this.over) {
+        return true;
+      }
+      const living = this.livingCombatants;
+      if (living.length === 0) {
+        return true;
+      }
+      const firstAlliance = living[0].alliance;
+      return living.every(function (combatant) {
+        return combatant.alliance === firstAlliance;
+      });
     }
 
     get livingCombatants() {

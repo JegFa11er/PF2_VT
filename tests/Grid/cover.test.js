@@ -145,6 +145,41 @@
       t.assertTrue(!cover.creatureCover);
     });
 
+    t.test("Large creatures use their full footprint corners for cover", function () {
+      const a = { id: "a", name: "A", x: 0, y: 0, alliance: "enemy", size: "large" };
+      const d = { id: "d", name: "D", x: 3, y: 0, alliance: "player", size: "large" };
+
+      const cover = Cover.determineCover(a, d, mapWith(8, 8));
+
+      // The target's 2x2 footprint outer corners, not its anchor (3,0) cell.
+      t.assertDeepEqual(cover.targetCorners, [
+        { x: 3, y: 0 },
+        { x: 5, y: 0 },
+        { x: 3, y: 2 },
+        { x: 5, y: 2 },
+      ]);
+      t.assertEqual(cover.blockedRaysCount, 0);
+      t.assertTrue(cover.lineOfSight);
+    });
+
+    t.test("cover is judged edge-to-edge for multi-cell creatures", function () {
+      const a = { id: "a", name: "A", x: 0, y: 0, alliance: "enemy", size: "large" };
+      const d = { id: "d", name: "D", x: 2, y: 1, alliance: "player", size: "large" };
+      const cover = Cover.determineCover(
+        a,
+        d,
+        mapWith(8, 8, [{ x: 1, y: 1 }]),
+      );
+
+      // A wall blocks rays from the anchor (top-left) cell, but the creatures'
+      // nearest footprint edges face each other on the clear side of the wall.
+      t.assertEqual(cover.blockedRaysCount, 0);
+      t.assertEqual(cover.degree, "none");
+      t.assertDeepEqual(cover.bestCorner, { x: 2, y: 0 });
+      t.assertTrue(cover.lineOfSight);
+      t.assertTrue(!cover.noLineOfSight);
+    });
+
     t.test("four blocked rays mean no line of sight", function () {
       const cover = Cover.determineCover(
         attacker(0, 0),
